@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Font judul besar */
+.font-title {
+  font-family: 'Inter', 'Poppins', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* Font teks biasa */
+.font-body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
