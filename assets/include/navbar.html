@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar Krishna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: {
+                            600: '#2563eb',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed top-0 w-full bg-white/95 backdrop-blur-md z-50 shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <div class="text-3xl font-black text-blue-600 tracking-tight">KRISHNA</div>
+                
+                <!-- Menu Items -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#beranda" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">Home</a>
+                    <a href="#paket" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">Paket</a>
+                    <a href="#profil-instruktur" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">Profil Instruktur</a>
+                    <a href="#galery" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">Galery</a>
+                    <a href="#review" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">Review</a>
+                    <a href="#about-us" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">About Us</a>
+                    <a href="#hubungi-kami" class="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-300">Hubungi Kami</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuButton" class="md:hidden text-gray-700 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-3 pb-4 bg-white rounded-lg p-4 shadow-lg">
+                <a href="#beranda" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">Home</a>
+                <a href="#paket" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">Paket</a>
+                <a href="#profil-instruktur" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">Profil Instruktur</a>
+                <a href="#galery" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">Galery</a>
+                <a href="#review" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">Review</a>
+                <a href="#about-us" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">About Us</a>
+                <a href="#hubungi-kami" class="block text-gray-700 hover:text-blue-600 font-semibold py-2 transition-colors mobile-menu-link">Hubungi Kami</a>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        // Fungsi untuk toggle mobile menu
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Fungsi untuk menutup mobile menu ketika link diklik
+        document.querySelectorAll('.mobile-menu-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.getElementById('mobileMenu').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
