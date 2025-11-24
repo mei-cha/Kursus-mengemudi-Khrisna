@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Galeri LightGallery</title>
+    
+    <!-- CSS LightGallery -->
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery-bundle.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-zoom.min.css" />
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lg-thumbnail.min.css" />
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 800px; }
+        .gallery a { display: block; overflow: hidden; border-radius: 8px; }
+        .gallery img { width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s; }
+        .gallery a:hover img { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <h1>Test Galeri Gambar dengan LightGallery</h1>
+    <p>Klik gambar untuk membuka galeri. Navigasi (panah, thumbnail, zoom) seharusnya muncul.</p>
+    
+    <div id="test-gallery" class="gallery">
+        <a href="https://picsum.photos/id/10/800/600" data-lg-size="800-600">
+            <img src="https://picsum.photos/id/10/400/300" alt="Gambar 1">
+        </a>
+        <a href="https://picsum.photos/id/20/800/600" data-lg-size="800-600">
+            <img src="https://picsum.photos/id/20/400/300" alt="Gambar 2">
+        </a>
+        <a href="https://picsum.photos/id/30/800/600" data-lg-size="800-600">
+            <img src="https://picsum.photos/id/30/400/300" alt="Gambar 3">
+        </a>
+        <a href="https://picsum.photos/id/40/800/600" data-lg-size="800-600">
+            <img src="https://picsum.photos/id/40/400/300" alt="Gambar 4">
+        </a>
+    </div>
+    
+    <!-- JS LightGallery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/lightgallery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/thumbnail/lg-thumbnail.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/zoom/lg-zoom.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lightGallery(document.getElementById('test-gallery'), {
+                plugins: [lgZoom, lgThumbnail],
+                speed: 500,
+                // Tidak ada licenseKey untuk versi gratis
+            });
+            console.log('LightGallery test initialized'); // Untuk debug di Console browser
+        });
+    </script>
+</body>
+</html>

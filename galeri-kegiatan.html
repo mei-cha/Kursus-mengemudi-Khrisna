@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Galery - Krishna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/Home.css"> 
+</head>
+<body class="font-sans scroll-smooth">
+    
+    <div id="navbar-placeholder"></div>
+    
+    <section class="min-h-screen pt-24 pb-16 bg-gradient-to-br from-gray-50 to-gray-200">
+        <div class="container mx-auto px-6">
+            
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+                <h1 class="text-5xl font-extrabold text-gray-900 mb-4">Galeri Dokumentasi Krishna</h1>
+                <p class="text-lg text-gray-600">
+                    Lihatlah momen-momen terbaik dari proses pelatihan kami.
+                </p>
+            </div>
+            
+            <div class="mb-20 p-8 bg-white rounded-xl shadow-2xl border-t-4 border-blue-500/50">
+                <h2 class="text-3xl font-bold text-blue-700 mb-2">Sesi Praktik</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    
+                    <div onclick="openModal('https://picsum.photos/id/10/800/600', 'Sesi Praktik Mengemudi di Lapangan')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/10/400/300" alt="Sesi Praktik 1" class="w-full h-48 object-cover">
+                    </div>
+                    
+                    <div onclick="openModal('https://picsum.photos/id/20/800/600', 'Latihan Parkir Paralel')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/20/400/300" alt="Sesi Praktik 2" class="w-full h-48 object-cover">
+                    </div>
+                    
+                    <div onclick="openModal('https://picsum.photos/id/30/800/600', 'Mengemudi di Jalan Raya')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/30/400/300" alt="Sesi Praktik 3" class="w-full h-48 object-cover">
+                    </div>
+
+                    <div onclick="openModal('https://picsum.photos/id/40/800/600', 'Mengemudi di Jalan Raya')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/40/400/300" alt="Sesi Praktik 4" class="w-full h-48 object-cover">
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div class="p-8 bg-white rounded-xl shadow-2xl border-t-4 border-green-500/50">
+                <h2 class="text-3xl font-bold text-green-700 mb-2">Dokumentasi Kelulusan</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    
+                    <div onclick="openModal('https://picsum.photos/id/70/800/600', 'Perayaan Kelulusan Angkatan Ini')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/70/400/300" alt="Kelulusan 1" class="w-full h-48 object-cover">
+                    </div>
+                    
+                    <div onclick="openModal('https://picsum.photos/id/80/800/600', 'Alumni dengan Sertifikat')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/80/400/300" alt="Kelulusan 2" class="w-full h-48 object-cover">
+                    </div>
+                    
+                    <div onclick="openModal('https://picsum.photos/id/90/800/600', 'Momen Kebersamaan')"
+                         class="relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition duration-500 hover:shadow-2xl hover:scale-[1.03]">
+                        <img src="https://picsum.photos/id/90/400/300" alt="Kelulusan 3" class="w-full h-48 object-cover">
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+    </section>
+    
+    <div id="footer-placeholder"></div>
+
+    <div id="imageModal" class="fixed inset-0 bg-black/90 hidden z-[9999] flex items-center justify-center p-4">
+        <div class="relative max-w-4xl max-h-full mx-auto">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-white text-3xl font-bold z-10 p-2 bg-black/50 rounded-full hover:bg-black/70 transition-colors">
+                &times;
+            </button>
+            <img id="modalImage" src="" alt="" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl">
+            <div id="modalCaption" class="text-white text-center mt-4 text-lg p-2 bg-black/50 rounded-lg"></div>
+        </div>
+    </div>
+    <script src="assets/js/Home.js"></script>
+    
+    <script>
+        // Panggil fungsi untuk memuat Navbar dan Footer
+        document.addEventListener('DOMContentLoaded', function() {
+            initIncludes(); 
+        });
+
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalCaption = document.getElementById('modalCaption');
+
+        /**
+         * Fungsi untuk membuka modal dan menampilkan gambar yang diklik.
+         * @param {string} src - URL gambar resolusi tinggi.
+         * @param {string} caption - Deskripsi gambar.
+         */
+        function openModal(src, caption) {
+            modalImage.src = src;
+            modalCaption.textContent = caption;
+            modal.classList.remove('hidden');
+        }
+
+        /**
+         * Fungsi untuk menutup modal.
+         */
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        // Opsional: Tutup modal ketika mengklik area gelap (backdrop)
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+    
+</body>
+</html>

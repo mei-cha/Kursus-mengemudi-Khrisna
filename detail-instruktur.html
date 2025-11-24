@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="detail-title">Detail Instruktur - Krishna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/css/Home.css">
+    <!-- Tambahkan Font untuk Icon (jika belum ada) -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+<body class="font-sans scroll-smooth">
+    
+    <div id="navbar-placeholder"></div>
+    
+    <section class="min-h-screen pt-24 pb-16 bg-gray-50">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <a href="profil-instruktur.html" class="text-blue-600 hover:text-blue-800 transition-colors mb-6 inline-flex items-center">
+                <span class="material-symbols-outlined mr-2">arrow_back</span> Kembali ke Daftar Instruktur
+            </a>
+            
+            <div id="instruktur-content" class="bg-white p-8 rounded-2xl shadow-2xl mt-4 border-t-4 border-blue-500 flex items-center justify-center min-h-[400px]">
+                <!-- Loading Spinner -->
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p class="text-gray-500">Memuat Detail Instruktur...</p>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+    
+    <div id="footer-placeholder"></div>
+
+    <!-- Pastikan script Home.js dimuat sebelum script kita -->
+    <script src="assets/js/Home.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded triggered'); // Debugging: Pastikan event ini berjalan
+            
+            try {
+                // Inisiasi navbar dan footer (dengan fallback jika tidak ada)
+                if (typeof initIncludes === 'function') {
+                    initIncludes();
+                    console.log('initIncludes executed successfully');
+                } else {
+                    console.warn('initIncludes function not found, skipping navbar/footer init');
+                }
+
+                // =======================================================
+                // FUNGSI KHUSUS: MEMUAT DETAIL INSTRUKTUR BERDASARKAN ID
+                // =======================================================
+                
+                // Data dummy instruktur (bisa diganti dengan API nanti)
+                const instructorsData = {
+                    'adi': {
+                        name: 'Adi Setyawan',
+                        specialty: 'Manual & Matic Specialist',
+                        experience: 8,
+                        qualifications: ['BNSP Certified', 'Basic Defensive Driving', 'First Aid Certified'],
+                        bio: 'Adi terkenal karena kesabarannya yang luar biasa. Ia memiliki spesialisasi dalam mengajarkan teknik parkir paralel dan seri dengan mudah, bahkan untuk pemula yang paling cemas sekalipun.',
+                        photo: 'https://i.pravatar.cc/150?img=1'
+                    },
+                    'budi': {
+                        name: 'Budi Santoso',
+                        specialty: 'Advanced Driving & Highway',
+                        experience: 12,
+                        qualifications: ['Ex-Racer License', 'Night Driving Expert', 'High-Speed Maneuvers'],
+                        bio: 'Budi akan mengajarkan Anda bagaimana cara mengemudi dengan percaya diri di jalan tol, dalam kondisi cuaca buruk, dan bagaimana cara melakukan pengereman darurat yang tepat.',
+                        photo: 'https://i.pravatar.cc/150?img=2'
+                    },
+                    'cindy': {
+                        name: 'Cindy Permata',
+                        specialty: 'Confidence Building Coach',
+                        experience: 5,
+                        qualifications: ['Psychology Degree', 'Anxiety Management', 'Traffic Flow Expert'],
+                        bio: 'Cindy fokus pada aspek psikologis mengemudi. Dia membantu mengatasi kecemasan mengemudi dan membangun kebiasaan mengemudi yang aman dan santai.',
+                        photo: 'https://i.pravatar.cc/150?img=3'
+                    },
+
+                    'nada': {
+                        name: 'Nada Indahwati',
+                        specialty: 'Confidence Building Coach',
+                        experience: 5,
+                        qualifications: ['Psychology Degree', 'Anxiety Management', 'Traffic Flow Expert'],
+                        bio: 'Nada fokus pada aspek psikologis mengemudi. Dia membantu mengatasi kecemasan mengemudi dan membangun kebiasaan mengemudi yang aman dan santai.',
+                        photo: 'https://i.pravatar.cc/150?img=4'
+                    }
+                };
+
+                // Ambil ID dari URL (?id=adi)
+                const urlParams = new URLSearchParams(window.location.search);
+                const instructorId = urlParams.get('id');
+                console.log('Instructor ID from URL:', instructorId); // Debugging
+                
+                const instructor = instructorsData[instructorId];
+                const contentDiv = document.getElementById('instruktur-content');
+                
+                if (!contentDiv) {
+                    throw new Error('Element instruktur-content not found');
+                }
+
+                if (instructor) {
+                    console.log('Instructor data found:', instructor); // Debugging
+                    
+                    // Perbarui judul halaman
+                    document.getElementById('detail-title').textContent = `${instructor.name} - Detail Instruktur`;
+                    
+                    // Buat konten HTML dinamis
+                    let qualificationList = instructor.qualifications.map(q => 
+                        `<li class="flex items-center text-gray-700">
+                            <span class="material-symbols-outlined text-green-500 mr-2">check_circle</span>${q}
+                        </li>`
+                    ).join('');
+
+                    contentDiv.innerHTML = `
+                        <div class="flex flex-col md:flex-row items-start md:space-x-8">
+                            <div class="flex-shrink-0 mb-6 md:mb-0">
+                                <img src="${instructor.photo}" alt="Foto Instruktur ${instructor.name}" class="w-48 h-48 rounded-full object-cover shadow-xl border-8 border-blue-100" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                            </div>
+                            
+                            <div class="flex-grow">
+                                <h1 class="text-4xl font-black text-blue-600 mb-2">${instructor.name}</h1>
+                                <p class="text-xl font-semibold text-gray-700 mb-4">${instructor.specialty}</p>
+                                
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-bold text-gray-900 border-b pb-1 mb-2">Biografi Singkat</h3>
+                                    <p class="text-gray-600 leading-relaxed">${instructor.bio}</p>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <h3 class="text-lg font-bold text-gray-900 border-b pb-1 mb-2">Pengalaman & Kualifikasi (${instructor.experience} Tahun)</h3>
+                                    <ul class="space-y-2">
+                                        ${qualificationList}
+                                    </ul>
+                                </div>
+                                
+                                <a href="#hubungi-kami" class="mt-4 inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                                    Booking dengan ${instructor.name}
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    console.log('Content updated successfully'); // Debugging
+                } else {
+                    console.warn('Instructor not found for ID:', instructorId); // Debugging
+                    contentDiv.innerHTML = `
+                        <div class="text-center">
+                            <h1 class="text-3xl font-bold text-red-600 mb-4">Instruktur tidak ditemukan.</h1>
+                            <p class="text-gray-600 mb-4">ID Instruktur yang Anda cari tidak valid atau tidak ada. Pastikan URL berisi parameter seperti <code>?id=adi</code>. ID yang ditemukan: <strong>${instructorId || 'tidak ada'}</strong>.</p>
+                            <a href="profil-instruktur.html" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Kembali ke Daftar Instruktur</a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error in script:', error); // Debugging
+                const contentDiv = document.getElementById('instruktur-content');
+                if (contentDiv) {
+                    contentDiv.innerHTML = `
+                        <div class="text-center">
+                            <h1 class="text-3xl font-bold text-red-600 mb-4">Terjadi Kesalahan</h1>
+                            <p class="text-gray-600 mb-4">Ada masalah saat memuat halaman. Periksa konsol browser untuk detail error: <code>${error.message}</code></p>
+                            <a href="profil-instruktur.html" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Kembali ke Daftar Instruktur</a>
+                        </div>
+                    `;
+                }
+            }
+        });
+    </script>
+    
+</body>
+</html>
