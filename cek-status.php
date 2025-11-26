@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             SELECT ps.*, pk.nama_paket, pk.harga,
                    (SELECT COUNT(*) FROM pembayaran p WHERE p.pendaftaran_id = ps.id AND p.status = 'terverifikasi') as jumlah_pembayaran,
                    (SELECT SUM(jumlah) FROM pembayaran p WHERE p.pendaftaran_id = ps.id AND p.status = 'terverifikasi') as total_dibayar
-            FROM pendaftaran_siswa ps 
+            FROM pendaftaran ps 
             JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
             WHERE ps.nomor_pendaftaran = ? AND ps.telepon = ?
         ");
@@ -29,33 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Harap isi nomor pendaftaran dan telepon.";
     }
 }
+
+// Set title khusus untuk halaman ini
+$page_title = "Cek Status Pendaftaran - Krishna Driving";
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Status Pendaftaran - Krishna Driving</title>
+    <title><?= $page_title ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <i class="fas fa-car text-2xl text-blue-600 mr-2"></i>
-                    <span class="text-xl font-bold text-gray-800">Krishna Driving</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="index.php" class="text-gray-600 hover:text-blue-600 font-medium">
-                        <i class="fas fa-home mr-1"></i>Beranda
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <?php include 'includes/header.php'; ?>
 
     <!-- Hero Section -->
     <section class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16">
@@ -107,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">
                         Lupa nomor pendaftaran? 
-                        <a href="index.php#kontak" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="index.php#tentang-kontak" class="text-blue-600 hover:text-blue-800 font-medium">
                             Hubungi kami
                         </a>
                     </p>
@@ -288,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mt-6 text-center">
                     <p class="text-gray-600">
                         Butuh bantuan? 
-                        <a href="index.php#kontak" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="index.php#tentang-kontak" class="text-blue-600 hover:text-blue-800 font-medium">
                             Hubungi customer service kami
                         </a>
                     </p>
@@ -307,7 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
         // Auto-format phone number
-        document.getElementById('telepon').addEventListener('input', function(e) {
+        document.getElementById('telepon')?.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 2) {
                 value = value.substring(0, 12); // Limit to 12 digits
@@ -316,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         // Auto-uppercase for registration number
-        document.getElementById('nomor_pendaftaran').addEventListener('input', function(e) {
+        document.getElementById('nomor_pendaftaran')?.addEventListener('input', function(e) {
             e.target.value = e.target.value.toUpperCase();
         });
     </script>
