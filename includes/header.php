@@ -57,7 +57,7 @@ try {
                     <a href="paket-kursus.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Paket</a>
                     <a href="instruktur.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Instruktur</a>
                     <a href="testimoni.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Testimoni</a>
-                    <a href="#galeri" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Galeri</a>
+                    <a href="galeri.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Galeri</a>
                     <a href="tentang-kontak.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Tentang & Kontak</a>
                     
                     <!-- Menu Cek Status -->
@@ -88,13 +88,13 @@ try {
                     <a href="paket-kursus.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-gift mr-3 w-5 text-center"></i>Paket Kursus
                     </a>
-                    <a href="#instruktur" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
+                    <a href="instruktur.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-users mr-3 w-5 text-center"></i>Instruktur
                     </a>
                     <a href="testimoni.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-star mr-3 w-5 text-center"></i>Testimoni
                     </a>
-                    <a href="#galeri" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
+                    <a href="galeri.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-images mr-3 w-5 text-center"></i>Galeri
                     </a>
                     <a href="tentang-kontak.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">

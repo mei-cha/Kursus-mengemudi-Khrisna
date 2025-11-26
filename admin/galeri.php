@@ -10,6 +10,20 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 $db = (new Database())->getConnection();
 
+$target_dir = "../assets/images/galeri/";
+
+// Auto create folder jika tidak ada
+if (!file_exists($target_dir)) {
+    if (!mkdir($target_dir, 0777, true)) {
+        die("Error: Gagal membuat folder galeri. Silakan buat manual folder: " . $target_dir);
+    }
+}
+
+// Pastikan folder writable
+if (!is_writable($target_dir)) {
+    die("Error: Folder tidak dapat ditulisi. Periksa permissions folder: " . $target_dir);
+}
+
 // Handle image upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['gambar'])) {
     $judul = $_POST['judul'];
@@ -22,9 +36,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['gambar'])) {
     $target_dir = "../assets/images/galeri/";
     $target_file = $target_dir . $gambar_name;
     
+    // Auto create folder jika tidak ada
+    if (!file_exists($target_dir)) {
+        if (!mkdir($target_dir, 0777, true)) {
+            $error = "Error: Gagal membuat folder galeri. Silakan buat manual folder: " . $target_dir;
+        }
+    }
+    
+    // Check folder permissions
+    if (!is_writable($target_dir)) {
+        $error = "Error: Folder tidak dapat ditulisi. Periksa permissions folder: " . $target_dir;
+    }
     // Check if image file is a actual image
-    $check = getimagesize($gambar["tmp_name"]);
-    if ($check === false) {
+    elseif ($check = getimagesize($gambar["tmp_name"]) === false) {
         $error = "File bukan gambar!";
     } 
     // Check file size (max 5MB)
@@ -32,21 +56,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['gambar'])) {
         $error = "Ukuran file terlalu besar! Maksimal 5MB.";
     }
     // Allow certain file formats
-    elseif (!in_array(pathinfo($gambar_name, PATHINFO_EXTENSION), ['jpg', 'jpeg', 'png', 'gif'])) {
+    elseif (!in_array(strtolower(pathinfo($gambar_name, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif'])) {
         $error = "Hanya file JPG, JPEG, PNG & GIF yang diizinkan.";
     }
     // Upload file
     elseif (move_uploaded_file($gambar["tmp_name"], $target_file)) {
-        $stmt = $db->prepare("INSERT INTO galeri (judul, deskripsi, gambar, kategori, urutan_tampil) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO galeri (judul, deskripsi, gambar, kategori, urutan_tampil, status) VALUES (?, ?, ?, ?, ?, 'aktif')");
         if ($stmt->execute([$judul, $deskripsi, $gambar_name, $kategori, $urutan_tampil])) {
             $success = "Gambar berhasil diupload!";
         } else {
             $error = "Gagal menyimpan data ke database!";
             // Delete uploaded file if database failed
-            unlink($target_file);
+            if (file_exists($target_file)) {
+                unlink($target_file);
+            }
         }
     } else {
-        $error = "Terjadi kesalahan saat upload gambar!";
+        $error = "Terjadi kesalahan saat upload gambar! Periksa permissions folder.";
     }
 }
 
