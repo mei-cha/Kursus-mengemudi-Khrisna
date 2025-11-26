@@ -150,6 +150,20 @@ $status_counts = $db->query("
     <title>Kelola Galeri - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .main-content {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
@@ -515,13 +529,9 @@ $status_counts = $db->query("
         </div>
     </div>
 
+    <!-- sidebar -->
+    <script src="../assets/js/sidebar.js"></script>
     <script>
-        // Sidebar Toggle
-        document.getElementById('sidebar-toggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('collapsed');
-        });
-
         // View Image Modal
         function viewImage(imageName, title) {
             document.getElementById('modalImage').src = `../assets/images/galeri/${imageName}`;
