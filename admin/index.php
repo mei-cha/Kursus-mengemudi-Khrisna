@@ -43,12 +43,12 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
     </style>
 </head>
 <body class="bg-gray-100">
-    <div class="flex h-screen">
+    <div class="flex h-screen absolute inset-0">
         <!-- Sidebar -->
         <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <div class="main-content flex-1 flex flex-col overflow-hidden relative">
             <!-- Top Header -->
             <header class="bg-white shadow">
                 <div class="flex justify-between items-center px-6 py-4">
@@ -238,22 +238,10 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
             </main>
         </div>
     </div>
-
+    
+    <!-- sidebar -->
+    <script src="../assets/js/sidebar.js"></script>
     <script>
-        // Sidebar Toggle
-        document.getElementById('sidebar-toggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            
-            sidebar.classList.toggle('collapsed');
-            
-            if (sidebar.classList.contains('collapsed')) {
-                mainContent.classList.add('ml-0');
-            } else {
-                mainContent.classList.remove('ml-0');
-            }
-        });
-
         // Update current time
         function updateTime() {
             const now = new Date();

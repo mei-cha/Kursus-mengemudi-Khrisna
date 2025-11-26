@@ -5,8 +5,8 @@
                 <!-- Company Info -->
                 <div>
                     <div class="flex items-center mb-4">
-                        <i class="fas fa-car text-2xl text-blue-400 mr-2"></i>
-                        <span class="text-xl font-bold">Krishna Driving</span>
+                        <img src="./assets/images/logo1.png" alt="logo" class="w-10 h-10 mr-3 rounded-full object-cover">
+                        <span class="text-xl font-bold">Krishna Kursus</span>
                     </div>
                     <p class="text-gray-400 text-sm leading-relaxed mb-4">
                         Kursus mengemudi mobil profesional dengan instruktur berpengalaman dan metode terbaik. 

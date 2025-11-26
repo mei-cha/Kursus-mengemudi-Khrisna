@@ -129,6 +129,20 @@ $total_testimoni = $db->query("SELECT COUNT(*) as total FROM testimoni")->fetch(
     <title>Export Data - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .main-content {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
@@ -301,13 +315,10 @@ $total_testimoni = $db->query("SELECT COUNT(*) as total FROM testimoni")->fetch(
             </main>
         </div>
     </div>
-
+    
+    <!-- sidebar -->
+    <script src="../assets/js/sidebar.js"></script>
     <script>
-        // Sidebar Toggle
-        document.getElementById('sidebar-toggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('collapsed');
-        });
 
         // Add confirmation for exports
         document.querySelectorAll('a[href*="export.php"]').forEach(link => {

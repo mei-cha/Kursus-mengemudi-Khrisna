@@ -129,6 +129,20 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
     <title>Kelola Pendaftaran - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .main-content {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
@@ -555,19 +569,9 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         </div>
     </div>
 
+    <!-- sidebar -->
+    <script src="../assets/js/sidebar.js"></script>
     <script>
-        // Toggle form tambah siswa
-        function toggleTambahForm() {
-            const form = document.getElementById('tambahForm');
-            form.classList.toggle('hidden');
-        }
-
-        // Sidebar Toggle
-        document.getElementById('sidebar-toggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('collapsed');
-        });
-
         // View Detail Function
         function viewDetail(id) {
             fetch(`pendaftaran_detail.php?id=${id}`)

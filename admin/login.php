@@ -40,10 +40,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
         <div class="max-w-md w-full space-y-8">
             <div>
                 <div class="flex justify-center">
-                    <i class="fas fa-car text-4xl text-blue-600"></i>
+                    <img src="../assets/images/logo1.png" alt="logo" class="w-12 h-12 mr-3 rounded-full object-cover">
                 </div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Admin Krishna Driving
+                    Admin Krishna kursus
                 </h2>
                 <p class="mt-2 text-center text-sm text-gray-600">
                     Masuk ke dashboard administrator
@@ -80,12 +80,6 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true
                         </span>
                         Masuk
                     </button>
-                </div>
-                
-                <div class="text-center">
-                    <p class="text-xs text-gray-500">
-                        Default login: admin / krishna123
-                    </p>
                 </div>
             </form>
         </div>
