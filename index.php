@@ -23,11 +23,10 @@
             <div class="text-center">
                 <div class="text-3xl md:text-4xl font-bold text-yellow-300">
                     <?php 
-                    // Hitung total siswa dari database
                     try {
                         $siswa_query = $db->query("SELECT COUNT(*) as total FROM pendaftaran WHERE status_pendaftaran = 'selesai'");
                         $total_siswa = $siswa_query->fetch(PDO::FETCH_ASSOC)['total'];
-                        echo number_format($total_siswa + 5000); // Fallback jika data kosong
+                        echo number_format($total_siswa + 5000);
                     } catch (Exception $e) {
                         echo "5,000+";
                     }
@@ -61,73 +60,215 @@
     </div>
 </section>
 
-<!-- Informasi Kursus Section -->
+<!-- Informasi Kursus Section - DISEDERHANAKAN -->
 <section id="paket-kursus" class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Paket Kursus Kami</h2>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Pilih paket yang sesuai dengan kebutuhan belajar mengemudi Anda</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Pilihan Paket Kursus</h2>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Pilih kategori paket yang sesuai dengan kebutuhan belajar mengemudi Anda</p>
         </div>
         
-        <?php if (empty($paket_kursus)): ?>
-            <div class="text-center py-12">
-                <i class="fas fa-car text-6xl text-gray-300 mb-4"></i>
-                <h3 class="text-2xl font-bold text-gray-600 mb-2">Paket Kursus Sedang Tidak Tersedia</h3>
-                <p class="text-gray-500">Silakan hubungi kami untuk informasi lebih lanjut.</p>
-            </div>
-        <?php else: ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <?php foreach ($paket_kursus as $paket): ?>
-                <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 transform hover:-translate-y-2">
-                    <div class="p-6">
-                        <!-- Badge Tipe Mobil -->
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($paket['nama_paket']) ?></h3>
-                            <span class="bg-blue-100 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full">
-                                <?= strtoupper($paket['tipe_mobil']) ?>
-                            </span>
-                        </div>
-                        
-                        <!-- Harga -->
-                        <div class="text-2xl font-bold text-blue-600 mb-4">
-                            Rp <?= number_format($paket['harga'], 0, ',', '.') ?>
-                        </div>
-                        
-                        <!-- Fitur -->
-                        <div class="space-y-3 mb-6">
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-clock text-blue-500 w-5 mr-3"></i>
-                                <span><?= $paket['durasi_jam'] ?> Jam Pelajaran</span>
-                            </div>
-                            <?php if ($paket['termasuk_teori']): ?>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-book text-green-500 w-5 mr-3"></i>
-                                <span>Kelas Teori</span>
-                            </div>
-                            <?php endif; ?>
-                            <?php if ($paket['termasuk_praktik']): ?>
-                            <div class="flex items-center text-gray-600">
-                                <i class="fas fa-road text-orange-500 w-5 mr-3"></i>
-                                <span>Praktik Langsung</span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <!-- Deskripsi -->
-                        <p class="text-gray-600 mb-6 text-sm leading-relaxed"><?= htmlspecialchars($paket['deskripsi'] ?? 'Paket lengkap belajar mengemudi') ?></p>
-                        
-                        <!-- Tombol -->
-                        <button onclick="pilihPaket(<?= $paket['id'] ?>)" 
-                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300 shadow-md hover:shadow-lg">
-                            <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket Ini
-                        </button>
-                    </div>
+        <!-- Kategori Paket -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Paket Reguler -->
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-car text-2xl"></i>
                 </div>
-                <?php endforeach; ?>
+                <h3 class="text-xl font-bold mb-2">Paket Reguler</h3>
+                <p class="text-blue-100 mb-4 text-sm">Kursus standar dengan jadwal reguler</p>
+                <div class="text-2xl font-bold mb-4">Mulai Rp 550rb</div>
+                <a href="paket-kursus.php#reguler" 
+                   class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                    Lihat Detail
+                </a>
             </div>
-        <?php endif; ?>
+
+            <!-- Paket Campuran -->
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-cogs text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Paket Campuran</h3>
+                <p class="text-green-100 mb-4 text-sm">Belajar manual & matic dalam satu paket</p>
+                <div class="text-2xl font-bold mb-4">Mulai Rp 650rb</div>
+                <a href="paket-kursus.php#campuran" 
+                   class="block w-full bg-white text-green-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                    Lihat Detail
+                </a>
+            </div>
+
+            <!-- Paket Extra -->
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-moon text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Paket Extra</h3>
+                <p class="text-purple-100 mb-4 text-sm">Kursus malam & hari libur</p>
+                <div class="text-2xl font-bold mb-4">Mulai Rp 650rb</div>
+                <a href="paket-kursus.php#extra" 
+                   class="block w-full bg-white text-purple-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                    Lihat Detail
+                </a>
+            </div>
+
+            <!-- Paket Pelancaran -->
+            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+                <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-bolt text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Paket Pelancaran</h3>
+                <p class="text-orange-100 mb-4 text-sm">Kursus singkat untuk yang sudah punya dasar</p>
+                <div class="text-2xl font-bold mb-4">Mulai Rp 350rb</div>
+                <a href="paket-kursus.php#pelancaran" 
+                   class="block w-full bg-white text-orange-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                    Lihat Detail
+                </a>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="text-center">
+            <a href="paket-kursus.php" 
+               class="inline-flex items-center bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-300 shadow-lg hover:shadow-xl">
+                <i class="fas fa-list mr-2"></i>Lihat Semua Paket
+            </a>
+        </div>
     </div>
 </section>
+
+<!-- JavaScript untuk Menampilkan Detail Paket -->
+<script>
+// Data paket dari PHP di-convert ke JavaScript
+const allPackages = <?= json_encode($paket_kursus) ?>;
+
+function showPackageDetail(category) {
+    const detailSection = document.getElementById('packageDetail');
+    const packageList = document.getElementById('packageList');
+    const detailTitle = document.getElementById('detailTitle');
+    
+    // Filter paket berdasarkan kategori
+    let filteredPackages = [];
+    let title = '';
+    
+    switch(category) {
+        case 'reguler':
+            filteredPackages = allPackages.filter(pkg => 
+                pkg.nama_paket.toLowerCase().includes('reguler')
+            );
+            title = 'Paket Reguler';
+            break;
+        case 'campuran':
+            filteredPackages = allPackages.filter(pkg => 
+                pkg.nama_paket.toLowerCase().includes('campuran') || 
+                pkg.tipe_mobil === 'keduanya'
+            );
+            title = 'Paket Campuran';
+            break;
+        case 'extra':
+            filteredPackages = allPackages.filter(pkg => 
+                pkg.nama_paket.toLowerCase().includes('extra')
+            );
+            title = 'Paket Extra';
+            break;
+        case 'pelancaran':
+            filteredPackages = allPackages.filter(pkg => 
+                pkg.nama_paket.toLowerCase().includes('pelancaran')
+            );
+            title = 'Paket Pelancaran';
+            break;
+    }
+    
+    // Update title
+    detailTitle.textContent = title;
+    
+    // Clear previous content
+    packageList.innerHTML = '';
+    
+    // Add packages to the list
+    if (filteredPackages.length > 0) {
+        filteredPackages.forEach(pkg => {
+            const pertemuan = Math.floor(pkg.durasi_jam / 50);
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 border border-gray-100';
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <h4 class="text-lg font-bold text-gray-800">${pkg.nama_paket}</h4>
+                    <span class="bg-blue-100 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full capitalize">
+                        ${pkg.tipe_mobil}
+                    </span>
+                </div>
+                
+                <div class="text-2xl font-bold text-blue-600 mb-4">
+                    Rp ${formatNumber(pkg.harga)}
+                </div>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-clock text-blue-500 w-5 mr-3"></i>
+                        <span>${pertemuan} Pertemuan</span>
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-road text-green-500 w-5 mr-3"></i>
+                        <span>${pkg.durasi_jam} Menit Total</span>
+                    </div>
+                </div>
+                
+                <p class="text-gray-600 text-sm mb-4 leading-relaxed">${pkg.deskripsi || 'Paket lengkap belajar mengemudi'}</p>
+                
+                <button onclick="pilihPaket(${pkg.id})" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
+                    <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket Ini
+                </button>
+            `;
+            packageList.appendChild(card);
+        });
+    } else {
+        packageList.innerHTML = `
+            <div class="col-span-3 text-center py-8">
+                <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-600">Belum ada paket dalam kategori ini.</p>
+            </div>
+        `;
+    }
+    
+    // Show the detail section
+    detailSection.classList.remove('hidden');
+    
+    // Scroll to detail section
+    detailSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hidePackageDetail() {
+    document.getElementById('packageDetail').classList.add('hidden');
+}
+
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Fungsi pilih paket untuk form pendaftaran
+function pilihPaket(paketId) {
+    const selectElement = document.getElementById('paket_kursus_id');
+    if (selectElement) {
+        selectElement.value = paketId;
+        document.getElementById('daftar').scrollIntoView({
+            behavior: 'smooth'
+        });
+        
+        // Tutup detail section
+        hidePackageDetail();
+    }
+}
+
+// Close detail when clicking outside
+document.addEventListener('click', function(e) {
+    const detailSection = document.getElementById('packageDetail');
+    if (!detailSection.contains(e.target) && !e.target.closest('button[onclick*="showPackageDetail"]')) {
+        hidePackageDetail();
+    }
+});
+</script>
 
 <!-- Profil Instruktur Section -->
 <section id="instruktur" class="py-16 bg-gray-50">

@@ -12,6 +12,10 @@ $db = (new Database())->getConnection();
 
 // Handle add/edit instructor
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Debug: Lihat data yang dikirim
+    error_log("POST Data: " . print_r($_POST, true));
+    error_log("FILES Data: " . print_r($_FILES, true));
+    
     if (isset($_POST['add_instruktur'])) {
         // Add new instructor
         $nama_lengkap = $_POST['nama_lengkap'];
@@ -21,26 +25,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $deskripsi = $_POST['deskripsi'];
         $aktif = isset($_POST['aktif']) ? 1 : 0;
         
+        // Set default values for new fields
+        $rating = 0.00;
+        $total_siswa = 0;
+        
         // Handle photo upload
         $foto = null;
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
             $foto_name = time() . '_' . basename($_FILES['foto']['name']);
             $target_dir = "../assets/images/instruktur/";
+            
+            // Create directory if not exists
+            if (!is_dir($target_dir)) {
+                mkdir($target_dir, 0755, true);
+            }
+            
             $target_file = $target_dir . $foto_name;
             
             // Check if image file is a actual image
             $check = getimagesize($_FILES["foto"]["tmp_name"]);
-            if ($check !== false && move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
-                $foto = $foto_name;
+            if ($check !== false) {
+                // Check file size (max 2MB)
+                if ($_FILES["foto"]["size"] <= 2097152) {
+                    // Allow certain file formats
+                    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+                    if (in_array($imageFileType, ['jpg', 'jpeg', 'png', 'gif'])) {
+                        if (move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
+                            $foto = $foto_name;
+                        } else {
+                            $error = "Gagal mengupload foto!";
+                        }
+                    } else {
+                        $error = "Format file tidak didukung! Hanya JPG, JPEG, PNG, GIF yang diizinkan.";
+                    }
+                } else {
+                    $error = "Ukuran file terlalu besar! Maksimal 2MB.";
+                }
+            } else {
+                $error = "File bukan gambar!";
             }
         }
         
-        $stmt = $db->prepare("INSERT INTO instruktur (nama_lengkap, nomor_licensi, spesialisasi, pengalaman_tahun, deskripsi, foto, aktif) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        
-        if ($stmt->execute([$nama_lengkap, $nomor_licensi, $spesialisasi, $pengalaman_tahun, $deskripsi, $foto, $aktif])) {
-            $success = "Instruktur berhasil ditambahkan!";
-        } else {
-            $error = "Gagal menambahkan instruktur!";
+        try {
+            $stmt = $db->prepare("INSERT INTO instruktur (nama_lengkap, nomor_licensi, spesialisasi, pengalaman_tahun, deskripsi, foto, aktif, rating, total_siswa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            
+            if ($stmt->execute([$nama_lengkap, $nomor_licensi, $spesialisasi, $pengalaman_tahun, $deskripsi, $foto, $aktif, $rating, $total_siswa])) {
+                $success = "Instruktur berhasil ditambahkan!";
+                // Reset form
+                echo "<script>resetForm();</script>";
+            } else {
+                $error = "Gagal menambahkan instruktur! Error: " . implode(", ", $stmt->errorInfo());
+            }
+        } catch (PDOException $e) {
+            $error = "Database error: " . $e->getMessage();
         }
     }
     elseif (isset($_POST['edit_instruktur'])) {
@@ -58,25 +95,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
             $foto_name = time() . '_' . basename($_FILES['foto']['name']);
             $target_dir = "../assets/images/instruktur/";
+            
+            // Create directory if not exists
+            if (!is_dir($target_dir)) {
+                mkdir($target_dir, 0755, true);
+            }
+            
             $target_file = $target_dir . $foto_name;
             
             // Check if image file is a actual image
             $check = getimagesize($_FILES["foto"]["tmp_name"]);
-            if ($check !== false && move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
-                // Delete old photo if exists
-                if ($foto && file_exists($target_dir . $foto)) {
-                    unlink($target_dir . $foto);
+            if ($check !== false) {
+                // Check file size (max 2MB)
+                if ($_FILES["foto"]["size"] <= 2097152) {
+                    // Allow certain file formats
+                    $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+                    if (in_array($imageFileType, ['jpg', 'jpeg', 'png', 'gif'])) {
+                        if (move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
+                            // Delete old photo if exists
+                            if ($foto && file_exists($target_dir . $foto)) {
+                                unlink($target_dir . $foto);
+                            }
+                            $foto = $foto_name;
+                        }
+                    }
                 }
-                $foto = $foto_name;
             }
         }
         
-        $stmt = $db->prepare("UPDATE instruktur SET nama_lengkap = ?, nomor_licensi = ?, spesialisasi = ?, pengalaman_tahun = ?, deskripsi = ?, foto = ?, aktif = ? WHERE id = ?");
-        
-        if ($stmt->execute([$nama_lengkap, $nomor_licensi, $spesialisasi, $pengalaman_tahun, $deskripsi, $foto, $aktif, $id])) {
-            $success = "Instruktur berhasil diupdate!";
-        } else {
-            $error = "Gagal mengupdate instruktur!";
+        try {
+            $stmt = $db->prepare("UPDATE instruktur SET nama_lengkap = ?, nomor_licensi = ?, spesialisasi = ?, pengalaman_tahun = ?, deskripsi = ?, foto = ?, aktif = ? WHERE id = ?");
+            
+            if ($stmt->execute([$nama_lengkap, $nomor_licensi, $spesialisasi, $pengalaman_tahun, $deskripsi, $foto, $aktif, $id])) {
+                $success = "Instruktur berhasil diupdate!";
+            } else {
+                $error = "Gagal mengupdate instruktur! Error: " . implode(", ", $stmt->errorInfo());
+            }
+        } catch (PDOException $e) {
+            $error = "Database error: " . $e->getMessage();
         }
     }
 }
@@ -232,6 +288,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                         <form method="POST" enctype="multipart/form-data" id="instructorForm">
                             <input type="hidden" name="id" id="editId">
                             <input type="hidden" name="current_foto" id="currentFoto">
+                            <input type="hidden" name="add_instruktur" id="addMode" value="1">
                             <input type="hidden" name="edit_instruktur" id="editMode" value="0">
                             
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -385,17 +442,22 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                                     <div class="text-sm text-gray-600 mb-3">
                                         <i class="fas fa-award mr-1"></i><?= $data['pengalaman_tahun'] ?>+ Tahun
                                     </div>
+
+                                    <!-- Rating -->
+                                    <div class="text-yellow-400 text-sm mb-4">
+                                        <?= str_repeat('★', floor($data['rating'] ?? 5)) ?><?= str_repeat('☆', 5 - floor($data['rating'] ?? 5)) ?>
+                                        <span class="text-gray-600 text-xs">(<?= number_format($data['rating'] ?? 0, 1) ?>)</span>
+                                    </div>
+
+                                    <!-- Total Siswa -->
+                                    <div class="text-sm text-gray-600 mb-4">
+                                        <i class="fas fa-users mr-1"></i><?= $data['total_siswa'] ?>+ Siswa
+                                    </div>
                                     
                                     <!-- Description -->
                                     <p class="text-gray-700 text-sm mb-4 line-clamp-2">
                                         <?= htmlspecialchars($data['deskripsi']) ?>
                                     </p>
-                                    
-                                    <!-- Rating (Placeholder for future implementation) -->
-                                    <div class="text-yellow-400 text-sm mb-4">
-                                        <?= str_repeat('★', floor($data['rating'] ?? 5)) ?><?= str_repeat('☆', 5 - floor($data['rating'] ?? 5)) ?>
-                                        <span class="text-gray-600 text-xs">(<?= $data['rating'] ?? '5.0' ?>)</span>
-                                    </div>
                                     
                                     <!-- Actions -->
                                     <div class="flex justify-center space-x-2">
@@ -459,118 +521,97 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
             }
         });
 
-        // Edit Instructor Function
-        function editInstructor(id) {
-            fetch(`get_instruktur_data.php?id=${id}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Fill form with existing data
-                    document.getElementById('editId').value = data.id;
-                    document.getElementById('nama_lengkap').value = data.nama_lengkap;
-                    document.getElementById('nomor_licensi').value = data.nomor_licensi;
-                    document.getElementById('spesialisasi').value = data.spesialisasi;
-                    document.getElementById('pengalaman_tahun').value = data.pengalaman_tahun;
-                    document.getElementById('deskripsi').value = data.deskripsi;
-                    document.getElementById('aktif').checked = data.aktif == 1;
-                    document.getElementById('currentFoto').value = data.foto;
-                    
-                    // Update photo preview
-                    if (data.foto) {
-                        document.getElementById('photoPreview').innerHTML = `
-                            <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                                <img src="../assets/images/instruktur/${data.foto}" alt="Current Photo" class="w-32 h-32 rounded-full object-cover">
-                            </div>
-                        `;
-                    }
-                    
-                    // Change form to edit mode
-                    document.getElementById('editMode').value = '1';
-                    document.getElementById('formTitle').textContent = 'Edit Instruktur';
-                    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>Update Instruktur';
-                    document.getElementById('cancelButton').classList.remove('hidden');
-                    
-                    // Scroll to form
-                    document.getElementById('instructorForm').scrollIntoView({ behavior: 'smooth' });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Gagal memuat data instruktur');
-                });
-        }
-
-        // Reset Form Function
-        function resetForm() {
-            document.getElementById('instructorForm').reset();
-            document.getElementById('editMode').value = '0';
-            document.getElementById('formTitle').textContent = 'Tambah Instruktur Baru';
-            document.getElementById('submitButton').innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Instruktur';
-            document.getElementById('cancelButton').classList.add('hidden');
-            document.getElementById('editId').value = '';
-            document.getElementById('currentFoto').value = '';
-            document.getElementById('photoPreview').innerHTML = `
-                <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
-                    <i class="fas fa-user text-gray-400 text-2xl"></i>
-                </div>
-            `;
-        }
-
-        // Delete Confirmation
-        function confirmDelete(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus instruktur ini?')) {
-                window.location.href = `instruktur.php?delete=${id}`;
+// Edit Instructor Function
+function editInstructor(id) {
+    fetch(`get_instruktur_data.php?id=${id}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-        }
-
-        // Form validation
-        document.getElementById('instructorForm').addEventListener('submit', function(e) {
-            const pengalaman = parseInt(document.getElementById('pengalaman_tahun').value);
+            return response.json();
+        })
+        .then(data => {
+            // Fill form with existing data
+            document.getElementById('editId').value = data.id;
+            document.getElementById('nama_lengkap').value = data.nama_lengkap;
+            document.getElementById('nomor_licensi').value = data.nomor_licensi;
+            document.getElementById('spesialisasi').value = data.spesialisasi;
+            document.getElementById('pengalaman_tahun').value = data.pengalaman_tahun;
+            document.getElementById('deskripsi').value = data.deskripsi;
+            document.getElementById('aktif').checked = data.aktif == 1;
+            document.getElementById('currentFoto').value = data.foto;
             
-            if (pengalaman < 1) {
-                alert('Pengalaman harus minimal 1 tahun!');
-                e.preventDefault();
-                return;
+            // Update photo preview
+            if (data.foto) {
+                document.getElementById('photoPreview').innerHTML = `
+                    <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="../assets/images/instruktur/${data.foto}" alt="Current Photo" class="w-32 h-32 rounded-full object-cover">
+                    </div>
+                `;
+            } else {
+                document.getElementById('photoPreview').innerHTML = `
+                    <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-400 text-2xl"></i>
+                    </div>
+                `;
             }
             
-            if (pengalaman > 50) {
-                alert('Pengalaman maksimal 50 tahun!');
-                e.preventDefault();
-                return;
-            }
+            // Change form to edit mode
+            document.getElementById('editMode').value = '1';
+            document.getElementById('formTitle').textContent = 'Edit Instruktur';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>Update Instruktur';
+            document.getElementById('cancelButton').classList.remove('hidden');
             
-            // File size validation
-            const fotoInput = document.getElementById('foto');
-            if (fotoInput.files.length > 0) {
-                const fileSize = fotoInput.files[0].size / 1024 / 1024; // MB
-                if (fileSize > 2) {
-                    alert('Ukuran file foto maksimal 2MB!');
-                    e.preventDefault();
-                    return;
-                }
-            }
+            // Scroll to form
+            document.getElementById('instructorForm').scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Gagal memuat data instruktur: ' + error.message);
         });
+}
 
-        // Auto-suggest description based on experience and specialization
-        document.getElementById('pengalaman_tahun').addEventListener('input', function() {
-            const pengalaman = parseInt(this.value) || 0;
-            const spesialisasi = document.getElementById('spesialisasi').value;
-            const deskripsi = document.getElementById('deskripsi');
-            
-            if (pengalaman >= 3 && !deskripsi.value) {
-                let suggestion = `Instruktur berpengalaman ${pengalaman} tahun dalam mengajar mengemudi `;
-                
-                if (spesialisasi === 'manual') {
-                    suggestion += 'mobil manual. ';
-                } else if (spesialisasi === 'matic') {
-                    suggestion += 'mobil matic. ';
-                } else {
-                    suggestion += 'baik mobil manual maupun matic. ';
-                }
-                
-                suggestion += 'Bersertifikat dan memiliki metode pengajaran yang menyenangkan.';
-                
-                deskripsi.placeholder = suggestion;
-            }
-        });
+// Form validation dan submission
+document.getElementById('instructorForm').addEventListener('submit', function(e) {
+    // Validasi dasar
+    const nama_lengkap = document.getElementById('nama_lengkap').value.trim();
+    const nomor_licensi = document.getElementById('nomor_licensi').value.trim();
+    const pengalaman = parseInt(document.getElementById('pengalaman_tahun').value);
+    
+    if (!nama_lengkap) {
+        alert('Nama lengkap harus diisi!');
+        e.preventDefault();
+        return;
+    }
+    
+    if (!nomor_licensi) {
+        alert('Nomor lisensi harus diisi!');
+        e.preventDefault();
+        return;
+    }
+    
+    if (pengalaman < 1 || pengalaman > 50) {
+        alert('Pengalaman harus antara 1-50 tahun!');
+        e.preventDefault();
+        return;
+    }
+    
+    // File size validation
+    const fotoInput = document.getElementById('foto');
+    if (fotoInput.files.length > 0) {
+        const fileSize = fotoInput.files[0].size / 1024 / 1024; // MB
+        if (fileSize > 2) {
+            alert('Ukuran file foto maksimal 2MB!');
+            e.preventDefault();
+            return;
+        }
+    }
+    
+    // Show loading state
+    const submitButton = document.getElementById('submitButton');
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+    submitButton.disabled = true;
+});
     </script>
 </body>
 </html>

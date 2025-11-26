@@ -54,9 +54,9 @@ try {
                 <!-- Desktop Menu - DISEDERHANAKAN -->
                 <div class="hidden md:flex items-center space-x-6">
                     <a href="index.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Beranda</a>
-                    <a href="#paket-kursus" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Paket</a>
-                    <a href="#instruktur" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Instruktur</a>
-                    <a href="#testimoni" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Testimoni</a>
+                    <a href="paket-kursus.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Paket</a>
+                    <a href="instruktur.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Instruktur</a>
+                    <a href="testimoni.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Testimoni</a>
                     <a href="#galeri" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Galeri</a>
                     <a href="tentang-kontak.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Tentang & Kontak</a>
                     
@@ -85,13 +85,13 @@ try {
                     <a href="index.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-home mr-3 w-5 text-center"></i>Beranda
                     </a>
-                    <a href="#paket-kursus" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
+                    <a href="paket-kursus.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-gift mr-3 w-5 text-center"></i>Paket Kursus
                     </a>
                     <a href="#instruktur" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-users mr-3 w-5 text-center"></i>Instruktur
                     </a>
-                    <a href="#testimoni" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
+                    <a href="testimoni.php" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
                         <i class="fas fa-star mr-3 w-5 text-center"></i>Testimoni
                     </a>
                     <a href="#galeri" class="text-gray-700 hover:text-blue-600 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 transition duration-300 flex items-center">
