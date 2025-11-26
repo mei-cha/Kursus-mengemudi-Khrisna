@@ -78,7 +78,7 @@ try {
                     <a href="testimoni.php" class="font-medium transition duration-300 <?= isNavActive('testimoni.php', $current_page) ?>">
                         Testimoni
                     </a>
-                    <a href="#galeri" class="font-medium transition duration-300 <?= ($current_page == 'index.php' && isset($_GET['section']) && $_GET['section'] == 'galeri') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' ?>">
+                    <a href="galeri.php" class="font-medium transition duration-300 <?= ($current_page == 'index.php' && isset($_GET['section']) && $_GET['section'] == 'galeri') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' ?>">
                         Galeri
                     </a>
                     <a href="tentang-kontak.php" class="font-medium transition duration-300 <?= isNavActive('tentang-kontak.php', $current_page) ?>">
