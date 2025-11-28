@@ -228,77 +228,84 @@ try {
             </div>
         <?php endif; ?>
 
-        <!-- Add Testimoni Section -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white mt-12">
-            <div class="text-center mb-6">
-                <h3 class="text-2xl font-bold mb-2">Bagikan Pengalaman Anda</h3>
-                <p class="text-blue-100">Ceritakan pengalaman belajar mengemudi Anda di Krishna Driving</p>
+<!-- Add Testimoni Section -->
+<div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white mt-12">
+    <div class="text-center mb-6">
+        <h3 class="text-2xl font-bold mb-2">Bagikan Pengalaman Anda</h3>
+        <p class="text-blue-100">Ceritakan pengalaman belajar mengemudi Anda di Krishna Driving</p>
+    </div>
+    
+    <form id="testimoniForm" action="process/submit_testimoni.php" method="POST" enctype="multipart/form-data" class="max-w-2xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Nama Lengkap *</label>
+                <input type="text" name="nama_siswa" required
+                       class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
+                       placeholder="Nama Anda">
             </div>
-            
-            <form id="testimoniForm" class="max-w-2xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-blue-100 mb-2">Nama Lengkap</label>
-                        <input type="text" name="nama_siswa" required
-                               class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
-                               placeholder="Nama Anda">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-blue-100 mb-2">Paket Kursus</label>
-                        <select name="paket_kursus" required
-                                class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white focus:ring-2 focus:ring-white focus:border-white">
-                            <option value="">Pilih Paket</option>
-                            <option value="Kursus Manual">Kursus Manual</option>
-                            <option value="Kursus Matic">Kursus Matic</option>
-                            <option value="Kursus Kombinasi">Kursus Kombinasi</option>
-                            <option value="Kursus Intensive">Kursus Intensive</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-blue-100 mb-2">Usia</label>
-                        <input type="number" name="usia" min="17" max="70"
-                               class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
-                               placeholder="Usia Anda">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-blue-100 mb-2">Lokasi</label>
-                        <input type="text" name="lokasi" required
-                               class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
-                               placeholder="Kota tempat tinggal">
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-blue-100 mb-2">Rating</label>
-                    <div class="flex justify-center space-x-2" id="ratingStars">
-                        <?php for ($i = 1; $i <= 5; $i++): ?>
-                        <button type="button" class="text-2xl text-gray-300 hover:text-yellow-300 transition duration-200" 
-                                data-rating="<?= $i ?>" onclick="setRating(<?= $i ?>)">
-                            ★
-                        </button>
-                        <?php endfor; ?>
-                    </div>
-                    <input type="hidden" name="rating" id="selectedRating" required>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-blue-100 mb-2">Testimoni</label>
-                    <textarea name="testimoni_text" rows="4" required
-                              class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
-                              placeholder="Ceritakan pengalaman belajar mengemudi Anda..."></textarea>
-                </div>
-
-                <div class="text-center">
-                    <button type="submit" 
-                            class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                        <i class="fas fa-paper-plane mr-2"></i>Kirim Testimoni
-                    </button>
-                </div>
-            </form>
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Paket Kursus *</label>
+                <select name="paket_kursus" required
+                        class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white focus:ring-2 focus:ring-white focus:border-white">
+                    <option value="">Pilih Paket</option>
+                    <option value="Kursus Manual">Kursus Manual</option>
+                    <option value="Kursus Matic">Kursus Matic</option>
+                    <option value="Kursus Kombinasi">Kursus Kombinasi</option>
+                    <option value="Kursus Intensive">Kursus Intensive</option>
+                </select>
+            </div>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Usia</label>
+                <input type="number" name="usia" min="17" max="70"
+                       class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
+                       placeholder="Usia Anda">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-blue-100 mb-2">Lokasi *</label>
+                <input type="text" name="lokasi" required
+                       class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
+                       placeholder="Kota tempat tinggal">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-blue-100 mb-2">Foto Siswa</label>
+            <input type="file" name="foto_siswa" accept="image/*"
+                   class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white file:bg-blue-600 file:border-0 file:text-white file:px-4 file:py-2 file:rounded-lg file:mr-4">
+            <p class="text-xs text-blue-200 mt-1">Format: JPG, JPEG, PNG (max 2MB)</p>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-blue-100 mb-2">Rating *</label>
+            <div class="flex justify-center space-x-2" id="ratingStars">
+                <?php for ($i = 1; $i <= 5; $i++): ?>
+                <button type="button" class="text-2xl text-gray-300 hover:text-yellow-300 transition duration-200" 
+                        data-rating="<?= $i ?>" onclick="setRating(<?= $i ?>)">
+                    ★
+                </button>
+                <?php endfor; ?>
+            </div>
+            <input type="hidden" name="rating" id="selectedRating" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-blue-100 mb-2">Testimoni *</label>
+            <textarea name="testimoni_text" rows="4" required
+                      class="w-full px-3 py-2 bg-blue-500 border border-blue-400 rounded-lg text-white placeholder-blue-200 focus:ring-2 focus:ring-white focus:border-white"
+                      placeholder="Ceritakan pengalaman belajar mengemudi Anda..."></textarea>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" 
+                    class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                <i class="fas fa-paper-plane mr-2"></i>Kirim Testimoni
+            </button>
+        </div>
+    </form>
+</div>
     </div>
 
     <!-- Success Modal -->
@@ -321,63 +328,75 @@ try {
 
     <script>
         // Rating System
-        let currentRating = 0;
+let currentRating = 0;
+
+function setRating(rating) {
+    currentRating = rating;
+    document.getElementById('selectedRating').value = rating;
+    
+    const stars = document.querySelectorAll('#ratingStars button');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.remove('text-gray-300');
+            star.classList.add('text-yellow-400');
+        } else {
+            star.classList.remove('text-yellow-400');
+            star.classList.add('text-gray-300');
+        }
+    });
+}
+
+// Filter functionality
+function filterTestimonials() {
+    const selectedRating = document.getElementById('filter-rating').value;
+    const selectedPaket = document.getElementById('filter-paket').value;
+    
+    const testimonials = document.querySelectorAll('.testimonial-card');
+    let visibleCount = 0;
+    
+    testimonials.forEach(testimonial => {
+        const rating = testimonial.dataset.rating;
+        const paket = testimonial.dataset.paket.toLowerCase();
         
-        function setRating(rating) {
-            currentRating = rating;
-            document.getElementById('selectedRating').value = rating;
-            
-            const stars = document.querySelectorAll('#ratingStars button');
-            stars.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.remove('text-gray-300');
-                    star.classList.add('text-yellow-400');
-                } else {
-                    star.classList.remove('text-yellow-400');
-                    star.classList.add('text-gray-300');
-                }
-            });
+        // Check filters
+        const ratingMatch = selectedRating === 'all' || rating === selectedRating;
+        const paketMatch = selectedPaket === 'all' || paket.includes(selectedPaket.toLowerCase());
+        
+        if (ratingMatch && paketMatch) {
+            testimonial.style.display = 'block';
+            visibleCount++;
+        } else {
+            testimonial.style.display = 'none';
         }
+    });
+}
 
-        // Filter functionality
-        function filterTestimonials() {
-            const selectedRating = document.getElementById('filter-rating').value;
-            const selectedPaket = document.getElementById('filter-paket').value;
-            
-            const testimonials = document.querySelectorAll('.testimonial-card');
-            let visibleCount = 0;
-            
-            testimonials.forEach(testimonial => {
-                const rating = testimonial.dataset.rating;
-                const paket = testimonial.dataset.paket.toLowerCase();
-                
-                // Check filters
-                const ratingMatch = selectedRating === 'all' || rating === selectedRating;
-                const paketMatch = selectedPaket === 'all' || paket.includes(selectedPaket.toLowerCase());
-                
-                if (ratingMatch && paketMatch) {
-                    testimonial.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    testimonial.style.display = 'none';
-                }
-            });
-        }
-
-        // Form submission
-        document.getElementById('testimoniForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!currentRating) {
-                alert('Silakan berikan rating!');
-                return;
-            }
-            
-            // Simulasi pengiriman data (dalam implementasi nyata, gunakan AJAX)
-            const formData = new FormData(this);
-            formData.append('rating', currentRating);
-            formData.append('tanggal_testimoni', new Date().toISOString().split('T')[0]);
-            
+// Form submission dengan AJAX
+document.getElementById('testimoniForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!currentRating) {
+        alert('Silakan berikan rating!');
+        return;
+    }
+    
+    // Validasi form
+    const formData = new FormData(this);
+    
+    // Show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengirim...';
+    submitButton.disabled = true;
+    
+    // Kirim data via AJAX
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             // Tampilkan modal sukses
             document.getElementById('successModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -385,34 +404,45 @@ try {
             // Reset form
             this.reset();
             setRating(0);
-        });
-
-        function closeSuccessModal() {
-            document.getElementById('successModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
+        } else {
+            alert('Error: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat mengirim testimoni.');
+    })
+    .finally(() => {
+        // Reset button state
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
+});
 
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Filter events
-            document.getElementById('filter-rating').addEventListener('change', filterTestimonials);
-            document.getElementById('filter-paket').addEventListener('change', filterTestimonials);
-            
-            // Close modal when clicking outside
-            document.getElementById('successModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeSuccessModal();
-                }
-            });
-            
-            // Mobile menu
-            document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-                const mobileMenu = document.getElementById('mobile-menu');
-                if (mobileMenu) {
-                    mobileMenu.classList.toggle('hidden');
-                }
-            });
+function closeSuccessModal() {
+    document.getElementById('successModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter events
+    const filterRating = document.getElementById('filter-rating');
+    const filterPaket = document.getElementById('filter-paket');
+    
+    if (filterRating) filterRating.addEventListener('change', filterTestimonials);
+    if (filterPaket) filterPaket.addEventListener('change', filterTestimonials);
+    
+    // Close modal when clicking outside
+    const successModal = document.getElementById('successModal');
+    if (successModal) {
+        successModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSuccessModal();
+            }
         });
+    }
+});
     </script>
 </body>
 </html>

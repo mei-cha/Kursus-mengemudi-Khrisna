@@ -1,5 +1,6 @@
 <?php
 require_once 'config/database.php';
+include 'includes/header.php';
 $database = new Database();
 $db = $database->getConnection();
 
@@ -39,45 +40,7 @@ try {
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-3">
-                <!-- Logo -->
-                <div class="flex items-center">
-                    <a href="index.php" class="flex items-center">
-                        <i class="fas fa-car text-2xl text-blue-600 mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">Krishna Driving</span>
-                    </a>
-                </div>
-
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="index.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Beranda</a>
-                    <a href="paket-kursus.php" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Paket Kursus</a>
-                    <a href="instruktur.php" class="text-blue-600 font-medium transition duration-300">Instruktur</a>
-                    <a href="index.php#testimoni" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Testimoni</a>
-                    <a href="index.php#tentang-kontak" class="text-gray-700 hover:text-blue-600 font-medium transition duration-300">Tentang & Kontak</a>
-                    
-                    <!-- Menu Cek Status -->
-                    <a href="cek-status.php" class="flex items-center text-gray-700 hover:text-blue-600 font-medium transition duration-300">
-                        <i class="fas fa-search mr-1 text-sm"></i>Cek Status
-                    </a>
-                    
-                    <!-- Tombol CTA -->
-                    <a href="index.php#daftar" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 shadow-md hover:shadow-lg">
-                        <i class="fas fa-edit mr-1"></i>Daftar
-                    </a>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600 transition duration-300 p-2 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    
 
     <!-- Header Section -->
     <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">

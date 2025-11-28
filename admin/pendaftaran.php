@@ -10,6 +10,50 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 $db = (new Database())->getConnection();
 
+// Handle tambah siswa manual
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
+    // Generate nomor pendaftaran
+    $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+    
+    $data = [
+        'nomor_pendaftaran' => $nomor_pendaftaran,
+        'nama_lengkap' => $_POST['nama_lengkap'],
+        'email' => $_POST['email'],
+        'telepon' => $_POST['telepon'],
+        'alamat' => $_POST['alamat'],
+        'tanggal_lahir' => $_POST['tanggal_lahir'],
+        'jenis_kelamin' => $_POST['jenis_kelamin'],
+        'paket_kursus_id' => $_POST['paket_kursus_id'],
+        'tipe_mobil' => $_POST['tipe_mobil'],
+        'jadwal_preferensi' => $_POST['jadwal_preferensi'],
+        'pengalaman_mengemudi' => $_POST['pengalaman_mengemudi'],
+        'kondisi_medis' => $_POST['kondisi_medis'],
+        'kontak_darurat' => $_POST['kontak_darurat'],
+        'nama_kontak_darurat' => $_POST['nama_kontak_darurat'],
+        'status_pendaftaran' => 'dikonfirmasi', // Langsung dikonfirmasi karena input manual
+        'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin'
+    ];
+    
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO pendaftaran_siswa 
+            (nomor_pendaftaran, nama_lengkap, email, telepon, alamat, tanggal_lahir, 
+             jenis_kelamin, paket_kursus_id, tipe_mobil, jadwal_preferensi, 
+             pengalaman_mengemudi, kondisi_medis, kontak_darurat, nama_kontak_darurat,
+             status_pendaftaran, catatan_admin) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        if ($stmt->execute(array_values($data))) {
+            $success = "Siswa berhasil ditambahkan dengan nomor pendaftaran: " . $nomor_pendaftaran;
+        } else {
+            $error = "Gagal menambahkan siswa!";
+        }
+    } catch (PDOException $e) {
+        $error = "Error: " . $e->getMessage();
+    }
+}
+
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $id = $_POST['id'];
@@ -53,8 +97,9 @@ if ($status_filter) {
 }
 
 if ($search) {
-    $query .= " AND (ps.nama_lengkap LIKE ? OR ps.nomor_pendaftaran LIKE ? OR ps.email LIKE ?)";
+    $query .= " AND (ps.nama_lengkap LIKE ? OR ps.nomor_pendaftaran LIKE ? OR ps.email LIKE ? OR ps.telepon LIKE ?)";
     $search_term = "%$search%";
+    $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
@@ -72,6 +117,9 @@ $status_counts = $db->query("
     FROM pendaftaran_siswa 
     GROUP BY status_pendaftaran
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+// Get paket kursus untuk form tambah siswa - DIUBAH: hilangkan WHERE status
+$paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -81,20 +129,6 @@ $status_counts = $db->query("
     <title>Kelola Pendaftaran - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .sidebar {
-            transition: all 0.3s ease;
-        }
-        .sidebar.collapsed {
-            width: 70px;
-        }
-        .sidebar.collapsed .sidebar-text {
-            display: none;
-        }
-        .main-content {
-            transition: all 0.3s ease;
-        }
-    </style>
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen">
@@ -132,6 +166,167 @@ $status_counts = $db->query("
                 </div>
                 <?php endif; ?>
 
+                <!-- Tambah Siswa Manual Button -->
+                <div class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Tambah Siswa</h3>
+                                <p class="text-gray-600">Untuk pendaftaran langsung di kantor</p>
+                            </div>
+                            <button onclick="toggleTambahForm()" 
+                                    class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300">
+                                <i class="fas fa-user-plus mr-2"></i>Tambah Siswa
+                            </button>
+                        </div>
+
+                        <!-- Form Tambah Siswa (Hidden by default) -->
+                        <div id="tambahForm" class="mt-6 hidden">
+                            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <input type="hidden" name="tambah_siswa" value="1">
+                                
+                                <div class="space-y-4">
+                                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Pribadi</h4>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
+                                        <input type="text" name="nama_lengkap" required
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="Nama lengkap siswa">
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                            <input type="email" name="email" required
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                   placeholder="email@contoh.com">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Telepon *</label>
+                                            <input type="tel" name="telepon" required
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                   placeholder="08123456789">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Lahir *</label>
+                                            <input type="date" name="tanggal_lahir" required
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin *</label>
+                                            <select name="jenis_kelamin" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="L">Laki-laki</option>
+                                                <option value="P">Perempuan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Alamat *</label>
+                                        <textarea name="alamat" required rows="3"
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                  placeholder="Alamat lengkap"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Kursus</h4>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Paket Kursus *</label>
+                                        <select name="paket_kursus_id" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="">Pilih Paket</option>
+                                            <?php foreach ($paket_kursus as $paket): ?>
+                                            <option value="<?= $paket['id'] ?>">
+                                                <?= htmlspecialchars($paket['nama_paket']) ?> - Rp <?= number_format($paket['harga'], 0, ',', '.') ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Mobil *</label>
+                                            <select name="tipe_mobil" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="manual">Manual</option>
+                                                <option value="matic">Matic</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Jadwal Preferensi *</label>
+                                            <select name="jadwal_preferensi" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="pagi">Pagi</option>
+                                                <option value="siang">Siang</option>
+                                                <option value="sore">Sore</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Pengalaman Mengemudi</label>
+                                        <select name="pengalaman_mengemudi"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="pemula">Pemula</option>
+                                            <option value="pernah_kursus">Pernah Kursus</option>
+                                            <option value="pernah_ujian">Pernah Ujian</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Tambahan</h4>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Kondisi Medis</label>
+                                        <textarea name="kondisi_medis" rows="2"
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                  placeholder="Kondisi medis khusus (jika ada)"></textarea>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kontak Darurat</label>
+                                            <input type="text" name="nama_kontak_darurat"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                   placeholder="Nama kontak darurat">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Telepon Darurat</label>
+                                            <input type="tel" name="kontak_darurat"
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                   placeholder="08123456789">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Admin</label>
+                                        <textarea name="catatan_admin" rows="2"
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                  placeholder="Catatan tambahan"></textarea>
+                                    </div>
+                                    
+                                    <div class="flex space-x-3 pt-4">
+                                        <button type="button" onclick="toggleTambahForm()" 
+                                                class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-bold hover:bg-gray-700 transition duration-300">
+                                            Batal
+                                        </button>
+                                        <button type="submit" 
+                                                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-300">
+                                            <i class="fas fa-save mr-2"></i>Simpan Data
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filters -->
                 <div class="bg-white rounded-lg shadow mb-6">
                     <div class="p-6">
@@ -139,7 +334,7 @@ $status_counts = $db->query("
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
                                 <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" 
-                                       placeholder="Cari nama, no. pendaftaran, email..."
+                                       placeholder="Cari nama, no. pendaftaran, email, telepon..."
                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
@@ -233,8 +428,8 @@ $status_counts = $db->query("
                                             <div class="text-sm text-gray-500"><?= $data['email'] ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket']) ?></div>
-                                            <div class="text-sm text-gray-500">Rp <?= number_format($data['harga'], 0, ',', '.') ?></div>
+                                            <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket'] ?? '-') ?></div>
+                                            <div class="text-sm text-gray-500">Rp <?= number_format($data['harga'] ?? 0, 0, ',', '.') ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             <?= date('d M Y', strtotime($data['dibuat_pada'])) ?>
@@ -258,21 +453,21 @@ $status_counts = $db->query("
                                             <div class="flex space-x-2">
                                                 <!-- View Button -->
                                                 <button onclick="viewDetail(<?= $data['id'] ?>)" 
-                                                        class="text-blue-600 hover:text-blue-900"
+                                                        class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                                                         title="Lihat Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                                 
                                                 <!-- Edit Status Button -->
                                                 <button onclick="editStatus(<?= $data['id'] ?>, '<?= $data['status_pendaftaran'] ?>', `<?= htmlspecialchars($data['catatan_admin'] ?? '') ?>`)" 
-                                                        class="text-green-600 hover:text-green-900"
+                                                        class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
                                                         title="Edit Status">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 
                                                 <!-- Delete Button -->
                                                 <button onclick="confirmDelete(<?= $data['id'] ?>)" 
-                                                        class="text-red-600 hover:text-red-900"
+                                                        class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                                                         title="Hapus">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -296,7 +491,7 @@ $status_counts = $db->query("
     </div>
 
     <!-- View Detail Modal -->
-    <div id="detailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div id="detailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <div class="flex justify-between items-center pb-3 border-b">
@@ -313,7 +508,7 @@ $status_counts = $db->query("
     </div>
 
     <!-- Edit Status Modal -->
-    <div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <form method="POST" id="statusForm">
                 <input type="hidden" name="id" id="editId">
@@ -361,9 +556,19 @@ $status_counts = $db->query("
         </div>
     </div>
 
-    <!-- sidebar -->
-    <script src="../assets/js/sidebar.js"></script>
     <script>
+        // Toggle form tambah siswa
+        function toggleTambahForm() {
+            const form = document.getElementById('tambahForm');
+            form.classList.toggle('hidden');
+        }
+
+        // Sidebar Toggle
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+        });
+
         // View Detail Function
         function viewDetail(id) {
             fetch(`pendaftaran_detail.php?id=${id}`)
@@ -413,6 +618,14 @@ $status_counts = $db->query("
                 closeStatusModal();
             }
         }
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+            const successMessage = document.querySelector('.bg-green-100');
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }
+        }, 5000);
     </script>
 </body>
 </html>

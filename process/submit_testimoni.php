@@ -1,5 +1,5 @@
 <?php
-require_once 'config/database.php';
+require_once '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $database = new Database();
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $foto_siswa = null;
     if (isset($_FILES['foto_siswa']) && $_FILES['foto_siswa']['error'] === 0) {
         $foto_name = time() . '_' . basename($_FILES['foto_siswa']['name']);
-        $target_dir = "assets/images/testimoni/";
+        $target_dir = "../assets/images/testimoni/";
         
         // Create directory if not exists
         if (!is_dir($target_dir)) {
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
-        // Insert data ke database
+        // Insert data ke database dengan status 'menunggu'
         $stmt = $db->prepare("INSERT INTO testimoni (nama_siswa, paket_kursus, rating, testimoni_text, foto_siswa, usia, lokasi, tanggal_testimoni, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'menunggu')");
         
         if ($stmt->execute([$nama_siswa, $paket_kursus, $rating, $testimoni_text, $foto_siswa, $usia, $lokasi, $tanggal_testimoni])) {
