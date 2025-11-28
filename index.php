@@ -9,7 +9,7 @@
         <p class="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto leading-relaxed">
             Belajar mengemudi dengan instruktur berpengalaman, metode terbaik, dan garansi sampai bisa
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-   center">
             <a href="#daftar" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold hover:bg-gray-100 transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                 <i class="fas fa-edit mr-2"></i>Daftar Sekarang
             </a>
@@ -61,22 +61,22 @@
 </section>
 
 <!-- Informasi Kursus Section - DISEDERHANAKAN -->
-<section id="paket-kursus" class="py-16 bg-white">
+    <section id="paket-kursus" class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-12">
+        <div class="text-center mb-16">
             <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Pilihan Paket Kursus</h2>
             <p class="text-xl text-gray-600 max-w-2xl mx-auto">Pilih kategori paket yang sesuai dengan kebutuhan belajar mengemudi Anda</p>
         </div>
         
-        <!-- Kategori Paket -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Semua Kartu Paket Menggunakan Warna Biru -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <!-- Paket Reguler -->
-            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
                 <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-car text-2xl"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Paket Reguler</h3>
-                <p class="text-blue-100 mb-4 text-sm">Kursus standar dengan jadwal reguler</p>
+                <p class="text-blue-100 mb-9 text-sm">Kursus standar dengan jadwal reguler</p>
                 <div class="text-2xl font-bold mb-4">Mulai Rp 550rb</div>
                 <a href="paket-kursus.php#reguler" 
                    class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
@@ -85,49 +85,49 @@
             </div>
 
             <!-- Paket Campuran -->
-            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
                 <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-cogs text-2xl"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Paket Campuran</h3>
-                <p class="text-green-100 mb-4 text-sm">Belajar manual & matic dalam satu paket</p>
+                <p class="text-blue-100 mb-4 text-sm">Belajar manual & matic dalam satu paket</p>
                 <div class="text-2xl font-bold mb-4">Mulai Rp 650rb</div>
                 <a href="paket-kursus.php#campuran" 
-                   class="block w-full bg-white text-green-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                   class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
                     Lihat Detail
                 </a>
             </div>
 
             <!-- Paket Extra -->
-            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
                 <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-moon text-2xl"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Paket Extra</h3>
-                <p class="text-purple-100 mb-4 text-sm">Kursus malam & hari libur</p>
+                <p class="text-blue-100 mb-9 text-sm">Kursus malam & hari libur</p>
                 <div class="text-2xl font-bold mb-4">Mulai Rp 650rb</div>
                 <a href="paket-kursus.php#extra" 
-                   class="block w-full bg-white text-purple-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                   class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
                     Lihat Detail
                 </a>
             </div>
 
             <!-- Paket Pelancaran -->
-            <div class="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
                 <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-bolt text-2xl"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">Paket Pelancaran</h3>
-                <p class="text-orange-100 mb-4 text-sm">Kursus singkat untuk yang sudah punya dasar</p>
+                <p class="text-blue-100 mb-4 text-sm">Kursus singkat untuk yang sudah punya dasar</p>
                 <div class="text-2xl font-bold mb-4">Mulai Rp 350rb</div>
                 <a href="paket-kursus.php#pelancaran" 
-                   class="block w-full bg-white text-orange-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                   class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
                     Lihat Detail
                 </a>
             </div>
         </div>
 
-        <!-- CTA -->
+        <!-- CTA Tetap Biru -->
         <div class="text-center">
             <a href="paket-kursus.php" 
                class="inline-flex items-center bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-300 shadow-lg hover:shadow-xl">

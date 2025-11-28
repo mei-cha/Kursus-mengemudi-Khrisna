@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mt-6 text-center">
                     <p class="text-sm text-gray-600">
                         Lupa nomor pendaftaran? 
-                        <a href="index.php#kontak" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="tentang-kontak.php" class="text-blue-600 hover:text-blue-800 font-medium">
                             Hubungi kami
                         </a>
                     </p>
@@ -274,7 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mt-6 text-center">
                     <p class="text-gray-600">
                         Butuh bantuan? 
-                        <a href="index.php#kontak" class="text-blue-600 hover:text-blue-800 font-medium">
+                        <a href="tentang-kontak.php" class="text-blue-600 hover:text-blue-800 font-medium">
                             Hubungi customer service kami
                         </a>
                     </p>
