@@ -14,7 +14,7 @@ $db = (new Database())->getConnection();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
     // Generate nomor pendaftaran
     $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-    
+
     $data = [
         'nomor_pendaftaran' => $nomor_pendaftaran,
         'nama_lengkap' => $_POST['nama_lengkap'],
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
         'status_pendaftaran' => 'dikonfirmasi', // Langsung dikonfirmasi karena input manual
         'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin'
     ];
-    
+
     try {
         $stmt = $db->prepare("
             INSERT INTO pendaftaran_siswa 
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
              status_pendaftaran, catatan_admin) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        
+
         if ($stmt->execute(array_values($data))) {
             $success = "Siswa berhasil ditambahkan dengan nomor pendaftaran: " . $nomor_pendaftaran;
         } else {
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $id = $_POST['id'];
     $status = $_POST['status'];
     $catatan = $_POST['catatan_admin'] ?? '';
-    
+
     $stmt = $db->prepare("UPDATE pendaftaran_siswa SET status_pendaftaran = ?, catatan_admin = ? WHERE id = ?");
     if ($stmt->execute([$status, $catatan, $id])) {
         $success = "Status pendaftaran berhasil diupdate!";
@@ -71,32 +71,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    
+
     try {
         // Mulai transaksi
         $db->beginTransaction();
-        
+
         // 1. Hapus dulu data evaluasi_kemajuan terkait
         $stmt1 = $db->prepare("DELETE FROM evaluasi_kemajuan WHERE pendaftaran_id = ?");
         $stmt1->execute([$id]);
-        
+
         // 2. Hapus data jadwal_kursus terkait
         $stmt2 = $db->prepare("DELETE FROM jadwal_kursus WHERE pendaftaran_id = ?");
         $stmt2->execute([$id]);
-        
+
         // 3. Hapus data pembayaran terkait (jika ada tabel pembayaran)
         // $stmt3 = $db->prepare("DELETE FROM pembayaran WHERE pendaftaran_id = ?");
         // $stmt3->execute([$id]);
-        
+
         // 4. Baru hapus data pendaftaran
         $stmt4 = $db->prepare("DELETE FROM pendaftaran_siswa WHERE id = ?");
         $stmt4->execute([$id]);
-        
+
         // Commit transaksi
         $db->commit();
-        
+
         $success = "Pendaftaran berhasil dihapus beserta data terkait!";
-        
     } catch (PDOException $e) {
         // Rollback jika ada error
         $db->rollBack();
@@ -148,13 +147,32 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Pendaftaran - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+
+        .main-content {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <!-- Sidebar -->
@@ -184,15 +202,15 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
             <!-- Content -->
             <main class="flex-1 overflow-y-auto p-6">
                 <?php if (isset($success)): ?>
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    <?= $success ?>
-                </div>
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                        <?= $success ?>
+                    </div>
                 <?php endif; ?>
 
                 <?php if (isset($error)): ?>
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    <?= $error ?>
-                </div>
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        <?= $error ?>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Tambah Siswa Manual Button -->
@@ -203,8 +221,8 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                                 <h3 class="text-lg font-medium text-gray-900">Tambah Siswa</h3>
                                 <p class="text-gray-600">Untuk pendaftaran langsung di kantor</p>
                             </div>
-                            <button onclick="toggleTambahForm()" 
-                                    class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300">
+                            <button onclick="toggleTambahForm()"
+                                class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300">
                                 <i class="fas fa-user-plus mr-2"></i>Tambah Siswa
                             </button>
                         </div>
@@ -213,77 +231,77 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                         <div id="tambahForm" class="mt-6 hidden">
                             <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <input type="hidden" name="tambah_siswa" value="1">
-                                
+
                                 <div class="space-y-4">
                                     <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Pribadi</h4>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
                                         <input type="text" name="nama_lengkap" required
-                                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                               placeholder="Nama lengkap siswa">
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Nama lengkap siswa">
                                     </div>
-                                    
+
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                                             <input type="email" name="email" required
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                   placeholder="email@contoh.com">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="email@contoh.com">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Telepon *</label>
                                             <input type="tel" name="telepon" required
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                   placeholder="08123456789">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="08123456789">
                                         </div>
                                     </div>
-                                    
+
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Lahir *</label>
                                             <input type="date" name="tanggal_lahir" required
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin *</label>
                                             <select name="jenis_kelamin" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="L">Laki-laki</option>
                                                 <option value="P">Perempuan</option>
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Alamat *</label>
                                         <textarea name="alamat" required rows="3"
-                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                  placeholder="Alamat lengkap"></textarea>
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Alamat lengkap"></textarea>
                                     </div>
                                 </div>
-                                
+
                                 <div class="space-y-4">
                                     <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Kursus</h4>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Paket Kursus *</label>
                                         <select name="paket_kursus_id" required
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">Pilih Paket</option>
                                             <?php foreach ($paket_kursus as $paket): ?>
-                                            <option value="<?= $paket['id'] ?>">
-                                                <?= htmlspecialchars($paket['nama_paket']) ?> - Rp <?= number_format($paket['harga'], 0, ',', '.') ?>
-                                            </option>
+                                                <option value="<?= $paket['id'] ?>">
+                                                    <?= htmlspecialchars($paket['nama_paket']) ?> - Rp <?= number_format($paket['harga'], 0, ',', '.') ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Mobil *</label>
                                             <select name="tipe_mobil" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="manual">Manual</option>
                                                 <option value="matic">Matic</option>
                                             </select>
@@ -291,62 +309,62 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Jadwal Preferensi *</label>
                                             <select name="jadwal_preferensi" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="pagi">Pagi</option>
                                                 <option value="siang">Siang</option>
                                                 <option value="sore">Sore</option>
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Pengalaman Mengemudi</label>
                                         <select name="pengalaman_mengemudi"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="pemula">Pemula</option>
                                             <option value="pernah_kursus">Pernah Kursus</option>
                                             <option value="pernah_ujian">Pernah Ujian</option>
                                         </select>
                                     </div>
-                                    
+
                                     <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Tambahan</h4>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Kondisi Medis</label>
                                         <textarea name="kondisi_medis" rows="2"
-                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                  placeholder="Kondisi medis khusus (jika ada)"></textarea>
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Kondisi medis khusus (jika ada)"></textarea>
                                     </div>
-                                    
+
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kontak Darurat</label>
                                             <input type="text" name="nama_kontak_darurat"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                   placeholder="Nama kontak darurat">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="Nama kontak darurat">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Telepon Darurat</label>
                                             <input type="tel" name="kontak_darurat"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                   placeholder="08123456789">
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                placeholder="08123456789">
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Admin</label>
                                         <textarea name="catatan_admin" rows="2"
-                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                  placeholder="Catatan tambahan"></textarea>
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="Catatan tambahan"></textarea>
                                     </div>
-                                    
+
                                     <div class="flex space-x-3 pt-4">
-                                        <button type="button" onclick="toggleTambahForm()" 
-                                                class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-bold hover:bg-gray-700 transition duration-300">
+                                        <button type="button" onclick="toggleTambahForm()"
+                                            class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-bold hover:bg-gray-700 transition duration-300">
                                             Batal
                                         </button>
-                                        <button type="submit" 
-                                                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-300">
+                                        <button type="submit"
+                                            class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-300">
                                             <i class="fas fa-save mr-2"></i>Simpan Data
                                         </button>
                                     </div>
@@ -362,9 +380,9 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                         <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
-                                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" 
-                                       placeholder="Cari nama, no. pendaftaran, email, telepon..."
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
+                                    placeholder="Cari nama, no. pendaftaran, email, telepon..."
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -399,8 +417,8 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                         'selesai' => ['color' => 'green', 'icon' => 'check', 'label' => 'Selesai'],
                         'dibatalkan' => ['color' => 'red', 'icon' => 'times', 'label' => 'Dibatalkan']
                     ];
-                    
-                    foreach ($status_info as $status => $info): 
+
+                    foreach ($status_info as $status => $info):
                         $count = 0;
                         foreach ($status_counts as $sc) {
                             if ($sc['status_pendaftaran'] === $status) {
@@ -409,13 +427,13 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                             }
                         }
                     ?>
-                    <div class="bg-white rounded-lg shadow p-4 text-center">
-                        <div class="p-2 bg-<?= $info['color'] ?>-100 rounded-lg inline-block mb-2">
-                            <i class="fas fa-<?= $info['icon'] ?> text-<?= $info['color'] ?>-600"></i>
+                        <div class="bg-white rounded-lg shadow p-4 text-center">
+                            <div class="p-2 bg-<?= $info['color'] ?>-100 rounded-lg inline-block mb-2">
+                                <i class="fas fa-<?= $info['icon'] ?> text-<?= $info['color'] ?>-600"></i>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-900"><?= $count ?></div>
+                            <div class="text-sm text-gray-600"><?= $info['label'] ?></div>
                         </div>
-                        <div class="text-2xl font-bold text-gray-900"><?= $count ?></div>
-                        <div class="text-sm text-gray-600"><?= $info['label'] ?></div>
-                    </div>
                     <?php endforeach; ?>
                 </div>
 
@@ -431,7 +449,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -447,62 +465,62 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <?php if (count($pendaftaran) > 0): ?>
                                     <?php foreach ($pendaftaran as $data): ?>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= $data['nomor_pendaftaran'] ?></div>
-                                            <div class="text-sm text-gray-500"><?= $data['telepon'] ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($data['nama_lengkap']) ?></div>
-                                            <div class="text-sm text-gray-500"><?= $data['email'] ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket'] ?? '-') ?></div>
-                                            <div class="text-sm text-gray-500">Rp <?= number_format($data['harga'] ?? 0, 0, ',', '.') ?></div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <?= date('d M Y', strtotime($data['dibuat_pada'])) ?>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <?php
-                                            $status_badges = [
-                                                'baru' => 'bg-yellow-100 text-yellow-800',
-                                                'dikonfirmasi' => 'bg-blue-100 text-blue-800',
-                                                'diproses' => 'bg-purple-100 text-purple-800',
-                                                'selesai' => 'bg-green-100 text-green-800',
-                                                'dibatalkan' => 'bg-red-100 text-red-800'
-                                            ];
-                                            $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text-gray-800';
-                                            ?>
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
-                                                <?= ucfirst($data['status_pendaftaran']) ?>
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div class="flex space-x-2">
-                                                <!-- View Button -->
-                                                <button onclick="viewDetail(<?= $data['id'] ?>)" 
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900"><?= $data['nomor_pendaftaran'] ?></div>
+                                                <div class="text-sm text-gray-500"><?= $data['telepon'] ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($data['nama_lengkap']) ?></div>
+                                                <div class="text-sm text-gray-500"><?= $data['email'] ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket'] ?? '-') ?></div>
+                                                <div class="text-sm text-gray-500">Rp <?= number_format($data['harga'] ?? 0, 0, ',', '.') ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <?= date('d M Y', strtotime($data['dibuat_pada'])) ?>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <?php
+                                                $status_badges = [
+                                                    'baru' => 'bg-yellow-100 text-yellow-800',
+                                                    'dikonfirmasi' => 'bg-blue-100 text-blue-800',
+                                                    'diproses' => 'bg-purple-100 text-purple-800',
+                                                    'selesai' => 'bg-green-100 text-green-800',
+                                                    'dibatalkan' => 'bg-red-100 text-red-800'
+                                                ];
+                                                $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text-gray-800';
+                                                ?>
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
+                                                    <?= ucfirst($data['status_pendaftaran']) ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex space-x-2">
+                                                    <!-- View Button -->
+                                                    <button onclick="viewDetail(<?= $data['id'] ?>)"
                                                         class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                                                         title="Lihat Detail">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                
-                                                <!-- Edit Status Button -->
-                                                <button onclick="editStatus(<?= $data['id'] ?>, '<?= $data['status_pendaftaran'] ?>', `<?= htmlspecialchars($data['catatan_admin'] ?? '') ?>`)" 
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+
+                                                    <!-- Edit Status Button -->
+                                                    <button onclick="editStatus(<?= $data['id'] ?>, '<?= $data['status_pendaftaran'] ?>', `<?= htmlspecialchars($data['catatan_admin'] ?? '') ?>`)"
                                                         class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
                                                         title="Edit Status">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                
-                                                <!-- Delete Button -->
-                                                <button onclick="confirmDelete(<?= $data['id'] ?>)" 
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+
+                                                    <!-- Delete Button -->
+                                                    <button onclick="confirmDelete(<?= $data['id'] ?>)"
                                                         class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                                                         title="Hapus">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
@@ -542,19 +560,19 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
             <form method="POST" id="statusForm">
                 <input type="hidden" name="id" id="editId">
                 <input type="hidden" name="update_status" value="1">
-                
+
                 <div class="flex justify-between items-center pb-3 border-b">
                     <h3 class="text-xl font-bold text-gray-900">Update Status</h3>
                     <button type="button" onclick="closeStatusModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
-                
+
                 <div class="mt-4 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                         <select name="status" id="editStatus" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="baru">Baru</option>
                             <option value="dikonfirmasi">Dikonfirmasi</option>
                             <option value="diproses">Diproses</option>
@@ -562,22 +580,22 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                             <option value="dibatalkan">Dibatalkan</option>
                         </select>
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Admin</label>
                         <textarea name="catatan_admin" id="editCatatan" rows="3"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Tambahkan catatan..."></textarea>
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Tambahkan catatan..."></textarea>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                    <button type="button" onclick="closeStatusModal()" 
-                            class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">
+                    <button type="button" onclick="closeStatusModal()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">
                         Batal
                     </button>
-                    <button type="submit" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
                         Update Status
                     </button>
                 </div>
@@ -585,18 +603,14 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         </div>
     </div>
 
+    <!-- sidebar -->
+    <script src="../assets/js/sidebar.js"></script>
     <script>
         // Toggle form tambah siswa
         function toggleTambahForm() {
             const form = document.getElementById('tambahForm');
             form.classList.toggle('hidden');
         }
-
-        // Sidebar Toggle
-        document.getElementById('sidebar-toggle').addEventListener('click', function() {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('collapsed');
-        });
 
         // View Detail Function
         function viewDetail(id) {
@@ -639,7 +653,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         window.onclick = function(event) {
             const detailModal = document.getElementById('detailModal');
             const statusModal = document.getElementById('statusModal');
-            
+
             if (event.target === detailModal) {
                 closeDetailModal();
             }
@@ -657,4 +671,5 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         }, 5000);
     </script>
 </body>
+
 </html>

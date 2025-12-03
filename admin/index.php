@@ -21,6 +21,7 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,17 +32,21 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
         .sidebar {
             transition: all 0.3s ease;
         }
+
         .sidebar.collapsed {
             width: 70px;
         }
+
         .sidebar.collapsed .sidebar-text {
             display: none;
         }
+
         .main-content {
             transition: all 0.3s ease;
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="flex h-screen absolute inset-0">
         <!-- Sidebar -->
@@ -75,7 +80,7 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                     <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition duration-300">
                         <div class="flex items-center">
                             <div class="p-3 bg-blue-100 rounded-lg">
-                                <i class="fas fa-users text-blue-600 text-xl"></i>
+                                <i class="fas fa-users" style="color: #2563eb; font-size: 1.5rem;"></i>
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Total Pendaftaran</p>
@@ -83,11 +88,11 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition duration-300">
                         <div class="flex items-center">
                             <div class="p-3 bg-yellow-100 rounded-lg">
-                                <i class="fas fa-user-plus text-yellow-600 text-xl"></i>
+                                <i class="fas fa-user-plus" style="color: #d97706; font-size: 1.5rem;"></i>
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Pendaftaran Baru</p>
@@ -95,11 +100,11 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition duration-300">
                         <div class="flex items-center">
                             <div class="p-3 bg-green-100 rounded-lg">
-                                <i class="fas fa-star text-green-600 text-xl"></i>
+                                <i class="fas fa-star" style="color: #059669; font-size: 1.5rem;"></i>
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Total Testimoni</p>
@@ -107,11 +112,11 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition duration-300">
                         <div class="flex items-center">
                             <div class="p-3 bg-red-100 rounded-lg">
-                                <i class="fas fa-clock text-red-600 text-xl"></i>
+                                <i class="fas fa-clock" style="color: #dc2626; font-size: 1.5rem;"></i>
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Testimoni Menunggu</p>
@@ -121,83 +126,83 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                     </div>
                 </div>
 
-<!-- Recent Registrations -->
-<div class="bg-white rounded-lg shadow">
-    <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex justify-between items-center">
-            <h3 class="text-lg font-medium text-gray-900">Pendaftaran Terbaru</h3>
-            <a href="pendaftaran.php" class="text-blue-600 hover:text-blue-900 font-medium text-sm">
-                Lihat semua →
-            </a>
-        </div>
-    </div>
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Pendaftaran</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                <?php foreach ($recent_pendaftaran as $pendaftaran): ?>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900"><?= $pendaftaran['nomor_pendaftaran'] ?></div>
-                        <div class="text-sm text-gray-500"><?= $pendaftaran['telepon'] ?></div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($pendaftaran['nama_lengkap']) ?></div>
-                        <div class="text-sm text-gray-500"><?= $pendaftaran['email'] ?></div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <?= $pendaftaran['telepon'] ?>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <?= date('d M Y', strtotime($pendaftaran['dibuat_pada'])) ?>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <?php
-                        $status_badges = [
-                            'baru' => 'bg-yellow-100 text-yellow-800',
-                            'dikonfirmasi' => 'bg-blue-100 text-blue-800',
-                            'diproses' => 'bg-purple-100 text-purple-800',
-                            'selesai' => 'bg-green-100 text-green-800',
-                            'dibatalkan' => 'bg-red-100 text-red-800'
-                        ];
-                        $status_class = $status_badges[$pendaftaran['status_pendaftaran']] ?? 'bg-gray-100 text-gray-800';
-                        ?>
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
-                            <?= ucfirst($pendaftaran['status_pendaftaran']) ?>
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            <!-- View Button -->
-                            <button onclick="viewDetail(<?= $pendaftaran['id'] ?>)" 
-                                    class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                                    title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            
-                            <!-- Edit Status Button -->
-                            <button onclick="editStatus(<?= $pendaftaran['id'] ?>, '<?= $pendaftaran['status_pendaftaran'] ?>', `<?= htmlspecialchars($pendaftaran['catatan_admin'] ?? '') ?>`)" 
-                                    class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                                    title="Edit Status">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                <!-- Recent Registrations -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-gray-900">Pendaftaran Terbaru</h3>
+                            <a href="pendaftaran.php" class="text-blue-600 hover:text-blue-900 font-medium text-sm">
+                                Lihat semua →
+                            </a>
                         </div>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Pendaftaran</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <?php foreach ($recent_pendaftaran as $pendaftaran): ?>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?= $pendaftaran['nomor_pendaftaran'] ?></div>
+                                            <div class="text-sm text-gray-500"><?= $pendaftaran['telepon'] ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($pendaftaran['nama_lengkap']) ?></div>
+                                            <div class="text-sm text-gray-500"><?= $pendaftaran['email'] ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <?= $pendaftaran['telepon'] ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <?= date('d M Y', strtotime($pendaftaran['dibuat_pada'])) ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <?php
+                                            $status_badges = [
+                                                'baru' => 'bg-yellow-100 text-yellow-800',
+                                                'dikonfirmasi' => 'bg-blue-100 text-blue-800',
+                                                'diproses' => 'bg-purple-100 text-purple-800',
+                                                'selesai' => 'bg-green-100 text-green-800',
+                                                'dibatalkan' => 'bg-red-100 text-red-800'
+                                            ];
+                                            $status_class = $status_badges[$pendaftaran['status_pendaftaran']] ?? 'bg-gray-100 text-gray-800';
+                                            ?>
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
+                                                <?= ucfirst($pendaftaran['status_pendaftaran']) ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div class="flex space-x-2">
+                                                <!-- View Button -->
+                                                <button onclick="viewDetail(<?= $pendaftaran['id'] ?>)"
+                                                    class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                                                    title="Lihat Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+
+                                                <!-- Edit Status Button -->
+                                                <button onclick="editStatus(<?= $pendaftaran['id'] ?>, '<?= $pendaftaran['status_pendaftaran'] ?>', `<?= htmlspecialchars($pendaftaran['catatan_admin'] ?? '') ?>`)"
+                                                    class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                                                    title="Edit Status">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Quick Actions -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -211,7 +216,7 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                                 </a>
                             </div>
                             <div class="p-3 bg-blue-100 rounded-lg">
-                                <i class="fas fa-users text-blue-600 text-2xl"></i>
+                                <i class="fas fa-users" style="color: #2563eb; font-size: 2rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -226,7 +231,7 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                                 </a>
                             </div>
                             <div class="p-3 bg-green-100 rounded-lg">
-                                <i class="fas fa-star text-green-600 text-2xl"></i>
+                                <i class="fas fa-star" style="color: #059669; font-size: 2rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -241,7 +246,7 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                                 </a>
                             </div>
                             <div class="p-3 bg-purple-100 rounded-lg">
-                                <i class="fas fa-images text-purple-600 text-2xl"></i>
+                                <i class="fas fa-images" style="color: #7c3aed; font-size: 2rem;"></i>
                             </div>
                         </div>
                     </div>
@@ -249,144 +254,145 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
             </main>
         </div>
     </div>
-    
+
     <!-- View Detail Modal -->
-<div id="detailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex justify-between items-center pb-3 border-b">
-                <h3 class="text-xl font-bold text-gray-900">Detail Pendaftaran</h3>
-                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div id="detailContent" class="mt-4">
-                <!-- Detail content will be loaded here -->
+    <div id="detailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-bold text-gray-900">Detail Pendaftaran</h3>
+                    <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="detailContent" class="mt-4">
+                    <!-- Detail content will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Edit Status Modal -->
-<div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-        <form method="POST" action="pendaftaran.php" id="statusForm">
-            <input type="hidden" name="id" id="editId">
-            <input type="hidden" name="update_status" value="1">
-            
-            <div class="flex justify-between items-center pb-3 border-b">
-                <h3 class="text-xl font-bold text-gray-900">Update Status</h3>
-                <button type="button" onclick="closeStatusModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <div class="mt-4 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select name="status" id="editStatus" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="baru">Baru</option>
-                        <option value="dikonfirmasi">Dikonfirmasi</option>
-                        <option value="diproses">Diproses</option>
-                        <option value="selesai">Selesai</option>
-                        <option value="dibatalkan">Dibatalkan</option>
-                    </select>
+    <!-- Edit Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <form method="POST" action="pendaftaran.php" id="statusForm">
+                <input type="hidden" name="id" id="editId">
+                <input type="hidden" name="update_status" value="1">
+
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-bold text-gray-900">Update Status</h3>
+                    <button type="button" onclick="closeStatusModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Admin</label>
-                    <textarea name="catatan_admin" id="editCatatan" rows="3"
+
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select name="status" id="editStatus" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="baru">Baru</option>
+                            <option value="dikonfirmasi">Dikonfirmasi</option>
+                            <option value="diproses">Diproses</option>
+                            <option value="selesai">Selesai</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Admin</label>
+                        <textarea name="catatan_admin" id="editCatatan" rows="3"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Tambahkan catatan..."></textarea>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                <button type="button" onclick="closeStatusModal()" 
+
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                    <button type="button" onclick="closeStatusModal()"
                         class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">
-                    Batal
-                </button>
-                <button type="submit" 
+                        Batal
+                    </button>
+                    <button type="submit"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300">
-                    Update Status
-                </button>
-            </div>
-        </form>
+                        Update Status
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
 
     <!-- sidebar -->
     <script src="../assets/js/sidebar.js"></script>
-<script>
-    // View Detail Function
-    function viewDetail(id) {
-        fetch(`pendaftaran_detail.php?id=${id}`)
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('detailContent').innerHTML = html;
-                document.getElementById('detailModal').classList.remove('hidden');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Gagal memuat detail pendaftaran');
-            });
-    }
-
-    function closeDetailModal() {
-        document.getElementById('detailModal').classList.add('hidden');
-    }
-
-    // Edit Status Function
-    function editStatus(id, status, catatan) {
-        document.getElementById('editId').value = id;
-        document.getElementById('editStatus').value = status;
-        document.getElementById('editCatatan').value = catatan;
-        document.getElementById('statusModal').classList.remove('hidden');
-    }
-
-    function closeStatusModal() {
-        document.getElementById('statusModal').classList.add('hidden');
-    }
-
-    // Close modals when clicking outside
-    window.onclick = function(event) {
-        const detailModal = document.getElementById('detailModal');
-        const statusModal = document.getElementById('statusModal');
-        
-        if (event.target === detailModal) {
-            closeDetailModal();
+    <script>
+        // View Detail Function
+        function viewDetail(id) {
+            fetch(`pendaftaran_detail.php?id=${id}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('detailContent').innerHTML = html;
+                    document.getElementById('detailModal').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Gagal memuat detail pendaftaran');
+                });
         }
-        if (event.target === statusModal) {
-            closeStatusModal();
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
         }
-    }
 
-    // Update current time
-    function updateTime() {
-        const now = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        document.querySelector('header .text-xs').textContent = now.toLocaleDateString('id-ID', options);
-    }
-
-    // Update time every minute
-    setInterval(updateTime, 60000);
-    updateTime(); // Initial call
-
-    // Auto-hide success message after 5 seconds
-    setTimeout(() => {
-        const successMessage = document.querySelector('.bg-green-100');
-        if (successMessage) {
-            successMessage.style.display = 'none';
+        // Edit Status Function
+        function editStatus(id, status, catatan) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editCatatan').value = catatan;
+            document.getElementById('statusModal').classList.remove('hidden');
         }
-    }, 5000);
-</script>
+
+        function closeStatusModal() {
+            document.getElementById('statusModal').classList.add('hidden');
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const detailModal = document.getElementById('detailModal');
+            const statusModal = document.getElementById('statusModal');
+
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+            if (event.target === statusModal) {
+                closeStatusModal();
+            }
+        }
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.querySelector('header .text-xs').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Update time every minute
+        setInterval(updateTime, 60000);
+        updateTime(); // Initial call
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+            const successMessage = document.querySelector('.bg-green-100');
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }
+        }, 5000);
+    </script>
 </body>
+
 </html>

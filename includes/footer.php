@@ -1,26 +1,30 @@
 <?php
 require_once 'config/database.php';
 
-class FooterSettings {
+class FooterSettings
+{
     private $conn;
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $db = new Database();
         $this->conn = $db->getConnection();
     }
-    
-    public function getSetting($bagian, $kunci) {
+
+    public function getSetting($bagian, $kunci)
+    {
         $query = "SELECT nilai FROM pengaturan_footer WHERE bagian = :bagian AND kunci = :kunci";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':bagian', $bagian);
         $stmt->bindParam(':kunci', $kunci);
         $stmt->execute();
-        
+
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result ? $result['nilai'] : $this->getDefault($bagian, $kunci);
     }
-    
-    private function getDefault($bagian, $kunci) {
+
+    private function getDefault($bagian, $kunci)
+    {
         $defaults = [
             'perusahaan' => [
                 'nama' => 'Krishna Kursus',
@@ -44,7 +48,7 @@ class FooterSettings {
                 'tiktok' => '#'
             ]
         ];
-        
+
         return $defaults[$bagian][$kunci] ?? '';
     }
 }
@@ -66,32 +70,32 @@ $footer = new FooterSettings();
                     <?= htmlspecialchars($footer->getSetting('perusahaan', 'deskripsi')) ?>
                 </p>
                 <div class="flex space-x-3">
-                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'facebook')) ?>" 
-                       target="_blank"
-                       class="text-gray-400 hover:text-white transition duration-300">
+                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'facebook')) ?>"
+                        target="_blank"
+                        class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-facebook text-lg"></i>
                     </a>
-                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'instagram')) ?>" 
-                       target="_blank"
-                       class="text-gray-400 hover:text-white transition duration-300">
+                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'instagram')) ?>"
+                        target="_blank"
+                        class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-instagram text-lg"></i>
                     </a>
-                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'youtube')) ?>" 
-                       target="_blank"
-                       class="text-gray-400 hover:text-white transition duration-300">
+                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'youtube')) ?>"
+                        target="_blank"
+                        class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-youtube text-lg"></i>
                     </a>
-                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'tiktok')) ?>" 
-                       target="_blank"
-                       class="text-gray-400 hover:text-white transition duration-300">
+                    <a href="<?= htmlspecialchars($footer->getSetting('media', 'tiktok')) ?>"
+                        target="_blank"
+                        class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-tiktok text-lg"></i>
                     </a>
                 </div>
             </div>
-            
-            <!-- Quick Links -->
+
+            <!-- Links -->
             <div>
-                <h4 class="font-bold mb-4 text-lg">Menu Cepat</h4>
+                <h4 class="font-bold mb-4 text-lg">Menu</h4>
                 <div class="space-y-2 text-sm">
                     <a href="index.php" class="block text-gray-400 hover:text-white transition duration-300">Beranda</a>
                     <a href="paket-kursus.php" class="block text-gray-400 hover:text-white transition duration-300">Paket Kursus</a>
@@ -100,7 +104,7 @@ $footer = new FooterSettings();
                     <a href="cek-status.php" class="block text-gray-400 hover:text-white transition duration-300">Cek Status</a>
                 </div>
             </div>
-            
+
             <!-- Contact Info -->
             <div>
                 <h4 class="font-bold mb-4 text-lg">Kontak Kami</h4>
@@ -123,7 +127,7 @@ $footer = new FooterSettings();
                     </p>
                 </div>
             </div>
-            
+
             <!-- Business Hours -->
             <div>
                 <h4 class="font-bold mb-4 text-lg">Jam Operasional</h4>
@@ -141,27 +145,27 @@ $footer = new FooterSettings();
                         <span><?= htmlspecialchars($footer->getSetting('jam', 'minggu')) ?></span>
                     </div>
                 </div>
-                
+
                 <!-- WhatsApp CTA -->
                 <div class="mt-4">
-                    <?php 
+                    <?php
                     $whatsapp = $footer->getSetting('kontak', 'whatsapp');
                     $whatsapp_clean = preg_replace('/[^0-9]/', '', $whatsapp);
                     ?>
-                    <a href="https://wa.me/<?= $whatsapp_clean ?>?text=Halo%20Krishna%20Kursus,%20saya%20ingin%20bertanya%20tentang%20kursus%20mengemudi" 
-                       target="_blank"
-                       class="inline-flex items-center bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition duration-300 text-sm">
+                    <a href="https://wa.me/<?= $whatsapp_clean ?>?text=Halo%20Krishna%20Kursus,%20saya%20ingin%20bertanya%20tentang%20kursus%20mengemudi"
+                        target="_blank"
+                        class="inline-flex items-center bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 transition duration-300 text-sm">
                         <i class="fab fa-whatsapp mr-2"></i>Chat WhatsApp
                     </a>
                 </div>
             </div>
         </div>
-        
+
         <!-- Bottom Bar -->
         <div class="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; <?= date('Y') ?> Krishna Driving Course. All rights reserved. | 
-               <a href="#" class="hover:text-white transition duration-300">Privacy Policy</a> | 
-               <a href="#" class="hover:text-white transition duration-300">Terms of Service</a>
+            <p>&copy; <?= date('Y') ?> Krishna Driving Course. All rights reserved. |
+                <a href="#" class="hover:text-white transition duration-300">Privacy Policy</a> |
+                <a href="#" class="hover:text-white transition duration-300">Terms of Service</a>
             </p>
         </div>
     </div>
