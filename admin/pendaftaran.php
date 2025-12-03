@@ -71,11 +71,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 // Handle delete
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    $stmt = $db->prepare("DELETE FROM pendaftaran_siswa WHERE id = ?");
-    if ($stmt->execute([$id])) {
-        $success = "Pendaftaran berhasil dihapus!";
-    } else {
-        $error = "Gagal menghapus pendaftaran!";
+    
+    try {
+        // Mulai transaksi
+        $db->beginTransaction();
+        
+        // 1. Hapus dulu data evaluasi_kemajuan terkait
+        $stmt1 = $db->prepare("DELETE FROM evaluasi_kemajuan WHERE pendaftaran_id = ?");
+        $stmt1->execute([$id]);
+        
+        // 2. Hapus data jadwal_kursus terkait
+        $stmt2 = $db->prepare("DELETE FROM jadwal_kursus WHERE pendaftaran_id = ?");
+        $stmt2->execute([$id]);
+        
+        // 3. Hapus data pembayaran terkait (jika ada tabel pembayaran)
+        // $stmt3 = $db->prepare("DELETE FROM pembayaran WHERE pendaftaran_id = ?");
+        // $stmt3->execute([$id]);
+        
+        // 4. Baru hapus data pendaftaran
+        $stmt4 = $db->prepare("DELETE FROM pendaftaran_siswa WHERE id = ?");
+        $stmt4->execute([$id]);
+        
+        // Commit transaksi
+        $db->commit();
+        
+        $success = "Pendaftaran berhasil dihapus beserta data terkait!";
+        
+    } catch (PDOException $e) {
+        // Rollback jika ada error
+        $db->rollBack();
+        $error = "Gagal menghapus pendaftaran! Error: " . $e->getMessage();
     }
 }
 
@@ -136,18 +161,22 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <div class="main-content flex-1 flex flex-col overflow-hidden relative">
             <!-- Top Header -->
             <header class="bg-white shadow">
                 <div class="flex justify-between items-center px-6 py-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-800">Kelola Pendaftaran</h1>
-                        <p class="text-gray-600">Kelola data pendaftaran siswa</p>
+                        <h1 class="text-2xl font-bold text-gray-800">Kelola pendaftaran</h1>
+                        <p class="text-gray-600">Kelola pendaftran siswa</p>
                     </div>
                     <div class="flex items-center space-x-4">
                         <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100">
                             <i class="fas fa-bars text-gray-600"></i>
                         </button>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-900"><?= $_SESSION['admin_username'] ?></p>
+                            <p class="text-xs text-gray-500"><?= date('l, d F Y') ?></p>
+                        </div>
                     </div>
                 </div>
             </header>

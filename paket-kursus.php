@@ -1,396 +1,367 @@
-<?php
-require_once 'config/database.php';
-include 'includes/header.php'; 
-$database = new Database();
-$db = $database->getConnection();
+<?php include 'includes/header.php'; ?>
 
-// Ambil data dari database
-try {
-    // Ambil paket kursus
-    $paket_query = $db->query("SELECT * FROM paket_kursus WHERE tersedia = 1 ORDER BY harga ASC");
-    $paket_kursus = $paket_query->fetchAll(PDO::FETCH_ASSOC);
+<!-- Header Paket Kursus -->
+<section class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Semua Paket Kursus</h1>
+        <p class="text-lg text-blue-100">Temukan paket kursus mengemudi yang tepat untuk kebutuhan Anda</p>
+    </div>
+</section>
 
-    // Ambil testimoni untuk sidebar
-    $testimoni_query = $db->query("SELECT * FROM testimoni WHERE status = 'disetujui' ORDER BY rating DESC, created_at DESC LIMIT 3");
-    $testimoni = $testimoni_query->fetchAll(PDO::FETCH_ASSOC);
-
-} catch (PDOException $e) {
-    $paket_kursus = [];
-    $testimoni = [];
-    error_log("Database error: " . $e->getMessage());
-}
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paket Kursus Mengemudi - Krishna Driving</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50">
-    <!-- Navigation -->
-
-
-    <!-- Header Section -->
-    <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">Paket Kursus Mengemudi</h1>
-            <p class="text-xl text-blue-100 max-w-3xl mx-auto">
-                Pilih paket yang paling sesuai dengan kebutuhan belajar mengemudi Anda
-            </p>
-        </div>
-    </section>
-
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Sidebar Filter -->
-            <div class="lg:w-1/4">
-                <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Filter Paket</h3>
+<!-- Filter & Konten -->
+<section class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="mb-8">
+            <!-- Filter Section -->
+            <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800 mb-2">Filter Paket</h2>
+                        <p class="text-sm text-gray-600">Temukan paket yang sesuai dengan kebutuhan Anda</p>
+                    </div>
                     
-                    <!-- Filter Tipe Mobil -->
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-3">Tipe Mobil</h4>
-                        <div class="space-y-2">
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-mobil" value="manual" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Manual</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-mobil" value="matic" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Matic</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-mobil" value="keduanya" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Keduanya</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Filter Kategori -->
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-3">Kategori</h4>
-                        <div class="space-y-2">
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-kategori" value="reguler" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Reguler</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-kategori" value="campuran" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Campuran</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-kategori" value="extra" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Extra</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="filter-kategori" value="pelancaran" checked 
-                                       class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-2 text-gray-600">Pelancaran</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Filter Harga -->
-                    <div class="mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-3">Rentang Harga</h4>
-                        <select id="filter-harga" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="all">Semua Harga</option>
-                            <option value="0-500000">Rp 0 - 500rb</option>
-                            <option value="500000-1000000">Rp 500rb - 1jt</option>
-                            <option value="1000000-2000000">Rp 1jt - 2jt</option>
-                            <option value="2000000-999999999">> Rp 2jt</option>
-                        </select>
-                    </div>
-
-                    <button onclick="resetFilters()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-300 transition duration-300">
-                        Reset Filter
-                    </button>
-                </div>
-
-                <!-- Testimoni Sidebar -->
-                <?php if (!empty($testimoni)): ?>
-                <div class="bg-white rounded-2xl shadow-lg p-6 mt-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Testimoni Terbaru</h3>
-                    <div class="space-y-4">
-                        <?php foreach ($testimoni as $testi): ?>
-                        <div class="border-l-4 border-blue-500 pl-4">
-                            <p class="text-gray-600 text-sm italic">"<?= htmlspecialchars(substr($testi['testimoni_text'], 0, 100)) ?>..."</p>
-                            <div class="flex items-center mt-2">
-                                <div class="text-yellow-400 text-sm">
-                                    <?= str_repeat('★', $testi['rating']) ?>
-                                </div>
-                                <span class="ml-2 text-sm font-semibold text-gray-700"><?= htmlspecialchars($testi['nama_siswa']) ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Package List -->
-            <div class="lg:w-3/4">
-                <!-- Filter Info -->
-                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <!-- Filter Tipe Mobil -->
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-800">Semua Paket Kursus</h2>
-                            <p class="text-gray-600" id="packageCount">
-                                Menampilkan <?= count($paket_kursus) ?> paket tersedia
-                            </p>
-                        </div>
-                        <div class="mt-4 md:mt-0">
-                            <select id="sort-packages" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="harga-asc">Harga: Rendah ke Tinggi</option>
-                                <option value="harga-desc">Harga: Tinggi ke Rendah</option>
-                                <option value="durasi-asc">Durasi: Pendek ke Panjang</option>
-                                <option value="durasi-desc">Durasi: Panjang ke Pendek</option>
+                            <label for="filterTipe" class="block text-sm font-medium text-gray-700 mb-1">Tipe Mobil</label>
+                            <select id="filterTipe" name="filterTipe" 
+                                    onchange="filterPaket()"
+                                    class="w-full sm:w-40 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="semua">Semua Tipe</option>
+                                <option value="manual">Manual</option>
+                                <option value="matic">Matic</option>
+                                <option value="keduanya">Keduanya</option>
                             </select>
                         </div>
+                        
+                        <!-- Filter Urutan Harga -->
+                        <div>
+                            <label for="filterHarga" class="block text-sm font-medium text-gray-700 mb-1">Urutkan Harga</label>
+                            <select id="filterHarga" name="filterHarga" 
+                                    onchange="filterPaket()"
+                                    class="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="default">Default</option>
+                                <option value="termurah">Termurah ke Tertinggi</option>
+                                <option value="termahal">Tertinggi ke Termurah</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Reset Filter -->
+                        <div class="flex items-end">
+                            <button onclick="resetFilter()" 
+                                    class="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-300 font-medium">
+                                <i class="fas fa-redo mr-2"></i>Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Packages Grid -->
-                <?php if (empty($paket_kursus)): ?>
-                    <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
-                        <i class="fas fa-car text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-2xl font-bold text-gray-600 mb-2">Paket Kursus Sedang Tidak Tersedia</h3>
-                        <p class="text-gray-500">Silakan hubungi kami untuk informasi lebih lanjut.</p>
+            </div>
+            
+            <!-- Info Jumlah Paket -->
+            <div class="flex justify-between items-center mb-6">
+                <p class="text-gray-700">
+                    <span id="jumlahPaket" class="font-semibold text-blue-600"><?= count($paket_kursus) ?></span> paket tersedia
+                </p>
+                <div class="flex items-center space-x-2 text-sm text-gray-600">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Klik paket untuk melihat detail lengkap</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Daftar Paket -->
+        <div id="daftarPaket" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <?php if (empty($paket_kursus)): ?>
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">Tidak Ada Paket Tersedia</h3>
+                    <p class="text-gray-500">Silakan coba lagi nanti.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($paket_kursus as $paket): ?>
+                <?php 
+                    // Hitung jumlah pertemuan (asumsi 50 menit per pertemuan)
+                    $pertemuan = ceil($paket['durasi_jam'] / 50);
+                    // Format harga
+                    $harga_formatted = number_format($paket['harga'], 0, ',', '.');
+                    // Warna berdasarkan tipe
+                    $warna_badge = $paket['tipe_mobil'] == 'manual' ? 'bg-blue-100 text-blue-600' : 
+                                  ($paket['tipe_mobil'] == 'matic' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600');
+                ?>
+                <div class="paket-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100"
+                     data-tipe="<?= $paket['tipe_mobil'] ?>"
+                     data-harga="<?= $paket['harga'] ?>">
+                    <!-- Badge -->
+                    <div class="px-6 pt-6">
+                        <span class="inline-block <?= $warna_badge ?> text-xs font-semibold px-3 py-1 rounded-full capitalize">
+                            <i class="fas fa-<?= $paket['tipe_mobil'] == 'manual' ? 'cog' : ($paket['tipe_mobil'] == 'matic' ? 'bolt' : 'sync') ?> mr-1"></i>
+                            <?= $paket['tipe_mobil'] ?>
+                        </span>
                     </div>
-                <?php else: ?>
-                    <div id="packagesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <?php foreach ($paket_kursus as $paket): ?>
-                        <?php
-                        $pertemuan = floor($paket['durasi_jam'] / 50);
-                        $kategori = 'reguler';
-                        if (strpos(strtolower($paket['nama_paket']), 'campuran') !== false || $paket['tipe_mobil'] === 'keduanya') {
-                            $kategori = 'campuran';
-                        } elseif (strpos(strtolower($paket['nama_paket']), 'extra') !== false) {
-                            $kategori = 'extra';
-                        } elseif (strpos(strtolower($paket['nama_paket']), 'pelancaran') !== false) {
-                            $kategori = 'pelancaran';
-                        }
-                        ?>
-                        <div class="package-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100 transform hover:-translate-y-1"
-                             data-tipe="<?= $paket['tipe_mobil'] ?>" 
-                             data-kategori="<?= $kategori ?>"
-                             data-harga="<?= $paket['harga'] ?>"
-                             data-durasi="<?= $paket['durasi_jam'] ?>">
-                            <div class="p-6">
-                                <!-- Header -->
-                                <div class="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 class="text-xl font-bold text-gray-800"><?= htmlspecialchars($paket['nama_paket']) ?></h3>
-                                        <span class="inline-block mt-1 px-2 py-1 text-xs font-semibold rounded-full 
-                                            <?= $kategori === 'reguler' ? 'bg-blue-100 text-blue-800' : '' ?>
-                                            <?= $kategori === 'campuran' ? 'bg-green-100 text-green-800' : '' ?>
-                                            <?= $kategori === 'extra' ? 'bg-purple-100 text-purple-800' : '' ?>
-                                            <?= $kategori === 'pelancaran' ? 'bg-orange-100 text-orange-800' : '' ?>">
-                                            <?= ucfirst($kategori) ?>
-                                        </span>
-                                    </div>
-                                    <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full capitalize">
-                                        <?= $paket['tipe_mobil'] ?>
-                                    </span>
-                                </div>
-                                
-                                <!-- Harga -->
-                                <div class="text-2xl font-bold text-blue-600 mb-4">
-                                    Rp <?= number_format($paket['harga'], 0, ',', '.') ?>
-                                </div>
-                                
-                                <!-- Info -->
-                                <div class="space-y-3 mb-4">
-                                    <div class="flex items-center text-gray-600">
-                                        <i class="fas fa-clock text-blue-500 w-5 mr-3"></i>
-                                        <span><?= $pertemuan ?> Pertemuan (<?= $paket['durasi_jam'] ?> menit)</span>
-                                    </div>
-                                    <?php if ($paket['termasuk_teori']): ?>
-                                    <div class="flex items-center text-gray-600">
-                                        <i class="fas fa-book text-green-500 w-5 mr-3"></i>
-                                        <span>Termasuk Kelas Teori</span>
-                                    </div>
-                                    <?php endif; ?>
-                                    <?php if ($paket['termasuk_praktik']): ?>
-                                    <div class="flex items-center text-gray-600">
-                                        <i class="fas fa-road text-orange-500 w-5 mr-3"></i>
-                                        <span>Termasuk Praktik Langsung</span>
-                                    </div>
-                                    <?php endif; ?>
-                                    <div class="flex items-center text-gray-600">
-                                        <i class="fas fa-users text-purple-500 w-5 mr-3"></i>
-                                        <span>Maksimal <?= $paket['maksimal_siswa'] ?> Siswa</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Deskripsi -->
-                                <p class="text-gray-600 text-sm mb-6 leading-relaxed"><?= htmlspecialchars($paket['deskripsi'] ?? 'Paket lengkap belajar mengemudi') ?></p>
-                                
-                                <!-- Tombol -->
-                                <div class="flex space-x-3">
-                                    <a href="index.php#daftar" 
-                                       class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300 text-center">
-                                        <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
-                                    </a>
-                                    <button onclick="sharePackage('<?= htmlspecialchars($paket['nama_paket']) ?>', <?= $paket['harga'] ?>)" 
-                                            class="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition duration-300">
-                                        <i class="fas fa-share-alt"></i>
-                                    </button>
-                                </div>
+                    
+                    <!-- Konten -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2"><?= htmlspecialchars($paket['nama_paket']) ?></h3>
+                        
+                        <div class="text-2xl font-bold text-blue-600 mb-4">Rp <?= $harga_formatted ?></div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-clock text-blue-500 w-5 mr-3"></i>
+                                <span><?= $pertemuan ?> Pertemuan</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-road text-green-500 w-5 mr-3"></i>
+                                <span><?= $paket['durasi_jam'] ?> Menit Total</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-car text-purple-500 w-5 mr-3"></i>
+                                <span>Mobil <?= ucfirst($paket['tipe_mobil']) ?></span>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        
+                        <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+                            <?= htmlspecialchars($paket['deskripsi'] ?? 'Paket lengkap belajar mengemudi dengan instruktur profesional') ?>
+                        </p>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="pilihPaket(<?= $paket['id'] ?>)" 
+                                    class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
+                                <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
+                            </button>
+                            <a href="detail-paket.php?id=<?= $paket['id'] ?>" 
+                               class="flex-1 border border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 text-center">
+                                <i class="fas fa-info-circle mr-2"></i>Detail
+                            </a>
+                        </div>
                     </div>
-                <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
 
-                <!-- Call to Action -->
-                <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-center text-white mt-8">
-                    <h3 class="text-2xl font-bold mb-4">Masih Bingung Memilih Paket?</h3>
-                    <p class="text-blue-100 mb-6 max-w-2xl mx-auto">
-                        Konsultasikan kebutuhan belajar mengemudi Anda dengan tim kami. 
-                        Kami akan membantu memilih paket yang paling sesuai.
+<!-- JavaScript untuk Filter -->
+<script>
+// Data paket dari PHP
+const semuaPaket = <?= json_encode($paket_kursus) ?>;
+
+// Fungsi filter paket
+function filterPaket() {
+    const filterTipe = document.getElementById('filterTipe').value;
+    const filterHarga = document.getElementById('filterHarga').value;
+    const container = document.getElementById('daftarPaket');
+    const jumlahSpan = document.getElementById('jumlahPaket');
+    
+    let filteredPaket = [...semuaPaket];
+    
+    // Filter berdasarkan tipe mobil
+    if (filterTipe !== 'semua') {
+        filteredPaket = filteredPaket.filter(paket => 
+            paket.tipe_mobil === filterTipe
+        );
+    }
+    
+    // Urutkan berdasarkan harga
+    if (filterHarga === 'termurah') {
+        filteredPaket.sort((a, b) => a.harga - b.harga);
+    } else if (filterHarga === 'termahal') {
+        filteredPaket.sort((a, b) => b.harga - a.harga);
+    }
+    
+    // Update jumlah paket
+    jumlahSpan.textContent = filteredPaket.length;
+    
+    // Tampilkan pesan jika tidak ada paket
+    if (filteredPaket.length === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-search text-5xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Tidak Ada Paket yang Sesuai</h3>
+                <p class="text-gray-500">Silakan coba filter lain.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Render paket yang sudah difilter
+    container.innerHTML = filteredPaket.map(paket => {
+        const pertemuan = Math.ceil(paket.durasi_jam / 50);
+        const hargaFormatted = new Intl.NumberFormat('id-ID').format(paket.harga);
+        
+        // Tentukan warna badge berdasarkan tipe mobil
+        let badgeColor, badgeIcon;
+        switch(paket.tipe_mobil) {
+            case 'manual':
+                badgeColor = 'bg-blue-100 text-blue-600';
+                badgeIcon = 'cog';
+                break;
+            case 'matic':
+                badgeColor = 'bg-green-100 text-green-600';
+                badgeIcon = 'bolt';
+                break;
+            default:
+                badgeColor = 'bg-purple-100 text-purple-600';
+                badgeIcon = 'sync';
+        }
+        
+        return `
+            <div class="paket-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100"
+                 data-tipe="${paket.tipe_mobil}"
+                 data-harga="${paket.harga}">
+                <div class="px-6 pt-6">
+                    <span class="inline-block ${badgeColor} text-xs font-semibold px-3 py-1 rounded-full capitalize">
+                        <i class="fas fa-${badgeIcon} mr-1"></i>
+                        ${paket.tipe_mobil}
+                    </span>
+                </div>
+                
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${escapeHtml(paket.nama_paket)}</h3>
+                    
+                    <div class="text-2xl font-bold text-blue-600 mb-4">Rp ${hargaFormatted}</div>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-clock text-blue-500 w-5 mr-3"></i>
+                            <span>${pertemuan} Pertemuan</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-road text-green-500 w-5 mr-3"></i>
+                            <span>${paket.durasi_jam} Menit Total</span>
+                        </div>
+                        <div class="flex items-center text-gray-600">
+                            <i class="fas fa-car text-purple-500 w-5 mr-3"></i>
+                            <span>Mobil ${capitalizeFirst(paket.tipe_mobil)}</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+                        ${escapeHtml(paket.deskripsi || 'Paket lengkap belajar mengemudi dengan instruktur profesional')}
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="https://wa.me/6281234567890?text=Halo,%20saya%20ingin%20konsultasi%20tentang%20paket%20kursus%20mengemudi" 
-                           target="_blank"
-                           class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300">
-                            <i class="fab fa-whatsapp mr-2"></i>Chat WhatsApp
-                        </a>
-                        <a href="tel:+6281234567890" 
-                           class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                            <i class="fas fa-phone mr-2"></i>Telepon Sekarang
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="pilihPaket(${paket.id})" 
+                                class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
+                            <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
+                        </button>
+                        <a href="detail-paket.php?id=${paket.id}" 
+                           class="flex-1 border border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 text-center">
+                            <i class="fas fa-info-circle mr-2"></i>Detail
                         </a>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        `;
+    }).join('');
+}
 
-    <!-- Footer -->
-    <?php include 'includes/footer.php'; ?>
+// Fungsi reset filter
+function resetFilter() {
+    document.getElementById('filterTipe').value = 'semua';
+    document.getElementById('filterHarga').value = 'default';
+    filterPaket();
+}
 
-    <script>
-        // Filter functionality
-        function filterPackages() {
-            const selectedMobil = Array.from(document.querySelectorAll('.filter-mobil:checked')).map(cb => cb.value);
-            const selectedKategori = Array.from(document.querySelectorAll('.filter-kategori:checked')).map(cb => cb.value);
-            const selectedHarga = document.getElementById('filter-harga').value;
-            const sortBy = document.getElementById('sort-packages').value;
-            
-            const packages = document.querySelectorAll('.package-card');
-            let visibleCount = 0;
-            
-            packages.forEach(package => {
-                const tipe = package.dataset.tipe;
-                const kategori = package.dataset.kategori;
-                const harga = parseInt(package.dataset.harga);
-                const durasi = parseInt(package.dataset.durasi);
-                
-                // Check filters
-                const mobilMatch = selectedMobil.includes(tipe);
-                const kategoriMatch = selectedKategori.includes(kategori);
-                const hargaMatch = checkHargaFilter(harga, selectedHarga);
-                
-                if (mobilMatch && kategoriMatch && hargaMatch) {
-                    package.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    package.style.display = 'none';
-                }
-            });
-            
-            // Update package count
-            document.getElementById('packageCount').textContent = `Menampilkan ${visibleCount} paket tersedia`;
-            
-            // Sort packages
-            sortPackages(sortBy);
-        }
-        
-        function checkHargaFilter(harga, filter) {
-            if (filter === 'all') return true;
-            
-            const [min, max] = filter.split('-').map(Number);
-            return harga >= min && harga <= max;
-        }
-        
-        function sortPackings(sortBy) {
-            const container = document.getElementById('packagesGrid');
-            const packages = Array.from(container.querySelectorAll('.package-card'));
-            
-            packages.sort((a, b) => {
-                const aHarga = parseInt(a.dataset.harga);
-                const bHarga = parseInt(b.dataset.harga);
-                const aDurasi = parseInt(a.dataset.durasi);
-                const bDurasi = parseInt(b.dataset.durasi);
-                
-                switch(sortBy) {
-                    case 'harga-asc':
-                        return aHarga - bHarga;
-                    case 'harga-desc':
-                        return bHarga - aHarga;
-                    case 'durasi-asc':
-                        return aDurasi - bDurasi;
-                    case 'durasi-desc':
-                        return bDurasi - aDurasi;
-                    default:
-                        return 0;
-                }
-            });
-            
-            // Re-append sorted packages
-            packages.forEach(pkg => container.appendChild(pkg));
-        }
-        
-        function resetFilters() {
-            document.querySelectorAll('.filter-mobil, .filter-kategori').forEach(cb => cb.checked = true);
-            document.getElementById('filter-harga').value = 'all';
-            document.getElementById('sort-packages').value = 'harga-asc';
-            filterPackages();
-        }
-        
-        function sharePackage(namaPaket, harga) {
-            const text = `Saya tertarik dengan paket ${namaPaket} seharga Rp ${harga.toLocaleString('id-ID')} di Krishna Driving Course.`;
-            const url = window.location.href;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: namaPaket,
-                    text: text,
-                    url: url
-                });
-            } else {
-                // Fallback untuk browser yang tidak support Web Share API
-                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
-                window.open(whatsappUrl, '_blank');
-            }
-        }
-        
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.filter-mobil, .filter-kategori').forEach(cb => {
-                cb.addEventListener('change', filterPackages);
-            });
-            document.getElementById('filter-harga').addEventListener('change', filterPackages);
-            document.getElementById('sort-packages').addEventListener('change', filterPackages);
-            
-            // Mobile menu
-            document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-                const mobileMenu = document.getElementById('mobile-menu');
-                if (mobileMenu) {
-                    mobileMenu.classList.toggle('hidden');
-                }
-            });
+// Fungsi pilih paket untuk form pendaftaran
+function pilihPaket(paketId) {
+    const selectElement = document.getElementById('paket_kursus_id');
+    if (selectElement) {
+        selectElement.value = paketId;
+        document.getElementById('daftar').scrollIntoView({
+            behavior: 'smooth'
         });
-    </script>
-</body>
-</html>
+        
+        // Tampilkan notifikasi
+        showNotification('Paket berhasil dipilih! Silakan lanjutkan pendaftaran.', 'success');
+    } else {
+        // Jika tidak ada form di halaman ini, redirect ke halaman pendaftaran
+        window.location.href = `pendaftaran.php?paket_id=${paketId}`;
+    }
+}
+
+// Fungsi helper
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function capitalizeFirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Fungsi notifikasi
+function showNotification(message, type = 'info') {
+    // Hapus notifikasi sebelumnya
+    const existingNotification = document.querySelector('.custom-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    // Buat notifikasi baru
+    const notification = document.createElement('div');
+    notification.className = `custom-notification fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
+        type === 'success' ? 'bg-green-500 text-white' :
+        type === 'error' ? 'bg-red-500 text-white' :
+        'bg-blue-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animasi masuk
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+        notification.classList.add('translate-x-0');
+    }, 10);
+    
+    // Auto remove setelah 5 detik
+    setTimeout(() => {
+        notification.classList.remove('translate-x-0');
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 5000);
+    
+    // Close on click
+    notification.addEventListener('click', () => {
+        notification.classList.remove('translate-x-0');
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    });
+}
+
+// Inisialisasi filter saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    filterPaket(); // Menampilkan semua paket dengan urutan default
+});
+</script>
+
+<!-- Style untuk Notifikasi -->
+<style>
+.custom-notification {
+    min-width: 300px;
+    max-width: 400px;
+    cursor: pointer;
+}
+
+.custom-notification:hover {
+    opacity: 0.9;
+}
+</style>
+
+<?php include 'includes/footer.php'; ?>

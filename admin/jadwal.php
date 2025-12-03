@@ -145,9 +145,10 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                         <p class="text-gray-600">Atur jadwal teori dan praktik mengemudi</p>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100">
-                            <i class="fas fa-bars text-gray-600"></i>
-                        </button>
+                        <!-- Di bagian header, ganti button toggle dengan ini: -->
+<button id="sidebar-toggle" class="p-3 rounded-2xl bg-white shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+    <i class="fas fa-bars text-blue-600"></i>
+</button>
                     </div>
                 </div>
             </header>
@@ -423,29 +424,29 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                             <?php endif; ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div class="flex space-x-2">
-                                                <!-- View Details Button -->
-                                                <button onclick="viewSchedule(<?= $data['id'] ?>)" 
-                                                        class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                                                        title="Lihat Detail">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                                
-                                                <!-- Update Status Button -->
-                                                <button onclick="updateSchedule(<?= $data['id'] ?>, '<?= $data['status'] ?>', '<?= $data['kehadiran_siswa'] ?>', `<?= htmlspecialchars($data['catatan_instruktur'] ?? '') ?>`)" 
-                                                        class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                                                        title="Update Status">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                
-                                                <!-- Delete Button -->
-                                                <button onclick="confirmDelete(<?= $data['id'] ?>)" 
-                                                        class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                                                        title="Hapus">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
+    <div class="flex space-x-2">
+        <!-- View Details Button -->
+        <button onclick="viewSchedule(<?= $data['id'] ?>)" 
+                class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition duration-200"
+                title="Lihat Detail">
+            <i class="fas fa-eye"></i>
+        </button>
+        
+        <!-- Update Status Button -->
+        <button onclick="updateSchedule(<?= $data['id'] ?>, '<?= $data['status'] ?>', '<?= $data['kehadiran_siswa'] ?>', `<?= htmlspecialchars($data['catatan_instruktur'] ?? '') ?>`)" 
+                class="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition duration-200"
+                title="Update Status">
+            <i class="fas fa-edit"></i>
+        </button>
+        
+        <!-- Delete Button -->
+        <button onclick="confirmDelete(<?= $data['id'] ?>)" 
+                class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition duration-200"
+                title="Hapus">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</td>
                                     </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -522,34 +523,100 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
         </div>
     </div>
 
-    <script>
-        // Update Schedule Function
-        function updateSchedule(id, status, kehadiran, catatan) {
-            document.getElementById('updateId').value = id;
-            document.getElementById('updateStatus').value = status;
-            document.getElementById('updateKehadiran').value = kehadiran || '';
-            document.getElementById('updateCatatan').value = catatan || '';
-            document.getElementById('updateModal').classList.remove('hidden');
-        }
+ <!-- View Schedule Modal -->
+<div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-4 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
+        <div class="mt-3">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-xl font-bold text-gray-900">Detail Jadwal Kursus</h3>
+                <button onclick="closeViewModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="viewContent" class="mt-4">
+                <!-- Detail content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
 
-        function closeUpdateModal() {
-            document.getElementById('updateModal').classList.add('hidden');
-        }
+<script>
+    // View Schedule Function
+    function viewSchedule(id) {
+        // Show loading state
+        document.getElementById('viewContent').innerHTML = `
+            <div class="flex justify-center items-center py-12">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mb-2"></i>
+                    <p class="text-gray-600">Memuat detail jadwal...</p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('viewModal').classList.remove('hidden');
+        
+        fetch(`jadwal_detail.php?id=${id}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('viewContent').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('viewContent').innerHTML = `
+                    <div class="flex justify-center items-center py-12">
+                        <div class="text-center text-red-600">
+                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                            <p>Gagal memuat detail jadwal</p>
+                        </div>
+                    </div>
+                `;
+            });
+    }
 
-        // Delete Confirmation
-        function confirmDelete(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus jadwal ini?')) {
-                window.location.href = `jadwal.php?delete=${id}`;
-            }
-        }
+    function closeViewModal() {
+        document.getElementById('viewModal').classList.add('hidden');
+    }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const updateModal = document.getElementById('updateModal');
-            if (event.target === updateModal) {
-                closeUpdateModal();
-            }
+    // Update Schedule Function (existing)
+    function updateSchedule(id, status, kehadiran, catatan) {
+        document.getElementById('updateId').value = id;
+        document.getElementById('updateStatus').value = status;
+        document.getElementById('updateKehadiran').value = kehadiran || '';
+        document.getElementById('updateCatatan').value = catatan || '';
+        document.getElementById('updateModal').classList.remove('hidden');
+    }
+
+    function closeUpdateModal() {
+        document.getElementById('updateModal').classList.add('hidden');
+    }
+
+    // Delete Confirmation
+    function confirmDelete(id) {
+        if (confirm('Apakah Anda yakin ingin menghapus jadwal ini?')) {
+            window.location.href = `jadwal.php?delete=${id}`;
         }
-    </script>
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const viewModal = document.getElementById('viewModal');
+        const updateModal = document.getElementById('updateModal');
+        
+        if (event.target === viewModal) {
+            closeViewModal();
+        }
+        if (event.target === updateModal) {
+            closeUpdateModal();
+        }
+    }
+
+    // Auto-hide success message after 5 seconds
+    setTimeout(() => {
+        const successMessage = document.querySelector('.bg-green-100');
+        if (successMessage) {
+            successMessage.style.display = 'none';
+        }
+    }, 5000);
+</script>
 </body>
 </html>

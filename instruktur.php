@@ -10,21 +10,11 @@ try {
     $instruktur_query = $db->query("SELECT * FROM instruktur WHERE aktif = 1 ORDER BY pengalaman_tahun DESC, rating DESC");
     $instruktur = $instruktur_query->fetchAll(PDO::FETCH_ASSOC);
 
-    // Hitung statistik
-    $total_instruktur = count($instruktur);
-    $instruktur_manual = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE aktif = 1 AND spesialisasi = 'manual'")->fetch()['total'];
-    $instruktur_matic = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE aktif = 1 AND spesialisasi = 'matic'")->fetch()['total'];
-    $instruktur_keduanya = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE aktif = 1 AND spesialisasi = 'keduanya'")->fetch()['total'];
-    
     // Ambil instruktur dengan rating tertinggi
     $top_instruktur = $db->query("SELECT * FROM instruktur WHERE aktif = 1 ORDER BY rating DESC LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
     $instruktur = [];
-    $total_instruktur = 0;
-    $instruktur_manual = 0;
-    $instruktur_matic = 0;
-    $instruktur_keduanya = 0;
     $top_instruktur = [];
     error_log("Database error: " . $e->getMessage());
 }
@@ -49,30 +39,6 @@ try {
             <p class="text-xl text-blue-100 max-w-3xl mx-auto">
                 Belajar dari instruktur berpengalaman dan bersertifikat yang siap membimbing Anda sampai bisa mengemudi
             </p>
-        </div>
-    </section>
-
-    <!-- Statistics Section -->
-    <section class="py-8 bg-white">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-blue-600"><?= $total_instruktur ?></div>
-                    <div class="text-gray-600 text-sm">Total Instruktur</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-yellow-600"><?= $instruktur_manual ?></div>
-                    <div class="text-gray-600 text-sm">Spesialis Manual</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-purple-600"><?= $instruktur_matic ?></div>
-                    <div class="text-gray-600 text-sm">Spesialis Matic</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-green-600"><?= $instruktur_keduanya ?></div>
-                    <div class="text-gray-600 text-sm">Spesialis Keduanya</div>
-                </div>
-            </div>
         </div>
     </section>
 
