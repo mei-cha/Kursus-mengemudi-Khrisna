@@ -103,7 +103,7 @@
 
               <!-- Telepon -->
               <div class="flex items-start gap-4">
-                <div class="mt-1 w-10 h-10 flex items-center justify-center bg-green-100 rounded-lg text-green-600">
+                <div class="mt-1 w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg text-blue-600">
                   <i class="fas fa-phone text-lg"></i>
                 </div>
                 <div>
@@ -117,7 +117,7 @@
 
               <!-- Email -->
               <div class="flex items-start gap-4">
-                <div class="mt-1 w-10 h-10 flex items-center justify-center bg-purple-100 rounded-lg text-purple-600">
+                <div class="mt-1 w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg text-blue-600">
                   <i class="fas fa-envelope text-lg"></i>
                 </div>
                 <div>
@@ -131,7 +131,7 @@
 
               <!-- Jam Operasional -->
               <div class="flex items-start gap-4">
-                <div class="mt-1 w-10 h-10 flex items-center justify-center bg-amber-100 rounded-lg text-amber-600">
+                <div class="mt-1 w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg text-blue-600">
                   <i class="fas fa-clock text-lg"></i>
                 </div>
                 <div>
