@@ -141,6 +141,8 @@ try {
         </div>
     </nav>
 
+    <!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- JavaScript untuk Mobile Menu -->
     <script>
         // Mobile Menu Toggle

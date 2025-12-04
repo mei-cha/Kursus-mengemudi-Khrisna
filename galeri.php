@@ -83,26 +83,6 @@ $kategori_info = [
         </div>
     </section>
 
-    <!-- Statistics Section -->
-    <section class="py-8 bg-white">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-blue-600"><?= $total_gambar ?></div>
-                    <div class="text-gray-600 text-sm">Total Foto</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-green-600"><?= $kategori_count ?></div>
-                    <div class="text-gray-600 text-sm">Kategori</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-3xl font-bold text-purple-600">100%</div>
-                    <div class="text-gray-600 text-sm">Kualitas Terjamin</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 py-8">
         <!-- Category Navigation -->
@@ -185,14 +165,6 @@ $kategori_info = [
         <?php endif; ?>
     </div>
 </div>
-                        
-                        <div class="p-4">
-                            <h3 class="font-bold text-gray-800 text-lg mb-2"><?= htmlspecialchars($item['judul']) ?></h3>
-                            <?php if (!empty($item['deskripsi'])): ?>
-                                <p class="text-gray-600 text-sm leading-relaxed"><?= htmlspecialchars($item['deskripsi']) ?></p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
                     <?php endforeach; ?>
                 </div>
             </section>
@@ -287,11 +259,49 @@ $kategori_info = [
     <?php include 'includes/footer.php'; ?>
 
     <script>
-        // Global variables for image navigation
-        let currentGalleryItems = [];
-        let currentImageIndex = 0;
+        // Close Image Modal
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
 
-        // View Image Modal
+// Image Navigation
+function navigateImage(direction) {
+    if (currentGalleryItems.length === 0) return;
+    
+    currentImageIndex += direction;
+    
+    // Loop around
+    if (currentImageIndex < 0) {
+        currentImageIndex = currentGalleryItems.length - 1;
+    } else if (currentImageIndex >= currentGalleryItems.length) {
+        currentImageIndex = 0;
+    }
+    
+    const currentItem = currentGalleryItems[currentImageIndex];
+    const img = currentItem.querySelector('img');
+    const title = currentItem.querySelector('h3').textContent;
+    const description = currentItem.querySelector('p')?.textContent || '';
+    const kategori = currentItem.dataset.kategori || '';
+    
+    // Cari tanggal dari data-item jika ada
+    let date = '';
+    const dateElement = currentItem.querySelector('.gallery-date');
+    if (dateElement) {
+        date = dateElement.textContent;
+    }
+    
+    viewImage(
+        img.src.split('/').pop(),
+        title,
+        description,
+        kategori,
+        date
+    );
+}
+
+// View Image Modal
 function viewImage(imageName, title, description, category = '', date = '') {
     const modal = document.getElementById('imageModal');
     const modalImage = document.getElementById('modalImage');
@@ -305,9 +315,10 @@ function viewImage(imageName, title, description, category = '', date = '') {
     
     // Set modal content
     modalImage.src = imagePath;
+    modalImage.alt = title;
     modalTitle.textContent = title;
     modalDescription.textContent = description || 'Tidak ada deskripsi';
-    modalCategory.textContent = category || 'general';
+    modalCategory.textContent = category ? getCategoryLabel(category) : 'Umum';
     modalDate.textContent = date || new Date().toLocaleDateString('id-ID');
     
     // Prepare for navigation
@@ -328,103 +339,109 @@ function viewImage(imageName, title, description, category = '', date = '') {
     };
 }
 
-        // Image Navigation
-        function navigateImage(direction) {
-            if (currentGalleryItems.length === 0) return;
-            
-            currentImageIndex += direction;
-            
-            // Loop around
-            if (currentImageIndex < 0) {
-                currentImageIndex = currentGalleryItems.length - 1;
-            } else if (currentImageIndex >= currentGalleryItems.length) {
-                currentImageIndex = 0;
-            }
-            
-            const currentItem = currentGalleryItems[currentImageIndex];
-            const img = currentItem.querySelector('img');
-            const title = currentItem.querySelector('h3').textContent;
-            const description = currentItem.querySelector('p')?.textContent || '';
-            
-            viewImage(
-                img.src.split('/').pop(),
-                title,
-                description
-            );
+// Helper function to get category label
+function getCategoryLabel(category) {
+    const categoryLabels = {
+        'aktivitas': 'Aktivitas Belajar',
+        'fasilitas': 'Fasilitas',
+        'sertifikat': 'Sertifikat',
+        'kendaraan': 'Kendaraan',
+        'instruktur': 'Instruktur'
+    };
+    return categoryLabels[category] || category;
+}
+
+// Category Filter
+function filterByCategory(kategori) {
+    const allItems = document.querySelectorAll('.gallery-item');
+    const categoryButtons = document.querySelectorAll('.category-filter');
+    
+    // Update active button
+    categoryButtons.forEach(btn => {
+        if (btn.dataset.kategori === kategori) {
+            btn.classList.add('border-blue-500', 'bg-blue-50');
+        } else {
+            btn.classList.remove('border-blue-500', 'bg-blue-50');
         }
-
-        // Category Filter
-        function filterByCategory(kategori) {
-            const allItems = document.querySelectorAll('.gallery-item');
-            const categoryButtons = document.querySelectorAll('.category-filter');
-            
-            // Update active button
-            categoryButtons.forEach(btn => {
-                if (btn.dataset.kategori === kategori) {
-                    btn.classList.add('border-blue-500', 'bg-blue-50');
-                } else {
-                    btn.classList.remove('border-blue-500', 'bg-blue-50');
-                }
-            });
-            
-            // Show/hide items
-            allItems.forEach(item => {
-                if (kategori === 'all' || item.dataset.kategori === kategori) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-            
-            // Scroll to category section
-            if (kategori !== 'all') {
-                const section = document.getElementById(kategori);
-                if (section) {
-                    section.scrollIntoView({ behavior: 'smooth' });
-                }
-            }
+    });
+    
+    // Show/hide items
+    allItems.forEach(item => {
+        if (kategori === 'all' || item.dataset.kategori === kategori) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
         }
+    });
+    
+    // Scroll to category section
+    if (kategori !== 'all') {
+        const section = document.getElementById(kategori);
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+}
 
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            const modal = document.getElementById('imageModal');
-            if (!modal.classList.contains('hidden')) {
-                if (e.key === 'Escape') {
-                    closeImageModal();
-                } else if (e.key === 'ArrowLeft') {
-                    navigateImage(-1);
-                } else if (e.key === 'ArrowRight') {
-                    navigateImage(1);
-                }
-            }
-        });
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('imageModal');
+    if (!modal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        } else if (e.key === 'ArrowLeft') {
+            navigateImage(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigateImage(1);
+        }
+    }
+});
 
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Category filter buttons
-            const categoryButtons = document.querySelectorAll('.category-filter');
-            categoryButtons.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    filterByCategory(this.dataset.kategori);
-                });
-            });
-            
-            // Close modal when clicking outside image
-            document.getElementById('imageModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeImageModal();
-                }
-            });
-            
-            // Mobile menu
-            document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-                const mobileMenu = document.getElementById('mobile-menu');
-                if (mobileMenu) {
-                    mobileMenu.classList.toggle('hidden');
-                }
-            });
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Category filter buttons
+    const categoryButtons = document.querySelectorAll('.category-filter');
+    categoryButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            filterByCategory(this.dataset.kategori);
         });
+    });
+    
+    // Close modal when clicking outside image (only on the dark background)
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        // Only close if clicking on the background (not on modal content)
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
+    
+    // Attach close button events
+    const closeButton = document.querySelector('#imageModal button[onclick="closeImageModal()"]');
+    if (closeButton) {
+        closeButton.addEventListener('click', closeImageModal);
+    }
+    
+    // Attach close button for the X icon
+    const closeXButton = document.querySelector('button[onclick="closeImageModal()"]');
+    if (closeXButton) {
+        closeXButton.addEventListener('click', closeImageModal);
+    }
+    
+    // Attach close event to the "Tutup" button
+    const tutupButton = document.querySelector('button[onclick="closeImageModal()"]');
+    if (tutupButton) {
+        tutupButton.addEventListener('click', closeImageModal);
+    }
+    
+    // Mobile menu
+    document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenu) {
+            mobileMenu.classList.toggle('hidden');
+        }
+    });
+});
     </script>
 </body>
 </html>

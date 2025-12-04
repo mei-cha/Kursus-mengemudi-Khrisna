@@ -64,7 +64,7 @@
                 </p>
                 <div class="flex items-center space-x-2 text-sm text-gray-600">
                     <i class="fas fa-info-circle"></i>
-                    <span>Klik paket untuk melihat detail lengkap</span>
+                    <span>Klik "Pilih Paket" untuk langsung mengisi form pendaftaran</span>
                 </div>
             </div>
         </div>
@@ -125,7 +125,7 @@
                         </p>
                         
                         <div class="flex space-x-3">
-                            <button onclick="pilihPaket(<?= $paket['id'] ?>)" 
+                            <button onclick="pilihPaket(<?= $paket['id'] ?>, '<?= htmlspecialchars(addslashes($paket['nama_paket'])) ?>')" 
                                     class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
                                 <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
                             </button>
@@ -242,7 +242,7 @@ function filterPaket() {
                     </p>
                     
                     <div class="flex space-x-3">
-                        <button onclick="pilihPaket(${paket.id})" 
+                        <button onclick="pilihPaket(${paket.id}, '${escapeHtml(paket.nama_paket)}')" 
                                 class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
                             <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
                         </button>
@@ -265,20 +265,15 @@ function resetFilter() {
 }
 
 // Fungsi pilih paket untuk form pendaftaran
-function pilihPaket(paketId) {
-    const selectElement = document.getElementById('paket_kursus_id');
-    if (selectElement) {
-        selectElement.value = paketId;
-        document.getElementById('daftar').scrollIntoView({
-            behavior: 'smooth'
-        });
-        
-        // Tampilkan notifikasi
-        showNotification('Paket berhasil dipilih! Silakan lanjutkan pendaftaran.', 'success');
-    } else {
-        // Jika tidak ada form di halaman ini, redirect ke halaman pendaftaran
-        window.location.href = `pendaftaran.php?paket_id=${paketId}`;
+function pilihPaket(paketId, namaPaket = '') {
+    // Simpan data paket di localStorage
+    localStorage.setItem('selected_package_id', paketId);
+    if (namaPaket) {
+        localStorage.setItem('selected_package_name', namaPaket);
     }
+    
+    // Redirect ke halaman index.php dengan anchor #daftar
+    window.location.href = `index.php#daftar`;
 }
 
 // Fungsi helper
@@ -292,76 +287,10 @@ function capitalizeFirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// Fungsi notifikasi
-function showNotification(message, type = 'info') {
-    // Hapus notifikasi sebelumnya
-    const existingNotification = document.querySelector('.custom-notification');
-    if (existingNotification) {
-        existingNotification.remove();
-    }
-    
-    // Buat notifikasi baru
-    const notification = document.createElement('div');
-    notification.className = `custom-notification fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
-        type === 'success' ? 'bg-green-500 text-white' :
-        type === 'error' ? 'bg-red-500 text-white' :
-        'bg-blue-500 text-white'
-    }`;
-    notification.innerHTML = `
-        <div class="flex items-center">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Animasi masuk
-    setTimeout(() => {
-        notification.classList.remove('translate-x-full');
-        notification.classList.add('translate-x-0');
-    }, 10);
-    
-    // Auto remove setelah 5 detik
-    setTimeout(() => {
-        notification.classList.remove('translate-x-0');
-        notification.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 300);
-    }, 5000);
-    
-    // Close on click
-    notification.addEventListener('click', () => {
-        notification.classList.remove('translate-x-0');
-        notification.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 300);
-    });
-}
-
 // Inisialisasi filter saat halaman dimuat
 document.addEventListener('DOMContentLoaded', function() {
     filterPaket(); // Menampilkan semua paket dengan urutan default
 });
 </script>
-
-<!-- Style untuk Notifikasi -->
-<style>
-.custom-notification {
-    min-width: 300px;
-    max-width: 400px;
-    cursor: pointer;
-}
-
-.custom-notification:hover {
-    opacity: 0.9;
-}
-</style>
 
 <?php include 'includes/footer.php'; ?>

@@ -385,7 +385,7 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
         const successMessage = document.querySelector('.bg-green-100');
         if (successMessage) {
             successMessage.style.display = 'none';
-        }
+        }––
     }, 5000);
 </script>
 </body>
