@@ -662,13 +662,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
             }
         }
 
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => {
-            const successMessage = document.querySelector('.bg-green-100');
-            if (successMessage) {
-                successMessage.style.display = 'none';
-            }
-        }, 5000);
+        
     </script>
 </body>
 

@@ -8,12 +8,14 @@ $db = $database->getConnection();
 $current_page = basename($_SERVER['PHP_SELF']);
 
 // Function untuk menentukan menu aktif
-function isNavActive($page_name, $current_page) {
+function isNavActive($page_name, $current_page)
+{
     return $page_name == $current_page ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600';
 }
 
 // Function untuk mobile menu
-function isMobileNavActive($page_name, $current_page) {
+function isMobileNavActive($page_name, $current_page)
+{
     return $page_name == $current_page ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50';
 }
 
@@ -45,7 +47,8 @@ try {
 }
 ?>
 <!DOCTYPE html>
- <html lang="id">
+<html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,6 +56,7 @@ try {
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-gray-50">
     <!-- Navigation Bar yang Disederhanakan -->
     <nav class="bg-white shadow-lg sticky top-0 z-50">
@@ -66,40 +70,49 @@ try {
 
                 <!-- Desktop Menu - DENGAN ACTIVE STATE -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="index.php" class="font-medium transition duration-300 <?= isNavActive('index.php', $current_page) ?>">
+                    <a href="index.php"
+                        class="font-medium transition duration-300 <?= isNavActive('index.php', $current_page) ?>">
                         Beranda
                     </a>
-                    <a href="paket-kursus.php" class="font-medium transition duration-300 <?= isNavActive('paket-kursus.php', $current_page) ?>">
+                    <a href="paket-kursus.php"
+                        class="font-medium transition duration-300 <?= isNavActive('paket-kursus.php', $current_page) ?>">
                         Paket
                     </a>
-                    <a href="instruktur.php" class="font-medium transition duration-300 <?= isNavActive('instruktur.php', $current_page) ?>">
+                    <a href="instruktur.php"
+                        class="font-medium transition duration-300 <?= isNavActive('instruktur.php', $current_page) ?>">
                         Instruktur
                     </a>
-                    <a href="testimoni.php" class="font-medium transition duration-300 <?= isNavActive('testimoni.php', $current_page) ?>">
+                    <a href="testimoni.php"
+                        class="font-medium transition duration-300 <?= isNavActive('testimoni.php', $current_page) ?>">
                         Testimoni
                     </a>
-                    <a href="galeri.php" class="font-medium transition duration-300 <?= ($current_page == 'index.php' && isset($_GET['section']) && $_GET['section'] == 'galeri') ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600' ?>">
+                    <a href="galeri.php"
+                        class="font-medium transition duration-300 <?= isNavActive('galeri.php', $current_page) ?>">
                         Galeri
                     </a>
-                    <a href="tentang-kontak.php" class="font-medium transition duration-300 <?= isNavActive('tentang-kontak.php', $current_page) ?>">
+                    <a href="tentang-kontak.php"
+                        class="font-medium transition duration-300 <?= isNavActive('tentang-kontak.php', $current_page) ?>">
                         Tentang & Kontak
                     </a>
-                    
+
                     <!-- Menu Cek Status -->
-                    <a href="cek-status.php" class="flex items-center font-medium transition duration-300 <?= isNavActive('cek-status.php', $current_page) ?>">
+                    <a href="cek-status.php"
+                        class="flex items-center font-medium transition duration-300 <?= isNavActive('cek-status.php', $current_page) ?>">
                         <i class="fas fa-search mr-1 text-sm"></i>Cek Status
                     </a>
-                    
+
                     <!-- Tombol CTA yang menonjol -->
-                    <a href="#daftar" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 shadow-md hover:shadow-lg">
+                    <a href="index.php#daftar"
+                        class="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 shadow-md hover:shadow-lg">
                         <i class="fas fa-edit mr-1"></i>Daftar
                     </a>
                 </div>
 
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600 transition duration-300 p-2 rounded-lg hover:bg-gray-100">
-                        <i class="fas fa-bars text-xl"></i>
+                    <button id="mobile-menu-button"
+                        class="text-gray-700 hover:text-blue-600 transition duration-300 p-2 rounded-lg hover:bg-gray-100">
+                        <i id="mobile-menu-icon" class="fas fa-bars text-xl"></i>
                     </button>
                 </div>
             </div>
@@ -108,32 +121,40 @@ try {
             <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2">
                 <div class="flex flex-col space-y-1 pt-3">
                     <!-- Hanya menu items, tanpa logo -->
-                    <a href="index.php" class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('index.php', $current_page) ?>">
+                    <a href="index.php"
+                        class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('index.php', $current_page) ?>">
                         <i class="fas fa-home mr-3 w-5 text-center"></i>Beranda
                     </a>
-                    <a href="paket-kursus.php" class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('paket-kursus.php', $current_page) ?>">
+                    <a href="paket-kursus.php"
+                        class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('paket-kursus.php', $current_page) ?>">
                         <i class="fas fa-gift mr-3 w-5 text-center"></i>Paket Kursus
                     </a>
-                    <a href="instruktur.php" class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('instruktur.php', $current_page) ?>">
+                    <a href="instruktur.php"
+                        class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('instruktur.php', $current_page) ?>">
                         <i class="fas fa-users mr-3 w-5 text-center"></i>Instruktur
                     </a>
-                    <a href="testimoni.php" class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('testimoni.php', $current_page) ?>">
+                    <a href="testimoni.php"
+                        class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('testimoni.php', $current_page) ?>">
                         <i class="fas fa-star mr-3 w-5 text-center"></i>Testimoni
                     </a>
-                    <a href="#galeri" class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= ($current_page == 'index.php' && isset($_GET['section']) && $_GET['section'] == 'galeri') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50' ?>">
+                    <a href="galeri.php"
+                        class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('galeri.php', $current_page) ?>">
                         <i class="fas fa-images mr-3 w-5 text-center"></i>Galeri
                     </a>
-                    <a href="tentang-kontak.php" class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('tentang-kontak.php', $current_page) ?>">
+                    <a href="tentang-kontak.php"
+                        class="py-3 px-4 rounded-lg transition duration-300 flex items-center <?= isMobileNavActive('tentang-kontak.php', $current_page) ?>">
                         <i class="fas fa-info-circle mr-3 w-5 text-center"></i>Tentang & Kontak
                     </a>
-                    
+
                     <!-- Menu Cek Status untuk Mobile -->
-                    <a href="cek-status.php" class="flex items-center py-3 px-4 rounded-lg transition duration-300 <?= isMobileNavActive('cek-status.php', $current_page) ?>">
+                    <a href="cek-status.php"
+                        class="flex items-center py-3 px-4 rounded-lg transition duration-300 <?= isMobileNavActive('cek-status.php', $current_page) ?>">
                         <i class="fas fa-search mr-3 w-5 text-center"></i>Cek Status
                     </a>
-                    
+
                     <!-- Tombol Daftar untuk Mobile -->
-                    <a href="#daftar" class="bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 mt-2 shadow-md flex items-center justify-center">
+                    <a href="index.php#daftar"
+                        class="bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 mt-2 shadow-md flex items-center justify-center">
                         <i class="fas fa-edit mr-2"></i>Daftar Sekarang
                     </a>
                 </div>
@@ -142,24 +163,40 @@ try {
     </nav>
 
     <!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- JavaScript untuk Mobile Menu -->
     <script>
-        // Mobile Menu Toggle
-        document.getElementById('mobile-menu-button').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
+        // Mobile Menu Toggle dengan perubahan icon
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenuIcon = document.getElementById('mobile-menu-icon');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', function () {
+            const isHidden = mobileMenu.classList.toggle('hidden');
+
+            // Toggle icon
+            if (isHidden) {
+                // Menu tertutup, tampilkan hamburger icon
+                mobileMenuIcon.classList.remove('fa-times');
+                mobileMenuIcon.classList.add('fa-bars');
+            } else {
+                // Menu terbuka, tampilkan X icon
+                mobileMenuIcon.classList.remove('fa-bars');
+                mobileMenuIcon.classList.add('fa-times');
+            }
         });
 
         // Close mobile menu when clicking outside
-        document.addEventListener('click', function(event) {
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            
-            if (mobileMenu && mobileMenuButton && 
-                !mobileMenu.contains(event.target) && 
+        document.addEventListener('click', function (event) {
+            if (mobileMenu && mobileMenuButton &&
+                !mobileMenu.contains(event.target) &&
                 !mobileMenuButton.contains(event.target)) {
+
                 mobileMenu.classList.add('hidden');
+                // Kembalikan icon ke hamburger
+                mobileMenuIcon.classList.remove('fa-times');
+                mobileMenuIcon.classList.add('fa-bars');
             }
         });
 
@@ -176,11 +213,25 @@ try {
                             block: 'start'
                         });
                         // Tutup mobile menu setelah klik link
-                        const mobileMenu = document.getElementById('mobile-menu');
                         if (mobileMenu) {
                             mobileMenu.classList.add('hidden');
+                            // Kembalikan icon ke hamburger
+                            mobileMenuIcon.classList.remove('fa-times');
+                            mobileMenuIcon.classList.add('fa-bars');
                         }
                     }
+                }
+            });
+        });
+
+        // Tutup menu ketika klik link di dalam menu mobile
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', function () {
+                if (mobileMenu) {
+                    mobileMenu.classList.add('hidden');
+                    // Kembalikan icon ke hamburger
+                    mobileMenuIcon.classList.remove('fa-times');
+                    mobileMenuIcon.classList.add('fa-bars');
                 }
             });
         });

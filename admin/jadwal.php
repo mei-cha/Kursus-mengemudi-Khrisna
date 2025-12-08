@@ -630,13 +630,13 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
             }
         }
 
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => {
-            const successMessage = document.querySelector('.bg-green-100');
-            if (successMessage) {
-                successMessage.style.display = 'none';
-            }
-        }, 5000);
+        // // Auto-hide success message after 5 seconds
+        // setTimeout(() => {
+        //     const successMessage = document.querySelector('.bg-green-100');
+        //     if (successMessage) {
+        //         successMessage.style.display = 'none';
+        //     }
+        // }, 5000);
     </script>
 </body>
 

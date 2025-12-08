@@ -140,23 +140,39 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Pendaftaran</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        No. Pendaftaran</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Nama</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Telepon</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Tanggal</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <?php foreach ($recent_pendaftaran as $pendaftaran): ?>
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= $pendaftaran['nomor_pendaftaran'] ?></div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                <?= $pendaftaran['nomor_pendaftaran'] ?>
+                                            </div>
                                             <div class="text-sm text-gray-500"><?= $pendaftaran['telepon'] ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($pendaftaran['nama_lengkap']) ?></div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                <?= htmlspecialchars($pendaftaran['nama_lengkap']) ?>
+                                            </div>
                                             <div class="text-sm text-gray-500"><?= $pendaftaran['email'] ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -176,7 +192,8 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                                             ];
                                             $status_class = $status_badges[$pendaftaran['status_pendaftaran']] ?? 'bg-gray-100 text-gray-800';
                                             ?>
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
+                                            <span
+                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
                                                 <?= ucfirst($pendaftaran['status_pendaftaran']) ?>
                                             </span>
                                         </td>
@@ -190,7 +207,8 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                                                 </button>
 
                                                 <!-- Edit Status Button -->
-                                                <button onclick="editStatus(<?= $pendaftaran['id'] ?>, '<?= $pendaftaran['status_pendaftaran'] ?>', `<?= htmlspecialchars($pendaftaran['catatan_admin'] ?? '') ?>`)"
+                                                <button
+                                                    onclick="editStatus(<?= $pendaftaran['id'] ?>, '<?= $pendaftaran['status_pendaftaran'] ?>', `<?= htmlspecialchars($pendaftaran['catatan_admin'] ?? '') ?>`)"
                                                     class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
                                                     title="Edit Status">
                                                     <i class="fas fa-edit"></i>
@@ -211,7 +229,8 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                             <div>
                                 <h4 class="text-lg font-medium text-gray-900 mb-2">Kelola Pendaftaran</h4>
                                 <p class="text-gray-600 text-sm mb-4">Lihat dan proses pendaftaran baru</p>
-                                <a href="pendaftaran.php" class="inline-flex items-center text-blue-600 hover:text-blue-900 font-medium">
+                                <a href="pendaftaran.php"
+                                    class="inline-flex items-center text-blue-600 hover:text-blue-900 font-medium">
                                     Kelola <i class="fas fa-arrow-right ml-2"></i>
                                 </a>
                             </div>
@@ -226,7 +245,8 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                             <div>
                                 <h4 class="text-lg font-medium text-gray-900 mb-2">Testimoni</h4>
                                 <p class="text-gray-600 text-sm mb-4">Approve testimoni dari siswa</p>
-                                <a href="testimoni.php" class="inline-flex items-center text-green-600 hover:text-green-900 font-medium">
+                                <a href="testimoni.php"
+                                    class="inline-flex items-center text-green-600 hover:text-green-900 font-medium">
                                     Kelola <i class="fas fa-arrow-right ml-2"></i>
                                 </a>
                             </div>
@@ -241,7 +261,8 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                             <div>
                                 <h4 class="text-lg font-medium text-gray-900 mb-2">Galeri</h4>
                                 <p class="text-gray-600 text-sm mb-4">Upload foto aktivitas</p>
-                                <a href="galeri.php" class="inline-flex items-center text-purple-600 hover:text-purple-900 font-medium">
+                                <a href="galeri.php"
+                                    class="inline-flex items-center text-purple-600 hover:text-purple-900 font-medium">
                                     Kelola <i class="fas fa-arrow-right ml-2"></i>
                                 </a>
                             </div>
@@ -342,57 +363,57 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
             document.getElementById('detailModal').classList.add('hidden');
         }
 
-    // Edit Status Function
-    function editStatus(id, status, catatan) {
-        document.getElementById('editId').value = id;
-        document.getElementById('editStatus').value = status;
-        document.getElementById('editCatatan').value = catatan;
-        document.getElementById('statusModal').classList.remove('hidden');
-    }
-
-    function closeStatusModal() {
-        document.getElementById('statusModal').classList.add('hidden');
-    }
-
-    // Close modals when clicking outside
-    window.onclick = function(event) {
-        const detailModal = document.getElementById('detailModal');
-        const statusModal = document.getElementById('statusModal');
-        
-        if (event.target === detailModal) {
-            closeDetailModal();
+        // Edit Status Function
+        function editStatus(id, status, catatan) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editCatatan').value = catatan;
+            document.getElementById('statusModal').classList.remove('hidden');
         }
-        if (event.target === statusModal) {
-            closeStatusModal();
+
+        function closeStatusModal() {
+            document.getElementById('statusModal').classList.add('hidden');
         }
-    }
 
-    // Update current time
-    function updateTime() {
-        const now = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        document.querySelector('header .text-xs').textContent = now.toLocaleDateString('id-ID', options);
-    }
+        // Close modals when clicking outside
+        window.onclick = function (event) {
+            const detailModal = document.getElementById('detailModal');
+            const statusModal = document.getElementById('statusModal');
 
-    // Update time every minute
-    setInterval(updateTime, 60000);
-    updateTime(); // Initial call
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+            if (event.target === statusModal) {
+                closeStatusModal();
+            }
+        }
 
-    // Auto-hide success message after 5 seconds
-    setTimeout(() => {
-        const successMessage = document.querySelector('.bg-green-100');
-        if (successMessage) {
-            successMessage.style.display = 'none';
-        }––
-    }, 5000);
-</script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            document.querySelector('header .text-xs').textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        // Update time every minute
+        setInterval(updateTime, 60000);
+        updateTime(); // Initial call
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+            const successMessage = document.querySelector('.bg-green-100');
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }––
+        }, 5000);
+    </script>
 </body>
 
 </html>

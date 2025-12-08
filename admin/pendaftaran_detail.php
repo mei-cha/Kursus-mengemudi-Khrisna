@@ -38,7 +38,8 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
             <div class="flex items-center space-x-4 mb-4 md:mb-0">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <div
+                    class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                     <span class="text-white text-xl font-bold">
                         <?= strtoupper(substr($data['nama_lengkap'], 0, 1)) ?>
                     </span>
@@ -54,12 +55,12 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                 </div>
             </div>
             <div class="flex space-x-3">
-                <button onclick="window.history.back()" 
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                <button onclick="window.history.back()"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali
                 </button>
-                <a href="pendaftaran_edit.php?id=<?= $id ?>" 
-                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                <a href="pendaftaran_edit.php?id=<?= $id ?>"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
                     <i class="fas fa-edit mr-2"></i>Edit
                 </a>
             </div>
@@ -105,8 +106,8 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Jenis Kelamin</label>
                                 <p class="text-gray-900">
-                                    <?= $data['jenis_kelamin'] === 'L' ? 
-                                        '<span class="inline-flex items-center"><i class="fas fa-mars text-blue-500 mr-2"></i>Laki-laki</span>' : 
+                                    <?= $data['jenis_kelamin'] === 'L' ?
+                                        '<span class="inline-flex items-center"><i class="fas fa-mars text-blue-500 mr-2"></i>Laki-laki</span>' :
                                         '<span class="inline-flex items-center"><i class="fas fa-venus text-pink-500 mr-2"></i>Perempuan</span>' ?>
                                 </p>
                             </div>
@@ -136,7 +137,8 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Harga</label>
-                                <p class="text-xl font-bold text-green-600">Rp <?= number_format($data['harga'], 0, ',', '.') ?></p>
+                                <p class="text-xl font-bold text-green-600">Rp
+                                    <?= number_format($data['harga'], 0, ',', '.') ?></p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Durasi</label>
@@ -147,7 +149,8 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Tipe Mobil</label>
                                 <p class="text-gray-900">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                                         <i class="fas fa-car mr-2"></i>
                                         <?= ucfirst($data['tipe_mobil']) ?>
                                     </span>
@@ -160,9 +163,11 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Pengalaman Mengemudi</label>
                                 <p class="text-gray-900">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
                                         <?= $data['pengalaman_mengemudi'] === 'pemula' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800' ?>">
-                                        <i class="fas fa-<?= $data['pengalaman_mengemudi'] === 'pemula' ? 'baby' : 'user' ?> mr-2"></i>
+                                        <i
+                                            class="fas fa-<?= $data['pengalaman_mengemudi'] === 'pemula' ? 'baby' : 'user' ?> mr-2"></i>
                                         <?= ucfirst(str_replace('_', ' ', $data['pengalaman_mengemudi'])) ?>
                                     </span>
                                 </p>
@@ -187,7 +192,8 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Nama Kontak Darurat</label>
-                            <p class="text-gray-900 font-medium"><?= htmlspecialchars($data['nama_kontak_darurat']) ?></p>
+                            <p class="text-gray-900 font-medium"><?= htmlspecialchars($data['nama_kontak_darurat']) ?>
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Telepon Darurat</label>
@@ -214,8 +220,8 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Kondisi Medis</label>
                             <p class="text-gray-900">
-                                <?= $data['kondisi_medis'] ? 
-                                    '<span class="bg-red-50 text-red-700 px-3 py-2 rounded-lg block">' . htmlspecialchars($data['kondisi_medis']) . '</span>' : 
+                                <?= $data['kondisi_medis'] ?
+                                    '<span class="bg-red-50 text-red-700 px-3 py-2 rounded-lg block">' . htmlspecialchars($data['kondisi_medis']) . '</span>' :
                                     '<span class="text-green-600"><i class="fas fa-check-circle mr-2"></i>Tidak ada</span>' ?>
                             </p>
                         </div>
@@ -225,17 +231,17 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
 
             <!-- Catatan Admin -->
             <?php if ($data['catatan_admin']): ?>
-            <div class="bg-white rounded-lg shadow-sm border border-yellow-200">
-                <div class="px-6 py-4 border-b border-yellow-200 bg-yellow-50">
-                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <i class="fas fa-sticky-note text-yellow-500 mr-3"></i>
-                        Catatan Admin
-                    </h3>
+                <div class="bg-white rounded-lg shadow-sm border border-yellow-200">
+                    <div class="px-6 py-4 border-b border-yellow-200 bg-yellow-50">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <i class="fas fa-sticky-note text-yellow-500 mr-3"></i>
+                            Catatan Admin
+                        </h3>
+                    </div>
+                    <div class="p-6 bg-yellow-50">
+                        <p class="text-gray-800 leading-relaxed"><?= htmlspecialchars($data['catatan_admin']) ?></p>
+                    </div>
                 </div>
-                <div class="p-6 bg-yellow-50">
-                    <p class="text-gray-800 leading-relaxed"><?= htmlspecialchars($data['catatan_admin']) ?></p>
-                </div>
-            </div>
             <?php endif; ?>
 
             <!-- Quick Actions -->
@@ -249,16 +255,16 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                 <div class="p-6">
                     <div class="space-y-3">
                         <a href="https://wa.me/<?= $data['telepon'] ?>?text=Halo%20<?= urlencode($data['nama_lengkap']) ?>%2C%20kami%20dari%20Krishna%20Driving%20Course"
-                           target="_blank"
-                           class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
+                            target="_blank"
+                            class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
                             <i class="fab fa-whatsapp mr-2"></i>WhatsApp
                         </a>
                         <a href="mailto:<?= $data['email'] ?>"
-                           class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                            class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
                             <i class="fas fa-envelope mr-2"></i>Email
                         </a>
                         <a href="jadwal.php?siswa=<?= $id ?>"
-                           class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
+                            class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
                             <i class="fas fa-calendar mr-2"></i>Jadwal
                         </a>
                     </div>
