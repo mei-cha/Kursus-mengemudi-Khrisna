@@ -44,7 +44,6 @@ try {
             'link_map' => 'https://maps.app.goo.gl/AQwKp9buZ7LhVFrk8?g_st=aw    '
         ];
     }
-
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
     $tentang = [];
@@ -297,5 +296,5 @@ try {
         </div>
     </div>
 </section>
-lorem
+
 <?php include 'includes/footer.php'; ?>

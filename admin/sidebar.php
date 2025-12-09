@@ -88,11 +88,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </a>
                 </li>
 
-
                 <li>
                     <a href="tentang-kontak.php"
-                        class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg <?= basename($_SERVER['PHP_SELF']) == 'tentang-kontak.php' ? 'bg-blue-50 text-blue-600' : '' ?>">
-                        <i class="fas fa-info-circle mr-3"></i>
+                        class="flex items-center px-4 py-3 rounded-lg font-medium <?= $current_page == 'tentang-kontak.php' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' ?>">
+                        <i class="fas fa-info-circle w-6 mr-3"></i>
                         <span class="sidebar-text">Tentang & Kontak</span>
                     </a>
                 </li>

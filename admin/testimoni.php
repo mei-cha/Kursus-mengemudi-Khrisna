@@ -209,15 +209,16 @@ $status_counts = $db->query("
                                 <h3 class="text-lg font-medium text-gray-900">Tambah Testimoni Baru</h3>
                                 <p class="text-gray-600">Tambahkan testimoni secara manual</p>
                             </div>
-                            <button onclick="toggleAddForm()" 
-                                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
-                                <i class="fas fa-plus mr-2"></i>Tambah Testimoni
+                            <button onclick="toggleTambahForm()"
+                                class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                aria-label="Toggle tambah form">
+                                <i id="toggle-icon" class="fas fa-plus"></i>
                             </button>
                         </div>
 
                         <!-- Add Testimoni Form (Hidden by default) -->
-                        <div id="addTestimoniForm" class="mt-4 hidden">
-                            <form method="POST" enctype="multipart/form-data" class="bg-gray-50 p-4 rounded-lg">
+                        <div id="tambahTestimoni" class="mt-4 hidden">
+                            <form method="POST" enctype="multipart/form-data" class="p-4 rounded-lg">
                                 <input type="hidden" name="add_testimoni" value="1">
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -294,7 +295,7 @@ $status_counts = $db->query("
 
                                 <div class="flex space-x-3">
                                     <button type="submit" 
-                                            class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-300">
+                                            class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">
                                         <i class="fas fa-save mr-2"></i>Simpan Testimoni
                                     </button>
                                     <button type="button" onclick="toggleAddForm()" 
@@ -522,12 +523,18 @@ $status_counts = $db->query("
         }
 
         // Toggle Add Form
-        function toggleAddForm() {
-            const form = document.getElementById('addTestimoniForm');
-            form.classList.toggle('hidden');
-            
-            if (!form.classList.contains('hidden')) {
-                form.scrollIntoView({ behavior: 'smooth' });
+        function toggleTambahForm() {
+           const form = document.getElementById('tambahTestimoni');
+            const icon = document.getElementById('toggle-icon');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-times');
+            } else {
+                form.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-plus');
             }
         }
 

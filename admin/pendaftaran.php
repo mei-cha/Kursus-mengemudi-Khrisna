@@ -222,8 +222,9 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                                 <p class="text-gray-600">Untuk pendaftaran langsung di kantor</p>
                             </div>
                             <button onclick="toggleTambahForm()"
-                                class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300">
-                                <i class="fas fa-user-plus mr-2"></i>Tambah Siswa
+                                class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                aria-label="Toggle upload form">
+                                <i id="toggle-icon" class="fas fa-plus"></i>
                             </button>
                         </div>
 
@@ -609,7 +610,17 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         // Toggle form tambah siswa
         function toggleTambahForm() {
             const form = document.getElementById('tambahForm');
-            form.classList.toggle('hidden');
+            const icon = document.getElementById('toggle-icon');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-times');
+            } else {
+                form.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-plus');
+            }
         }
 
         // View Detail Function
@@ -661,8 +672,6 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                 closeStatusModal();
             }
         }
-
-        
     </script>
 </body>
 

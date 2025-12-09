@@ -166,6 +166,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -184,6 +185,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <?php include 'sidebar.php'; ?>
@@ -212,6 +214,107 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                         <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
+
+                <!-- Tambah Instruktur - Form Hidden by Default -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg  font-semibold text-gray-900">Kelola Instruktur</h3>
+                                <p class="text-sm text-gray-500">Tambah atau edit data instruktur</p>
+                            </div>
+                            <button onclick="toggleInstructorForm()"
+                                class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                aria-label="Toggle form">
+                                <i id="toggleInstructorIcon" class="fas fa-plus text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Form (hidden by default) -->
+                        <div id="instructorFormContainer" class="mt-6 hidden">
+                            <form method="POST" enctype="multipart/form-data" id="instructorForm">
+                                <input type="hidden" name="id" id="editId">
+                                <input type="hidden" name="current_foto" id="currentFoto">
+                                <input type="hidden" name="add_instruktur" value="1">
+
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <!-- Foto & Status -->
+                                    <div class="lg:col-span-1">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Foto Instruktur</label>
+                                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                                    <div id="photoPreview" class="mb-3">
+                                                        <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                                                            <i class="fas fa-user text-gray-400 text-2xl"></i>
+                                                        </div>
+                                                    </div>
+                                                    <input type="file" name="foto" id="foto" accept="image/*"
+                                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                                    <p class="text-xs text-gray-500 mt-2">JPG, PNG • Maks. 2MB</p>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" name="aktif" id="aktif" class="w-4 h-4 text-blue-600 rounded" checked>
+                                                    <label for="aktif" class="ml-2 text-sm text-gray-700">Aktif</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Data Instruktur -->
+                                    <div class="lg:col-span-2 space-y-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
+                                                <input type="text" name="nama_lengkap" id="nama_lengkap" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Lisensi *</label>
+                                                <input type="text" name="nomor_licensi" id="nomor_licensi" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Spesialisasi *</label>
+                                                <select name="spesialisasi" id="spesialisasi" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                                    <option value="manual">Manual</option>
+                                                    <option value="matic">Matic</option>
+                                                    <option value="keduanya">Keduanya</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Pengalaman (Tahun) *</label>
+                                                <input type="number" name="pengalaman_tahun" id="pengalaman_tahun" required min="1" max="50"
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi & Keahlian *</label>
+                                            <textarea name="deskripsi" id="deskripsi" rows="4" required
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                                        </div>
+                                        <div class="flex space-x-3 pt-2">
+                                            <button type="submit"
+                                                class="flex-1 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
+                                                <i class="fas fa-plus mr-1.5"></i> Tambah Instruktur
+                                            </button>
+                                            <button type="button" onclick="toggleInstructorForm()"
+                                                class="flex-1 px-5 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition">
+                                                <i class="fas fa-times mr-1.5"></i> Batal
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -258,86 +361,6 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                                 <p class="text-2xl font-bold"><?= $matic_experts ?></p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Form -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium" id="formTitle">Tambah Instruktur Baru</h3>
-                    </div>
-                    <div class="p-6">
-                        <form method="POST" enctype="multipart/form-data" id="instructorForm">
-                            <input type="hidden" name="id" id="editId">
-                            <input type="hidden" name="current_foto" id="currentFoto">
-                            <input type="hidden" name="add_instruktur" id="addMode" value="1">
-                            <input type="hidden" name="edit_instruktur" id="editMode" value="0">
-
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <div class="lg:col-span-1">
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-medium mb-2">Foto Instruktur</label>
-                                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                                                <div id="photoPreview" class="mb-3">
-                                                    <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
-                                                        <i class="fas fa-user text-gray-400 text-2xl"></i>
-                                                    </div>
-                                                </div>
-                                                <input type="file" name="foto" id="foto" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                                <p class="text-xs text-gray-500 mt-2">Format: JPG, JPEG, PNG (max 2MB)</p>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium mb-2">Status</label>
-                                            <div class="flex items-center">
-                                                <input type="checkbox" name="aktif" id="aktif" class="w-4 h-4 text-blue-600 rounded" checked>
-                                                <label for="aktif" class="ml-2 text-sm">Aktif (Tampil di website)</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="lg:col-span-2 space-y-4">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium mb-2">Nama Lengkap *</label>
-                                            <input type="text" name="nama_lengkap" id="nama_lengkap" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium mb-2">Nomor Lisensi *</label>
-                                            <input type="text" name="nomor_licensi" id="nomor_licensi" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium mb-2">Spesialisasi *</label>
-                                            <select name="spesialisasi" id="spesialisasi" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                                <option value="manual">Manual</option>
-                                                <option value="matic">Matic</option>
-                                                <option value="keduanya">Keduanya</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium mb-2">Pengalaman (Tahun) *</label>
-                                            <input type="number" name="pengalaman_tahun" id="pengalaman_tahun" required min="1" max="50" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium mb-2">Deskripsi & Keahlian *</label>
-                                        <textarea name="deskripsi" id="deskripsi" rows="4" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
-                                    </div>
-                                    <div class="flex space-x-3 pt-4">
-                                        <button type="submit" id="submitButton" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700">
-                                            <i class="fas fa-plus mr-2"></i>Tambah Instruktur
-                                        </button>
-                                        <button type="button" id="cancelButton" onclick="resetForm()" class="bg-gray-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-gray-700 hidden">
-                                            Batal
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
                     </div>
                 </div>
 
@@ -397,6 +420,22 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
     </div>
 
     <script>
+        function toggleInstructorForm() {
+            const form = document.getElementById('instructorFormContainer');
+            const icon = document.getElementById('toggleInstructorIcon');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-times');
+            } else {
+                form.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-plus');
+            }
+        }
+
+
         document.getElementById('foto').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -444,7 +483,9 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                     document.getElementById('formTitle').textContent = 'Edit Instruktur';
                     document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>Update Instruktur';
                     document.getElementById('cancelButton').classList.remove('hidden');
-                    document.getElementById('instructorForm').scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('instructorForm').scrollIntoView({
+                        behavior: 'smooth'
+                    });
                 })
                 .catch(err => {
                     alert('Gagal memuat data instruktur.');
@@ -496,4 +537,5 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
         });
     </script>
 </body>
+
 </html>

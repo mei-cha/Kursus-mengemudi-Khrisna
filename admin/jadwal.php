@@ -185,6 +185,113 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                     </div>
                 <?php endif; ?>
 
+                <!-- Add Schedule Form - Hidden by default -->
+                <div class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-4">
+                        <!-- Toggle Button -->
+                        <div class="flex justify-between items-center">
+                            <div class="px-4 py-3">
+                                <h3 class="text-lg font-medium text-gray-900">Tambah Jadwal Baru</h3>
+                            </div>
+                            <button id="toggleScheduleFormBtn"
+                                onclick="toggleScheduleForm()"
+                                class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                aria-label="Toggle form">
+                                <i id="toggleScheduleFormIcon" class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <!-- Form (hidden by default) -->
+                        <div id="scheduleFormContainer" class="hidden mt-6 p-6">
+                            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <input type="hidden" name="add_schedule" value="1">
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Siswa *</label>
+                                    <select name="pendaftaran_id" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Pilih Siswa</option>
+                                        <?php foreach ($active_registrations as $reg): ?>
+                                            <option value="<?= $reg['id'] ?>">
+                                                <?= $reg['nomor_pendaftaran'] ?> - <?= htmlspecialchars($reg['nama_lengkap']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Instruktur *</label>
+                                    <select name="instruktur_id" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Pilih Instruktur</option>
+                                        <?php foreach ($instrukturs as $instruktur): ?>
+                                            <option value="<?= $instruktur['id'] ?>">
+                                                <?= htmlspecialchars($instruktur['nama_lengkap']) ?> - <?= $instruktur['spesialisasi'] ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal *</label>
+                                    <input type="date" name="tanggal_jadwal" required min="<?= date('Y-m-d') ?>"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        value="<?= date('Y-m-d') ?>">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Jam Mulai *</label>
+                                    <input type="time" name="jam_mulai" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        value="08:00">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Jam Selesai *</label>
+                                    <input type="time" name="jam_selesai" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        value="10:00">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Sesi *</label>
+                                    <select name="tipe_sesi" required
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="teori">Teori</option>
+                                        <option value="praktik">Praktik</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
+                                    <input type="text" name="lokasi"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Lokasi kursus">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Mobil Digunakan</label>
+                                    <input type="text" name="mobil_digunakan"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Mobil yang akan digunakan">
+                                </div>
+
+                                <div class="md:col-span-3 flex justify-end space-x-3">
+                                    <button type="button"
+                                        onclick="toggleScheduleForm()"
+                                        class="bg-gray-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-700 transition">
+                                        Batal
+                                    </button>
+                                    <button type="submit"
+                                        class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition">
+                                        <i class="fas fa-plus mr-2"></i>Tambah Jadwal
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white rounded-lg shadow p-6">
@@ -233,95 +340,6 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                 <p class="text-2xl font-bold text-gray-900"><?= $jadwal_hari_ini ?></p>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Add Schedule Form -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Tambah Jadwal Baru</h3>
-                    </div>
-                    <div class="p-6">
-                        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <input type="hidden" name="add_schedule" value="1">
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Siswa *</label>
-                                <select name="pendaftaran_id" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">Pilih Siswa</option>
-                                    <?php foreach ($active_registrations as $reg): ?>
-                                        <option value="<?= $reg['id'] ?>">
-                                            <?= $reg['nomor_pendaftaran'] ?> - <?= htmlspecialchars($reg['nama_lengkap']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Instruktur *</label>
-                                <select name="instruktur_id" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">Pilih Instruktur</option>
-                                    <?php foreach ($instrukturs as $instruktur): ?>
-                                        <option value="<?= $instruktur['id'] ?>">
-                                            <?= htmlspecialchars($instruktur['nama_lengkap']) ?> - <?= $instruktur['spesialisasi'] ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal *</label>
-                                <input type="date" name="tanggal_jadwal" required min="<?= date('Y-m-d') ?>"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    value="<?= date('Y-m-d') ?>">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Jam Mulai *</label>
-                                <input type="time" name="jam_mulai" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    value="08:00">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Jam Selesai *</label>
-                                <input type="time" name="jam_selesai" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    value="10:00">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Sesi *</label>
-                                <select name="tipe_sesi" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="teori">Teori</option>
-                                    <option value="praktik">Praktik</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
-                                <input type="text" name="lokasi"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Lokasi kursus">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Mobil Digunakan</label>
-                                <input type="text" name="mobil_digunakan"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Mobil yang akan digunakan">
-                            </div>
-
-                            <div class="md:col-span-3 flex justify-end">
-                                <button type="submit"
-                                    class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition duration-300">
-                                    <i class="fas fa-plus mr-2"></i>Tambah Jadwal
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
 
@@ -561,6 +579,21 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
     <!-- sidebar -->
     <script src="../assets/js/sidebar.js"></script>
     <script>
+        // Toggle schedule form visibility
+        function toggleScheduleForm() {
+            const container = document.getElementById('scheduleFormContainer');
+            const icon = document.getElementById('toggleScheduleFormIcon');
+
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-times');
+            } else {
+                container.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-plus');
+            }
+        }
         // View Schedule Function
         function viewSchedule(id) {
             // Show loading state
