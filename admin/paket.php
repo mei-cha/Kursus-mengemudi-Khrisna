@@ -10,6 +10,23 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 $db = (new Database())->getConnection();
 
+// Handle AJAX request for package data - TAMBAHKAN INI
+if (isset($_GET['ajax_get_paket']) && isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $stmt = $db->prepare("SELECT * FROM paket_kursus WHERE id = ?");
+    $stmt->execute([$id]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($data) {
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    } else {
+        http_response_code(404);
+        echo json_encode(['error' => 'Data not found']);
+    }
+    exit;
+}
+
 // Handle add/edit package
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_paket'])) {
@@ -58,25 +75,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete
+// Handle delete - Diubah bagian ini saja
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
     // Check if package is being used in any registration
-    $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM pendaftaran WHERE paket_kursus_id = ?");
-    $check_stmt->execute([$id]);
-    $usage = $check_stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($usage['count'] > 0) {
-        $_SESSION['error'] = "Tidak bisa menghapus paket ini karena sudah digunakan dalam pendaftaran!";
+    // HAPUS atau KOMENTARI bagian ini karena tabel pendaftaran tidak ada:
+    // $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM pendaftaran WHERE paket_kursus_id = ?");
+    // $check_stmt->execute([$id]);
+    // $usage = $check_stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Ganti dengan pengecekan sederhana atau langsung hapus:
+    // Atau jika nanti akan ada tabel pendaftaran, buat dulu tabelnya
+    
+    // Untuk sementara, langsung hapus tanpa pengecekan
+    $stmt = $db->prepare("DELETE FROM paket_kursus WHERE id = ?");
+    if ($stmt->execute([$id])) {
+        $_SESSION['success'] = "Paket kursus berhasil dihapus!";
     } else {
-        $stmt = $db->prepare("DELETE FROM paket_kursus WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            $_SESSION['success'] = "Paket kursus berhasil dihapus!";
-        } else {
-            $_SESSION['error'] = "Gagal menghapus paket kursus!";
-        }
+        $_SESSION['error'] = "Gagal menghapus paket kursus!";
     }
+    
     header('Location: paket.php');
     exit;
 }
@@ -581,9 +600,9 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
             document.getElementById('durasi_menit').addEventListener('input', convertToHours);
         });
 
-        // Edit Package Function
+        // Edit Package Function - DIPERBAIKI
         function editPackage(id) {
-            fetch(`get_paket_data.php?id=${id}`)
+            fetch(`paket.php?ajax_get_paket=1&id=${id}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -607,7 +626,19 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                     convertToHours();
 
                     // Change form to edit mode
-                    document.getElementById('formTitle').textContent = 'Edit Paket Kursus';
+                    const formTitle = document.querySelector('.bg-white.rounded-lg.shadow.mb-6 h3');
+                    if (formTitle) {
+                        formTitle.textContent = 'Edit Paket Kursus';
+                    }
+                    
+                    // Tampilkan form jika hidden
+                    const container = document.getElementById('packageFormContainer');
+                    const icon = document.getElementById('toggleFormIcon');
+                    container.classList.remove('hidden');
+                    icon.classList.remove('fa-plus');
+                    icon.classList.add('fa-times');
+                    
+                    // Tampilkan tombol edit dan sembunyikan tombol tambah
                     document.getElementById('submitButton').classList.add('hidden');
                     document.getElementById('editButton').classList.remove('hidden');
                     document.getElementById('cancelButton').classList.remove('hidden');
@@ -619,14 +650,21 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Gagal memuat data paket. Pastikan file get_paket_data.php ada dan berfungsi.');
+                    alert('Gagal memuat data paket.');
                 });
         }
 
-        // Reset Form Function
+        // Reset Form Function - DIPERBAIKI
         function resetForm() {
             document.getElementById('packageForm').reset();
-            document.getElementById('formTitle').textContent = 'Tambah Paket Kursus Baru';
+            
+            // Kembalikan judul ke default
+            const formTitle = document.querySelector('.bg-white.rounded-lg.shadow.mb-6 h3');
+            if (formTitle) {
+                formTitle.textContent = 'Tambah Paket Kursus Baru';
+            }
+            
+            // Tampilkan tombol tambah dan sembunyikan tombol edit
             document.getElementById('submitButton').classList.remove('hidden');
             document.getElementById('editButton').classList.add('hidden');
             document.getElementById('cancelButton').classList.add('hidden');

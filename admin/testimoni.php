@@ -233,10 +233,10 @@ $status_counts = $db->query("
                                         <select name="paket_kursus" required
                                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">Pilih Paket</option>
-                                            <option value="Kursus Manual">Kursus Manual</option>
-                                            <option value="Kursus Matic">Kursus Matic</option>
-                                            <option value="Kursus Kombinasi">Kursus Kombinasi</option>
-                                            <option value="Kursus Intensive">Kursus Intensive</option>
+                                            <option value="Paket Reguler">Paket Reguler</option>
+                                            <option value="Paket Campuran">Paket Campuran</option>
+                                            <option value="Paket Extra">Paket Extra</option>
+                                            <option value="Paket Pelancaran">Paket Pelancaran</option>
                                         </select>
                                     </div>
                                 </div>

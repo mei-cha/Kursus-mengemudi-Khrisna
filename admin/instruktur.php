@@ -9,11 +9,28 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 $db = (new Database())->getConnection();
 
+// AJAX handler untuk get data instruktur
+if (isset($_GET['ajax_get_instruktur']) && isset($_GET['id'])) {
+    $id = $_GET['id'];
+    $stmt = $db->prepare("SELECT * FROM instruktur WHERE id = ?");
+    $stmt->execute([$id]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($data) {
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    } else {
+        http_response_code(404);
+        echo json_encode(['error' => 'Data not found']);
+    }
+    exit;
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Determine mode: 'add' or 'edit'
     $mode = 'add';
-    if (isset($_POST['edit_instruktur']) && $_POST['edit_instruktur'] == '1') {
+    if (isset($_POST['id']) && !empty($_POST['id'])) {
         $mode = 'edit';
     }
 
@@ -32,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check_stmt = $db->prepare("SELECT id FROM instruktur WHERE nomor_licensi = ?");
         $check_stmt->execute([$nomor_licensi]);
         if ($check_stmt->rowCount() > 0) {
-            $error = "Nomor lisensi '$nomor_licensi' sudah digunakan!";
+            $_SESSION['error'] = "Nomor lisensi '$nomor_licensi' sudah digunakan!";
         } else {
             // Handle upload foto
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
@@ -49,27 +66,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (move_uploaded_file($_FILES["foto"]["tmp_name"], $target_file)) {
                             $foto = $foto_name;
                         } else {
-                            $error = "Gagal mengupload foto!";
+                            $_SESSION['error'] = "Gagal mengupload foto!";
                         }
                     } else {
-                        $error = "Format file tidak didukung! Hanya JPG, JPEG, PNG, GIF yang diizinkan.";
+                        $_SESSION['error'] = "Format file tidak didukung! Hanya JPG, JPEG, PNG, GIF yang diizinkan.";
                     }
                 } else {
-                    $error = "File bukan gambar atau ukuran melebihi 2MB!";
+                    $_SESSION['error'] = "File bukan gambar atau ukuran melebihi 2MB!";
                 }
             }
 
-            if (!isset($error)) {
+            if (!isset($_SESSION['error'])) {
                 try {
                     $stmt = $db->prepare("INSERT INTO instruktur (nama_lengkap, nomor_licensi, spesialisasi, pengalaman_tahun, deskripsi, foto, aktif, rating, total_siswa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                     if ($stmt->execute([$nama_lengkap, $nomor_licensi, $spesialisasi, $pengalaman_tahun, $deskripsi, $foto, $aktif, $rating, $total_siswa])) {
-                        $success = "Instruktur berhasil ditambahkan!";
-                        echo "<script>resetForm();</script>";
+                        $_SESSION['success'] = "Instruktur berhasil ditambahkan!";
                     } else {
-                        $error = "Gagal menambahkan instruktur.";
+                        $_SESSION['error'] = "Gagal menambahkan instruktur.";
                     }
                 } catch (PDOException $e) {
-                    $error = "Database error: " . $e->getMessage();
+                    $_SESSION['error'] = "Database error: " . $e->getMessage();
                 }
             }
         }
@@ -87,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check_stmt = $db->prepare("SELECT id FROM instruktur WHERE nomor_licensi = ? AND id != ?");
         $check_stmt->execute([$nomor_licensi, $id]);
         if ($check_stmt->rowCount() > 0) {
-            $error = "Nomor lisensi '$nomor_licensi' sudah digunakan oleh instruktur lain!";
+            $_SESSION['error'] = "Nomor lisensi '$nomor_licensi' sudah digunakan oleh instruktur lain!";
         } else {
             // Handle upload foto baru
             if (isset($_FILES['foto']) && $_FILES['foto']['error'] === 0) {
@@ -114,15 +130,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $stmt = $db->prepare("UPDATE instruktur SET nama_lengkap = ?, nomor_licensi = ?, spesialisasi = ?, pengalaman_tahun = ?, deskripsi = ?, foto = ?, aktif = ? WHERE id = ?");
                 if ($stmt->execute([$nama_lengkap, $nomor_licensi, $spesialisasi, $pengalaman_tahun, $deskripsi, $foto, $aktif, $id])) {
-                    $success = "Instruktur berhasil diupdate!";
+                    $_SESSION['success'] = "Instruktur berhasil diupdate!";
                 } else {
-                    $error = "Gagal mengupdate instruktur.";
+                    $_SESSION['error'] = "Gagal mengupdate instruktur.";
                 }
             } catch (PDOException $e) {
-                $error = "Database error: " . $e->getMessage();
+                $_SESSION['error'] = "Database error: " . $e->getMessage();
             }
         }
     }
+    
+    // Redirect setelah POST
+    header('Location: instruktur.php');
+    exit;
 }
 
 // Handle delete
@@ -137,10 +157,12 @@ if (isset($_GET['delete'])) {
         if ($instruktur['foto'] && file_exists("../assets/images/instruktur/" . $instruktur['foto'])) {
             unlink("../assets/images/instruktur/" . $instruktur['foto']);
         }
-        $success = "Instruktur berhasil dihapus!";
+        $_SESSION['success'] = "Instruktur berhasil dihapus!";
     } else {
-        $error = "Gagal menghapus instruktur!";
+        $_SESSION['error'] = "Gagal menghapus instruktur!";
     }
+    header('Location: instruktur.php');
+    exit;
 }
 
 // Handle toggle status
@@ -148,11 +170,18 @@ if (isset($_GET['toggle'])) {
     $id = $_GET['toggle'];
     $stmt = $db->prepare("UPDATE instruktur SET aktif = NOT aktif WHERE id = ?");
     if ($stmt->execute([$id])) {
-        $success = "Status instruktur berhasil diubah!";
+        $_SESSION['success'] = "Status instruktur berhasil diubah!";
     } else {
-        $error = "Gagal mengubah status instruktur!";
+        $_SESSION['error'] = "Gagal mengubah status instruktur!";
     }
+    header('Location: instruktur.php');
+    exit;
 }
+
+// Get messages from session
+$success = $_SESSION['success'] ?? '';
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
 
 // Fetch all instructors
 $stmt = $db->query("SELECT * FROM instruktur ORDER BY pengalaman_tahun DESC, nama_lengkap ASC");
@@ -203,13 +232,13 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
             </header>
 
             <main class="flex-1 overflow-y-auto p-6">
-                <?php if (isset($success)): ?>
+                <?php if ($success): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                         <?= htmlspecialchars($success) ?>
                     </div>
                 <?php endif; ?>
 
-                <?php if (isset($error)): ?>
+                <?php if ($error): ?>
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                         <?= htmlspecialchars($error) ?>
                     </div>
@@ -220,7 +249,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                     <div class="p-5">
                         <div class="flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg  font-semibold text-gray-900">Kelola Instruktur</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">Kelola Instruktur</h3>
                                 <p class="text-sm text-gray-500">Tambah atau edit data instruktur</p>
                             </div>
                             <button onclick="toggleInstructorForm()"
@@ -235,7 +264,6 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                             <form method="POST" enctype="multipart/form-data" id="instructorForm">
                                 <input type="hidden" name="id" id="editId">
                                 <input type="hidden" name="current_foto" id="currentFoto">
-                                <input type="hidden" name="add_instruktur" value="1">
 
                                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <!-- Foto & Status -->
@@ -270,19 +298,19 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
                                                 <input type="text" name="nama_lengkap" id="nama_lengkap" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Lisensi *</label>
                                                 <input type="text" name="nomor_licensi" id="nomor_licensi" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Spesialisasi *</label>
                                                 <select name="spesialisasi" id="spesialisasi" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                     <option value="manual">Manual</option>
                                                     <option value="matic">Matic</option>
                                                     <option value="keduanya">Keduanya</option>
@@ -291,22 +319,22 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Pengalaman (Tahun) *</label>
                                                 <input type="number" name="pengalaman_tahun" id="pengalaman_tahun" required min="1" max="50"
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             </div>
                                         </div>
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi & Keahlian *</label>
                                             <textarea name="deskripsi" id="deskripsi" rows="4" required
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
                                         </div>
                                         <div class="flex space-x-3 pt-2">
-                                            <button type="submit"
+                                            <button type="submit" id="submitButton"
                                                 class="flex-1 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 transition">
                                                 <i class="fas fa-plus mr-1.5"></i> Tambah Instruktur
                                             </button>
-                                            <button type="button" onclick="toggleInstructorForm()"
-                                                class="flex-1 px-5 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition">
-                                                <i class="fas fa-times mr-1.5"></i> Batal
+                                            <button type="button" onclick="resetInstructorForm()"
+                                                class="flex-1 px-5 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition hidden" id="cancelButton">
+                                                <i class="fas fa-times mr-1.5"></i> Batal Edit
                                             </button>
                                         </div>
                                     </div>
@@ -325,7 +353,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Total Instruktur</p>
-                                <p class="text-2xl font-bold"><?= $total_instruktur ?></p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $total_instruktur ?></p>
                             </div>
                         </div>
                     </div>
@@ -336,7 +364,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Instruktur Aktif</p>
-                                <p class="text-2xl font-bold"><?= $instruktur_aktif ?></p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $instruktur_aktif ?></p>
                             </div>
                         </div>
                     </div>
@@ -347,7 +375,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Ahli Manual</p>
-                                <p class="text-2xl font-bold"><?= $manual_experts ?></p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $manual_experts ?></p>
                             </div>
                         </div>
                     </div>
@@ -358,7 +386,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-600">Ahli Matic</p>
-                                <p class="text-2xl font-bold"><?= $matic_experts ?></p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $matic_experts ?></p>
                             </div>
                         </div>
                     </div>
@@ -367,7 +395,7 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                 <!-- Instructors List -->
                 <div class="bg-white rounded-lg shadow">
                     <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium">Daftar Instruktur (<?= count($instruktur) ?>)</h3>
+                        <h3 class="text-lg font-medium text-gray-900">Daftar Instruktur (<?= count($instruktur) ?>)</h3>
                     </div>
                     <div class="p-6">
                         <?php if (count($instruktur) > 0): ?>
@@ -377,7 +405,9 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                                         <div class="relative mb-4">
                                             <div class="w-20 h-20 mx-auto bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
                                                 <?php if ($data['foto']): ?>
-                                                    <img src="../assets/images/instruktur/<?= htmlspecialchars($data['foto']) ?>" class="w-20 h-20 rounded-full object-cover">
+                                                    <img src="../assets/images/instruktur/<?= htmlspecialchars($data['foto']) ?>" 
+                                                         class="w-20 h-20 rounded-full object-cover" 
+                                                         alt="<?= htmlspecialchars($data['nama_lengkap']) ?>">
                                                 <?php else: ?>
                                                     <i class="fas fa-user text-gray-400 text-2xl"></i>
                                                 <?php endif; ?>
@@ -435,7 +465,6 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
             }
         }
 
-
         document.getElementById('foto').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -452,9 +481,24 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
         });
 
         function editInstructor(id) {
-            fetch(`get_instruktur_data.php?id=${id}`)
-                .then(res => res.json())
+            console.log('Fetching instructor data for ID:', id);
+            
+            fetch(`instruktur.php?ajax_get_instruktur=1&id=${id}`)
+                .then(res => {
+                    console.log('Response status:', res.status);
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! Status: ${res.status}`);
+                    }
+                    return res.json();
+                })
                 .then(data => {
+                    console.log('Received data:', data);
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Isi form dengan data yang diterima
                     document.getElementById('editId').value = data.id;
                     document.getElementById('nama_lengkap').value = data.nama_lengkap;
                     document.getElementById('nomor_licensi').value = data.nomor_licensi;
@@ -464,10 +508,11 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                     document.getElementById('aktif').checked = data.aktif == 1;
                     document.getElementById('currentFoto').value = data.foto;
 
+                    // Update photo preview
                     if (data.foto) {
                         document.getElementById('photoPreview').innerHTML = `
                             <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                                <img src="../assets/images/instruktur/${encodeURIComponent(data.foto)}" class="w-32 h-32 rounded-full object-cover">
+                                <img src="../assets/images/instruktur/${data.foto}" class="w-32 h-32 rounded-full object-cover">
                             </div>
                         `;
                     } else {
@@ -478,34 +523,36 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
                         `;
                     }
 
-                    document.getElementById('editMode').value = '1';
-                    document.getElementById('addMode').value = '0';
-                    document.getElementById('formTitle').textContent = 'Edit Instruktur';
-                    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>Update Instruktur';
+                    // Change form to edit mode
+                    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-1.5"></i> Update Instruktur';
+                    document.getElementById('submitButton').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    document.getElementById('submitButton').classList.add('bg-green-600', 'hover:bg-green-700');
                     document.getElementById('cancelButton').classList.remove('hidden');
+
+                    // Tampilkan form jika hidden
+                    const formContainer = document.getElementById('instructorFormContainer');
+                    if (formContainer.classList.contains('hidden')) {
+                        toggleInstructorForm();
+                    }
+
+                    // Scroll to form
                     document.getElementById('instructorForm').scrollIntoView({
                         behavior: 'smooth'
                     });
                 })
                 .catch(err => {
-                    alert('Gagal memuat data instruktur.');
+                    console.error('Error:', err);
+                    alert('Gagal memuat data instruktur: ' + err.message);
                 });
         }
 
-        function confirmDelete(id) {
-            if (confirm('Yakin ingin menghapus instruktur ini?')) {
-                window.location.href = `instruktur.php?delete=${id}`;
-            }
-        }
-
-        function resetForm() {
+        function resetInstructorForm() {
             document.getElementById('instructorForm').reset();
             document.getElementById('editId').value = '';
             document.getElementById('currentFoto').value = '';
-            document.getElementById('editMode').value = '0';
-            document.getElementById('addMode').value = '1';
-            document.getElementById('formTitle').textContent = 'Tambah Instruktur Baru';
-            document.getElementById('submitButton').innerHTML = '<i class="fas fa-plus mr-2"></i>Tambah Instruktur';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-plus mr-1.5"></i> Tambah Instruktur';
+            document.getElementById('submitButton').classList.remove('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('submitButton').classList.add('bg-blue-600', 'hover:bg-blue-700');
             document.getElementById('cancelButton').classList.add('hidden');
             document.getElementById('photoPreview').innerHTML = `
                 <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
@@ -514,20 +561,29 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
             `;
         }
 
+        function confirmDelete(id) {
+            if (confirm('Yakin ingin menghapus instruktur ini?')) {
+                window.location.href = `instruktur.php?delete=${id}`;
+            }
+        }
+
         document.getElementById('instructorForm').addEventListener('submit', function(e) {
             const nama = document.getElementById('nama_lengkap').value.trim();
             const lisensi = document.getElementById('nomor_licensi').value.trim();
             const pengalaman = parseInt(document.getElementById('pengalaman_tahun').value);
+            
             if (!nama || !lisensi) {
                 alert('Nama dan nomor lisensi wajib diisi!');
                 e.preventDefault();
                 return;
             }
+            
             if (pengalaman < 1 || pengalaman > 50) {
                 alert('Pengalaman harus antara 1–50 tahun!');
                 e.preventDefault();
                 return;
             }
+            
             const foto = document.getElementById('foto').files[0];
             if (foto && foto.size > 2 * 1024 * 1024) {
                 alert('Ukuran foto maksimal 2MB!');
@@ -537,5 +593,4 @@ $matic_experts = $db->query("SELECT COUNT(*) as total FROM instruktur WHERE spes
         });
     </script>
 </body>
-
 </html>

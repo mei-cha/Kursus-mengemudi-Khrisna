@@ -109,29 +109,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">Status Pendaftaran Anda</h2>
                 
-                <!-- Status Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="text-center p-4 bg-blue-50 rounded-lg">
-                        <div class="text-2xl font-bold text-blue-600 mb-2">
-                            <?= $result['nomor_pendaftaran'] ?>
-                        </div>
-                        <div class="text-sm text-gray-600">Nomor Pendaftaran</div>
-                    </div>
-                    
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <div class="text-2xl font-bold text-green-600 mb-2">
-                            <?= htmlspecialchars($result['nama_lengkap']) ?>
-                        </div>
-                        <div class="text-sm text-gray-600">Nama Siswa</div>
-                    </div>
-                    
-                    <div class="text-center p-4 bg-purple-50 rounded-lg">
-                        <div class="text-2xl font-bold text-purple-600 mb-2 capitalize">
-                            <?= $result['status_pendaftaran'] ?>
-                        </div>
-                        <div class="text-sm text-gray-600">Status</div>
-                    </div>
-                </div>
+<!-- Status Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="text-center p-5 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-id-card text-blue-600"></i>
+        </div>
+        <div class="text-lg font-semibold text-gray-800 mb-1">
+            <?= $result['nomor_pendaftaran'] ?>
+        </div>
+        <div class="text-sm text-gray-500">Nomor Pendaftaran</div>
+    </div>
+    
+    <div class="text-center p-5 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-user text-blue-600"></i>
+        </div>
+        <div class="text-lg font-semibold text-gray-800 mb-1">
+            <?= htmlspecialchars($result['nama_lengkap']) ?>
+        </div>
+        <div class="text-sm text-gray-500">Nama Siswa</div>
+    </div>
+    
+    <div class="text-center p-5 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-clipboard-check text-blue-600"></i>
+        </div>
+        <?php
+        $status = $result['status_pendaftaran'];
+        $statusColors = [
+            'baru' => 'text-yellow-600 bg-yellow-50',
+            'dikonfirmasi' => 'text-blue-600 bg-blue-50',
+            'diproses' => 'text-purple-600 bg-purple-50',
+            'selesai' => 'text-green-600 bg-green-50'
+        ];
+        $statusColor = $statusColors[$status] ?? 'text-gray-600 bg-gray-50';
+        ?>
+        <div class="text-lg font-semibold <?= $statusColor ?> inline-block px-3 py-1 rounded-full mb-1 capitalize">
+            <?= $status ?>
+        </div>
+        <div class="text-sm text-gray-500">Status</div>
+    </div>
+</div>
 
                 <!-- Progress Bar -->
                 <div class="mb-8">
@@ -212,63 +231,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- Payment Information -->
-                <?php if ($result['jumlah_pembayaran'] > 0): ?>
-                <div class="mt-8 p-6 bg-green-50 rounded-lg">
-                    <h3 class="text-lg font-semibold text-green-800 mb-4">
-                        <i class="fas fa-check-circle mr-2"></i>Informasi Pembayaran
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-green-700">
-                                Jumlah Pembayaran: <strong><?= $result['jumlah_pembayaran'] ?>x</strong>
-                            </p>
-                            <p class="text-green-700">
-                                Total Terbayar: <strong>Rp <?= number_format($result['total_dibayar'] ?? 0, 0, ',', '.') ?></strong>
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-green-700">
-                                Sisa Pembayaran: 
-                                <strong>Rp <?= number_format($result['harga'] - ($result['total_dibayar'] ?? 0), 0, ',', '.') ?></strong>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <?php else: ?>
-                <div class="mt-8 p-6 bg-yellow-50 rounded-lg">
-                    <h3 class="text-lg font-semibold text-yellow-800 mb-4">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Informasi Pembayaran
-                    </h3>
-                    <p class="text-yellow-700">
-                        Belum ada pembayaran yang terverifikasi. Silakan lakukan pembayaran sesuai instruksi yang diberikan.
-                    </p>
-                </div>
-                <?php endif; ?>
+<!-- Payment Information -->
+<?php if ($result['jumlah_pembayaran'] > 0): ?>
+<div class="mt-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div class="flex items-center mb-6">
+        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
+            <i class="fas fa-credit-card text-blue-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800">Informasi Pembayaran</h3>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-2">Total Tagihan</p>
+            <p class="text-xl font-bold text-gray-800">Rp <?= number_format($result['harga'], 0, ',', '.') ?></p>
+        </div>
+        
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-2">Total Dibayar</p>
+            <p class="text-xl font-bold text-green-600">Rp <?= number_format($result['total_dibayar'] ?? 0, 0, ',', '.') ?></p>
+        </div>
+        
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600 mb-2">Sisa Pembayaran</p>
+            <p class="text-xl font-bold text-blue-600">
+                Rp <?= number_format($result['harga'] - ($result['total_dibayar'] ?? 0), 0, ',', '.') ?>
+            </p>
+        </div>
+    </div>
+    
+    <div class="mt-4 pt-4 border-t border-gray-200">
+        <div class="flex items-center text-gray-700">
+            <i class="fas fa-check-circle text-green-500 mr-2"></i>
+            <p class="text-sm">
+                <span class="font-medium"><?= $result['jumlah_pembayaran'] ?> pembayaran</span> telah diverifikasi
+            </p>
+        </div>
+    </div>
+</div>
+<?php else: ?>
+<div class="mt-8 p-6 bg-white border border-yellow-100 rounded-lg shadow-sm">
+    <div class="flex items-center mb-4">
+        <div class="w-10 h-10 bg-yellow-50 rounded-lg flex items-center justify-center mr-3">
+            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800">Informasi Pembayaran</h3>
+    </div>
+    
+    <div class="flex items-start">
+        <i class="fas fa-info-circle text-yellow-500 mt-1 mr-3"></i>
+        <div>
+            <p class="text-gray-700 font-medium mb-1">Belum Ada Pembayaran Terverifikasi</p>
+            <p class="text-sm text-gray-600">
+                Silakan lakukan pembayaran sesuai instruksi yang diberikan melalui email atau hubungi admin untuk informasi lebih lanjut.
+            </p>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
-                <!-- Next Steps -->
-                <div class="mt-8 p-6 bg-blue-50 rounded-lg">
-                    <h3 class="text-lg font-semibold text-blue-800 mb-4">Langkah Selanjutnya</h3>
-                    <?php if ($result['status_pendaftaran'] === 'baru'): ?>
-                        <p class="text-blue-700 mb-2">✅ Pendaftaran Anda telah diterima</p>
-                        <p class="text-blue-700 mb-2">⏳ Menunggu konfirmasi dari admin</p>
-                        <p class="text-blue-700">💳 Silakan lakukan pembayaran sesuai instruksi</p>
-                    <?php elseif ($result['status_pendaftaran'] === 'dikonfirmasi'): ?>
-                        <p class="text-blue-700 mb-2">✅ Pendaftaran telah dikonfirmasi</p>
-                        <p class="text-blue-700 mb-2">✅ Pembayaran telah diverifikasi</p>
-                        <p class="text-blue-700">⏳ Menunggu jadwal kursus dari admin</p>
-                    <?php elseif ($result['status_pendaftaran'] === 'diproses'): ?>
-                        <p class="text-blue-700 mb-2">✅ Pendaftaran telah dikonfirmasi</p>
-                        <p class="text-blue-700 mb-2">✅ Pembayaran telah diverifikasi</p>
-                        <p class="text-blue-700 mb-2">✅ Sedang dalam proses kursus</p>
-                        <p class="text-blue-700">📞 Hubungi kami untuk info jadwal</p>
-                    <?php elseif ($result['status_pendaftaran'] === 'selesai'): ?>
-                        <p class="text-blue-700 mb-2">✅ Pendaftaran telah dikonfirmasi</p>
-                        <p class="text-blue-700 mb-2">✅ Pembayaran telah diverifikasi</p>
-                        <p class="text-blue-700 mb-2">✅ Proses kursus telah selesai</p>
-                        <p class="text-blue-700">🎉 Selamat! Anda telah menyelesaikan kursus</p>
-                    <?php endif; ?>
+<!-- Next Steps -->
+<div class="mt-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div class="flex items-center mb-6">
+        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
+            <i class="fas fa-arrow-right text-blue-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800">Langkah Selanjutnya</h3>
+    </div>
+    
+    <div class="space-y-3">
+        <?php if ($result['status_pendaftaran'] === 'baru'): ?>
+            <div class="flex items-start">
+                <i class="fas fa-clock text-gray-400 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Menunggu Konfirmasi Admin</p>
+                    <p class="text-sm text-gray-600">Admin akan menghubungi Anda dalam 1-2 hari kerja</p>
                 </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-credit-card text-gray-400 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Persiapkan Pembayaran</p>
+                    <p class="text-sm text-gray-600">Siapkan pembayaran sesuai instruksi yang akan diberikan</p>
+                </div>
+            </div>
+        <?php elseif ($result['status_pendaftaran'] === 'dikonfirmasi'): ?>
+            <div class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Pendaftaran Dikonfirmasi</p>
+                    <p class="text-sm text-gray-600">Pendaftaran Anda telah dikonfirmasi oleh admin</p>
+                </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-calendar text-blue-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Menunggu Jadwal Kursus</p>
+                    <p class="text-sm text-gray-600">Admin akan mengatur jadwal kursus untuk Anda</p>
+                </div>
+            </div>
+        <?php elseif ($result['status_pendaftaran'] === 'diproses'): ?>
+            <div class="flex items-start">
+                <i class="fas fa-spinner text-purple-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Kursus Sedang Berlangsung</p>
+                    <p class="text-sm text-gray-600">Anda sedang mengikuti program kursus mengemudi</p>
+                </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-calendar-check text-purple-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Ikuti Jadwal dengan Baik</p>
+                    <p class="text-sm text-gray-600">Pastikan untuk mengikuti semua sesi sesuai jadwal</p>
+                </div>
+            </div>
+        <?php elseif ($result['status_pendaftaran'] === 'selesai'): ?>
+            <div class="flex items-start">
+                <i class="fas fa-graduation-cap text-green-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Kursus Telah Selesai</p>
+                    <p class="text-sm text-gray-600">Selamat! Anda telah menyelesaikan kursus mengemudi</p>
+                </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-certificate text-green-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="text-gray-700 font-medium">Penerimaan Sertifikat</p>
+                    <p class="text-sm text-gray-600">Sertifikat akan diberikan dalam waktu dekat</p>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 
                 <!-- Contact Information -->
                 <div class="mt-6 text-center">

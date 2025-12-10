@@ -29,20 +29,20 @@ try {
 <!-- Main Content -->
 <div class="max-w-7xl mx-auto px-4 py-8">
     <!-- Filter Section -->
-    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Semua Instruktur</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Semua Instruktur</h2>
                 <p class="text-gray-600">Pilih berdasarkan spesialisasi dan pengalaman</p>
             </div>
-            <div class="mt-4 md:mt-0 flex flex-wrap gap-4">
-                <select id="filter-spesialisasi" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <div class="mt-4 md:mt-0 flex flex-wrap gap-3">
+                <select id="filter-spesialisasi" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700">
                     <option value="all">Semua Spesialisasi</option>
                     <option value="manual">Manual</option>
                     <option value="matic">Matic</option>
                     <option value="keduanya">Keduanya</option>
                 </select>
-                <select id="filter-pengalaman" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select id="filter-pengalaman" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700">
                     <option value="all">Semua Pengalaman</option>
                     <option value="5">5+ Tahun</option>
                     <option value="10">10+ Tahun</option>
@@ -54,7 +54,7 @@ try {
 
     <!-- All Instructors Grid -->
     <?php if (empty($instruktur)): ?>
-        <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
             <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
             <h3 class="text-2xl font-bold text-gray-600 mb-2">Data Instruktur Sedang Tidak Tersedia</h3>
             <p class="text-gray-500">Silakan hubungi kami untuk informasi lebih lanjut.</p>
@@ -62,13 +62,13 @@ try {
     <?php else: ?>
         <div id="instructorsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($instruktur as $inst): ?>
-            <div class="instructor-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 border border-gray-100"
+            <div class="instructor-card bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition duration-300"
                  data-spesialisasi="<?= $inst['spesialisasi'] ?>"
                  data-pengalaman="<?= $inst['pengalaman_tahun'] ?>">
                 
                 <!-- Header dengan Foto -->
                 <div class="relative">
-                    <div class="h-48 bg-gradient-to-br from-blue-500 to-blue-600 rounded-t-2xl flex items-center justify-center">
+                    <div class="h-48 bg-gradient-to-br from-blue-500 to-blue-600 rounded-t-xl flex items-center justify-center">
                         <?php if (!empty($inst['foto'])): ?>
                             <img src="assets/images/instruktur/<?= $inst['foto'] ?>" 
                                  alt="<?= htmlspecialchars($inst['nama_lengkap']) ?>" 
@@ -90,18 +90,18 @@ try {
                 </div>
 
                 <!-- Content -->
-                <div class="p-6">
+                <div class="p-5">
                     <!-- Nama dan Spesialisasi -->
                     <div class="mb-4">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2"><?= htmlspecialchars($inst['nama_lengkap']) ?></h3>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2"><?= htmlspecialchars($inst['nama_lengkap']) ?></h3>
                         
-                        <div class="flex items-center text-gray-600 mb-3">
+                        <div class="flex items-center text-gray-600 mb-2">
                             <i class="fas fa-car mr-2 text-blue-500"></i>
                             <span class="font-medium">Spesialis: <?= ucfirst($inst['spesialisasi']) ?></span>
                         </div>
 
                         <!-- Nomor Lisensi -->
-                        <div class="flex items-center text-gray-600 text-sm mb-4">
+                        <div class="flex items-center text-gray-600 text-sm mb-3">
                             <i class="fas fa-id-card mr-2 text-blue-500"></i>
                             <span>Lisensi: <?= htmlspecialchars($inst['nomor_licensi']) ?></span>
                         </div>
@@ -109,12 +109,12 @@ try {
 
                     <!-- Stats Grid -->
                     <div class="grid grid-cols-2 gap-3 mb-4">
-                        <div class="text-center bg-blue-50 rounded-lg p-3">
-                            <div class="text-lg font-bold text-blue-600"><?= $inst['pengalaman_tahun'] ?>+</div>
+                        <div class="text-center bg-gray-50 rounded-lg p-3">
+                            <div class="text-lg font-bold text-gray-800"><?= $inst['pengalaman_tahun'] ?>+</div>
                             <div class="text-xs text-gray-600">Tahun Pengalaman</div>
                         </div>
-                        <div class="text-center bg-green-50 rounded-lg p-3">
-                            <div class="text-lg font-bold text-green-600">Bersertifikat</div>
+                        <div class="text-center bg-gray-50 rounded-lg p-3">
+                            <div class="text-lg font-bold text-gray-800">Bersertifikat</div>
                             <div class="text-xs text-gray-600">Profesional</div>
                         </div>
                     </div>
@@ -130,22 +130,22 @@ try {
                     <div class="mb-4">
                         <h4 class="font-semibold text-gray-700 text-sm mb-2">Keahlian:</h4>
                         <div class="flex flex-wrap gap-1">
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                                 <i class="fas fa-road mr-1"></i>Praktik Mengemudi
                             </span>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                                 <i class="fas fa-book mr-1"></i>Teori Berkendara
                             </span>
                             <?php if ($inst['spesialisasi'] == 'manual'): ?>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                                 <i class="fas fa-cog mr-1"></i>Kopling & Gigi
                             </span>
                             <?php elseif ($inst['spesialisasi'] == 'matic'): ?>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                                 <i class="fas fa-bolt mr-1"></i>Transmisi Otomatis
                             </span>
                             <?php else: ?>
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                                 <i class="fas fa-sync-alt mr-1"></i>Manual & Matic
                             </span>
                             <?php endif; ?>
@@ -160,7 +160,7 @@ try {
                         </button>
                         <a href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20belajar%20dengan%20instruktur%20<?= urlencode($inst['nama_lengkap']) ?>%20di%20Krishna%20Driving.%20Saya%20ingin%20konsultasi%20terlebih%20dahulu."
                            target="_blank"
-                           class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300">
+                           class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center">
                             <i class="fab fa-whatsapp"></i>
                         </a>
                     </div>
@@ -171,7 +171,7 @@ try {
     <?php endif; ?>
 
     <!-- Call to Action -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-center text-white mt-12">
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-8 text-center text-white mt-12">
         <div class="max-w-2xl mx-auto">
             <h3 class="text-2xl font-bold mb-4">Siap Belajar Mengemudi?</h3>
             <p class="text-blue-100 mb-6">
@@ -184,7 +184,7 @@ try {
                     <i class="fas fa-gift mr-2"></i>Lihat Paket Kursus
                 </a>
                 <a href="index.php#daftar" 
-                   class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300">
+                   class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
                     <i class="fas fa-edit mr-2"></i>Daftar Sekarang
                 </a>
             </div>
@@ -194,7 +194,7 @@ try {
 
 <!-- Instructor Detail Modal -->
 <div id="instructorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
             <div class="flex justify-between items-start mb-6">
                 <h3 class="text-2xl font-bold text-gray-800" id="modalName">Nama Instruktur</h3>
@@ -217,19 +217,19 @@ try {
                 
                 <div class="md:col-span-2">
                     <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div class="bg-blue-50 rounded-lg p-4 text-center">
-                            <div id="modalExperience" class="text-lg font-bold text-blue-600">0+</div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center">
+                            <div id="modalExperience" class="text-lg font-bold text-gray-800">0+</div>
                             <div class="text-sm text-gray-600">Tahun Pengalaman</div>
                         </div>
-                        <div class="bg-green-50 rounded-lg p-4 text-center">
-                            <div class="text-lg font-bold text-green-600">Profesional</div>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center">
+                            <div class="text-lg font-bold text-gray-800">Profesional</div>
                             <div class="text-sm text-gray-600">Sertifikasi</div>
                         </div>
                     </div>
                     
                     <div class="mb-4">
                         <h4 class="font-semibold text-gray-700 mb-2">Spesialisasi:</h4>
-                        <span id="modalSpecialization" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold">
+                        <span id="modalSpecialization" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
                             <!-- Spesialisasi -->
                         </span>
                     </div>
@@ -309,34 +309,26 @@ try {
         
         // Set specialization badge
         const specializationBadge = document.getElementById('modalSpecialization');
-        specializationBadge.className = `inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
-            instructor.spesialisasi === 'manual' ? 'bg-yellow-100 text-yellow-800' :
-            instructor.spesialisasi === 'matic' ? 'bg-purple-100 text-purple-800' :
-            'bg-green-100 text-green-800'
-        }`;
-        specializationBadge.innerHTML = `<i class="fas fa-${
-            instructor.spesialisasi === 'manual' ? 'cog' : 
-            instructor.spesialisasi === 'matic' ? 'bolt' : 'sync-alt'
-        } mr-1"></i>${instructor.spesialisasi.charAt(0).toUpperCase() + instructor.spesialisasi.slice(1)}`;
+        specializationBadge.textContent = instructor.spesialisasi.charAt(0).toUpperCase() + instructor.spesialisasi.slice(1);
         
         // Set skills
         const skillsContainer = document.getElementById('modalSkills');
         const skills = [
-            { name: 'Praktik Mengemudi', icon: 'road', color: 'blue' },
-            { name: 'Teori Berkendara', icon: 'book', color: 'green' },
-            { name: 'Safety Driving', icon: 'shield-alt', color: 'red' }
+            { name: 'Praktik Mengemudi', icon: 'road' },
+            { name: 'Teori Berkendara', icon: 'book' },
+            { name: 'Safety Driving', icon: 'shield-alt' }
         ];
         
         if (instructor.spesialisasi === 'manual') {
-            skills.push({ name: 'Kopling & Gigi', icon: 'cog', color: 'yellow' });
+            skills.push({ name: 'Kopling & Gigi', icon: 'cog' });
         } else if (instructor.spesialisasi === 'matic') {
-            skills.push({ name: 'Transmisi Otomatis', icon: 'bolt', color: 'purple' });
+            skills.push({ name: 'Transmisi Otomatis', icon: 'bolt' });
         } else {
-            skills.push({ name: 'Manual & Matic', icon: 'sync-alt', color: 'indigo' });
+            skills.push({ name: 'Manual & Matic', icon: 'sync-alt' });
         }
         
         skillsContainer.innerHTML = skills.map(skill => 
-            `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-${skill.color}-100 text-${skill.color}-800">
+            `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                 <i class="fas fa-${skill.icon} mr-1"></i>${skill.name}
             </span>`
         ).join('');

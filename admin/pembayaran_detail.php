@@ -31,6 +31,14 @@ $status_badges = [
     'ditolak' => 'bg-red-100 text-red-800'
 ];
 $status_class = $status_badges[$data['status']] ?? 'bg-gray-100 text-gray-800';
+
+// Handle status display
+$status_display = ucfirst($data['status']);
+if ($data['status'] === 'terverifikasi') {
+    $status_display = 'Terverifikasi';
+} elseif ($data['status'] === 'menunggu') {
+    $status_display = 'Menunggu Verifikasi';
+}
 ?>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -56,12 +64,15 @@ $status_class = $status_badges[$data['status']] ?? 'bg-gray-100 text-gray-800';
             </div>
             <div>
                 <label class="text-sm font-medium text-gray-600">Tipe Pembayaran</label>
-                <p class="text-gray-900 capitalize"><?= $data['tipe_pembayaran'] ?></p>
+                <p class="text-gray-900 capitalize">
+                    <?= $data['tipe_pembayaran'] === 'dp' ? 'DP (Uang Muka)' : 
+                       ($data['tipe_pembayaran'] === 'pelunasan' ? 'Pelunasan' : 'Lunas') ?>
+                </p>
             </div>
             <div>
                 <label class="text-sm font-medium text-gray-600">Status</label>
                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $status_class ?>">
-                    <?= ucfirst($data['status']) ?>
+                    <?= $status_display ?>
                 </span>
             </div>
             <?php if ($data['diverifikasi_oleh']): ?>
@@ -111,20 +122,20 @@ $status_class = $status_badges[$data['status']] ?? 'bg-gray-100 text-gray-800';
 
 <!-- Bukti Pembayaran & Catatan -->
 <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-    <?php if ($data['bukti_bayar']): ?>
+    <?php if (!empty($data['bukti_bayar'])): ?>
     <div>
         <h4 class="text-lg font-medium text-gray-900 mb-4">Bukti Pembayaran</h4>
         <div class="border border-gray-200 rounded-lg p-4">
             <img src="../assets/images/bukti_bayar/<?= $data['bukti_bayar'] ?>" 
                  alt="Bukti Pembayaran" 
-                 class="w-full max-w-xs mx-auto rounded shadow-sm cursor-pointer"
+                 class="w-full max-w-xs mx-auto rounded shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                  onclick="window.open('../assets/images/bukti_bayar/<?= $data['bukti_bayar'] ?>', '_blank')">
             <p class="text-sm text-gray-500 text-center mt-2">Klik gambar untuk melihat ukuran penuh</p>
         </div>
     </div>
     <?php endif; ?>
     
-    <?php if ($data['catatan']): ?>
+    <?php if (!empty($data['catatan'])): ?>
     <div>
         <h4 class="text-lg font-medium text-gray-900 mb-4">Catatan</h4>
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -135,21 +146,21 @@ $status_class = $status_badges[$data['status']] ?? 'bg-gray-100 text-gray-800';
 </div>
 
 <!-- Informasi Bank (jika transfer) -->
-<?php if ($data['metode_pembayaran'] === 'transfer' && ($data['bank_name'] || $data['account_number'])): ?>
+<?php if ($data['metode_pembayaran'] === 'transfer' && (!empty($data['nama_bank']) || !empty($data['nomor_rekening']))): ?>
 <div class="mt-6">
     <h4 class="text-lg font-medium text-gray-900 mb-4">Informasi Transfer</h4>
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <?php if ($data['bank_name']): ?>
+            <?php if (!empty($data['nama_bank'])): ?>
             <div>
                 <label class="text-sm font-medium text-gray-600">Nama Bank</label>
-                <p class="text-gray-900"><?= $data['bank_name'] ?></p>
+                <p class="text-gray-900"><?= htmlspecialchars($data['nama_bank']) ?></p>
             </div>
             <?php endif; ?>
-            <?php if ($data['account_number']): ?>
+            <?php if (!empty($data['nomor_rekening'])): ?>
             <div>
                 <label class="text-sm font-medium text-gray-600">Nomor Rekening</label>
-                <p class="text-gray-900"><?= $data['account_number'] ?></p>
+                <p class="text-gray-900"><?= htmlspecialchars($data['nomor_rekening']) ?></p>
             </div>
             <?php endif; ?>
         </div>

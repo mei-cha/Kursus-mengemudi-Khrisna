@@ -55,14 +55,11 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                 </div>
             </div>
             <div class="flex space-x-3">
+                <!-- TOMBOL EDIT DIHAPUS - HANYA TINGGAL TOMBOL KEMBALI -->
                 <button onclick="window.history.back()"
                     class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali
                 </button>
-                <a href="pendaftaran_edit.php?id=<?= $id ?>"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                    <i class="fas fa-edit mr-2"></i>Edit
-                </a>
             </div>
         </div>
     </div>
