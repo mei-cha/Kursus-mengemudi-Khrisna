@@ -84,12 +84,6 @@ $tipe_class = $tipe_badges[$data['tipe_sesi']] ?? 'bg-gray-100 text-gray-800 bor
                     </div>
                 </div>
             </div>
-            <div class="flex space-x-3">
-                <button onclick="closeViewModal()" 
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
-                    <i class="fas fa-times mr-2"></i>Tutup
-                </button>
-            </div>
         </div>
     </div>
 
@@ -278,34 +272,6 @@ $tipe_class = $tipe_badges[$data['tipe_sesi']] ?? 'bg-gray-100 text-gray-800 bor
                                 </p>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200 bg-blue-50">
-                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <i class="fas fa-bolt text-blue-500 mr-3"></i>
-                        Quick Actions
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-3">
-                        <button onclick="updateSchedule(<?= $data['id'] ?>, '<?= $data['status'] ?>', '<?= $data['kehadiran_siswa'] ?? '' ?>', `<?= htmlspecialchars($data['catatan_instruktur'] ?? '') ?>`)" 
-                                class="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-200 flex items-center justify-center">
-                            <i class="fas fa-edit mr-2"></i>
-                            Update Status
-                        </button>
-                        
-                        <?php if (!empty($data['telepon'])): ?>
-                        <a href="https://wa.me/62<?= ltrim($data['telepon'], '0') ?>?text=Halo%20<?= urlencode($data['nama_siswa']) ?>%2C%20mengenai%20jadwal%20kursus%20mengemudi%20tanggal%20<?= urlencode(formatDate($data['tanggal_jadwal'], 'd M Y')) ?>"
-                           target="_blank"
-                           class="w-full bg-green-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-200 flex items-center justify-center">
-                            <i class="fab fa-whatsapp mr-2"></i>
-                            WhatsApp Siswa
-                        </a>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>

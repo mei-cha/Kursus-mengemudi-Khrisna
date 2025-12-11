@@ -152,17 +152,12 @@ try {
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex space-x-3">
+                    <!-- Action Button -->
+                    <div>
                         <button onclick="showInstructorDetail(<?= htmlspecialchars(json_encode($inst)) ?>)" 
-                                class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 text-sm">
-                            <i class="fas fa-eye mr-1"></i>Lihat Profil
+                                class="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 text-md">
+                            <i class="fas fa-eye mr-1"></i>Lihat Profil Lengkap
                         </button>
-                        <a href="https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20belajar%20dengan%20instruktur%20<?= urlencode($inst['nama_lengkap']) ?>%20di%20Krishna%20Driving.%20Saya%20ingin%20konsultasi%20terlebih%20dahulu."
-                           target="_blank"
-                           class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300 flex items-center justify-center">
-                            <i class="fab fa-whatsapp"></i>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -171,25 +166,23 @@ try {
     <?php endif; ?>
 
     <!-- Call to Action -->
-    <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-8 text-center text-white mt-12">
-        <div class="max-w-2xl mx-auto">
-            <h3 class="text-2xl font-bold mb-4">Siap Belajar Mengemudi?</h3>
-            <p class="text-blue-100 mb-6">
-                Pilih instruktur favorit Anda dan mulai perjalanan belajar mengemudi dengan profesional.
-                Garansi sampai bisa!
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-center text-white mt-12">
+            <h3 class="text-2xl font-bold mb-4">Tertarik Bergabung?</h3>
+            <p class="text-blue-100 mb-6 max-w-2xl mx-auto">
+                Lihat sendiri bagaimana pengalaman belajar mengemudi yang menyenangkan di Krishna Driving.
+                Daftar sekarang dan jadilah bagian dari keluarga besar kami!
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="paket-kursus.php" 
-                   class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                <a href="paket-kursus.php"
+                    class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
                     <i class="fas fa-gift mr-2"></i>Lihat Paket Kursus
                 </a>
-                <a href="index.php#daftar" 
-                   class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+                <a href="index.php#daftar"
+                    class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300">
                     <i class="fas fa-edit mr-2"></i>Daftar Sekarang
                 </a>
             </div>
         </div>
-    </div>
 </div>
 
 <!-- Instructor Detail Modal -->
@@ -248,18 +241,6 @@ try {
                 <p id="modalDescription" class="text-gray-600 leading-relaxed">
                     <!-- Deskripsi -->
                 </p>
-            </div>
-            
-            <div class="mt-6 flex space-x-3">
-                <a href="#" id="modalWhatsApp" 
-                   target="_blank"
-                   class="flex-1 bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition duration-300 text-center">
-                    <i class="fab fa-whatsapp mr-2"></i>Konsultasi via WhatsApp
-                </a>
-                <a href="index.php#daftar" 
-                   class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 text-center">
-                    <i class="fas fa-edit mr-2"></i>Daftar Sekarang
-                </a>
             </div>
         </div>
     </div>
@@ -333,9 +314,9 @@ try {
             </span>`
         ).join('');
         
-        // Set WhatsApp link
-        const whatsappLink = document.getElementById('modalWhatsApp');
-        whatsappLink.href = `https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20belajar%20dengan%20instruktur%20${encodeURIComponent(instructor.nama_lengkap)}%20di%20Krishna%20Driving.%20Saya%20ingin%20konsultasi%20terlebih%20dahulu.`;
+        // Hapus kode yang mengatur link WhatsApp
+        // const whatsappLink = document.getElementById('modalWhatsApp');
+        // whatsappLink.href = `https://wa.me/6281234567890?text=Halo,%20saya%20tertarik%20belajar%20dengan%20instruktur%20${encodeURIComponent(instructor.nama_lengkap)}%20di%20Krishna%20Driving.%20Saya%20ingin%20konsultasi%20terlebih%20dahulu.`;
         
         // Show modal
         modal.classList.remove('hidden');

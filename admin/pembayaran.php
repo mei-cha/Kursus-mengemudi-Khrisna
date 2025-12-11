@@ -207,20 +207,11 @@ $payment_types = $db->query("
             font-size: 0.75rem;
             padding: 0.25rem 0.75rem;
         }
-        /* Custom select styling */
-        select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
-            padding-right: 2.5rem;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
 
-        /* Remove default arrow in IE */
-        select::-ms-expand {
-            display: none;
+        /* PERBAIKAN: Menggunakan styling default browser untuk select */
+        select {
+            /* Hanya gunakan styling dasar, biarkan browser menampilkan ikon default */
+            padding-right: 2.5rem;
         }
 
         /* Ensure buttons have consistent height */
@@ -600,7 +591,7 @@ $payment_types = $db->query("
                         
                         <div class="flex space-x-2 mt-4">
                             <button type="submit" 
-                                    class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition duration-300">
+                                    class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">
                                 <i class="fas fa-filter mr-2"></i>Filter
                             </button>
                             <a href="pembayaran.php" 

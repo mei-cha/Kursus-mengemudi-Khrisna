@@ -10,6 +10,77 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 $db = (new Database())->getConnection();
 
+// ==================== FUNGSI HELPER ====================
+function cekStatusPembayaran($db, $pendaftaran_id) {
+    $stmt = $db->prepare("
+        SELECT 
+            SUM(CASE WHEN status = 'terverifikasi' THEN jumlah ELSE 0 END) as total_dibayar,
+            MAX(CASE WHEN tipe_pembayaran = 'lunas' AND status = 'terverifikasi' THEN 1 ELSE 0 END) as is_lunas
+        FROM pembayaran 
+        WHERE pendaftaran_id = ?
+    ");
+    $stmt->execute([$pendaftaran_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function cekJumlahPertemuan($db, $pendaftaran_id) {
+    $stmt = $db->prepare("
+        SELECT 
+            ps.id,
+            pk.jumlah_pertemuan,
+            COUNT(jk.id) as pertemuan_selesai
+        FROM pendaftaran_siswa ps
+        JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id
+        LEFT JOIN jadwal_kursus jk ON ps.id = jk.pendaftaran_id 
+            AND jk.status = 'selesai'
+        WHERE ps.id = ?
+        GROUP BY ps.id
+    ");
+    $stmt->execute([$pendaftaran_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function updateStatusOtomatis($db, $pendaftaran_id) {
+    // Cek pembayaran
+    $pembayaran = cekStatusPembayaran($db, $pendaftaran_id);
+    $total_dibayar = $pembayaran['total_dibayar'] ?? 0;
+    $is_lunas = $pembayaran['is_lunas'] ?? 0;
+    
+    // Cek pertemuan
+    $pertemuan = cekJumlahPertemuan($db, $pendaftaran_id);
+    $jumlah_pertemuan = $pertemuan['jumlah_pertemuan'] ?? 0;
+    $pertemuan_selesai = $pertemuan['pertemuan_selesai'] ?? 0;
+    
+    // Dapatkan status saat ini
+    $stmt = $db->prepare("SELECT status_pendaftaran FROM pendaftaran_siswa WHERE id = ?");
+    $stmt->execute([$pendaftaran_id]);
+    $current_status = $stmt->fetchColumn();
+    
+    $new_status = $current_status;
+    
+    // ATURAN: Jika sudah dikonfirmasi dan sudah bayar DP, ubah ke diproses
+    if ($current_status === 'dikonfirmasi' && $total_dibayar > 0) {
+        $new_status = 'diproses';
+    }
+    
+    // ATURAN: Jika sudah selesai semua pertemuan DAN lunas, ubah ke selesai
+    if ($current_status === 'diproses' && 
+        $pertemuan_selesai >= $jumlah_pertemuan && 
+        $is_lunas == 1) {
+        $new_status = 'selesai';
+    }
+    
+    // Update jika status berubah
+    if ($new_status !== $current_status) {
+        $update_stmt = $db->prepare("UPDATE pendaftaran_siswa SET status_pendaftaran = ? WHERE id = ?");
+        $update_stmt->execute([$new_status, $pendaftaran_id]);
+        return $new_status;
+    }
+    
+    return $current_status;
+}
+// ==================== END FUNGSI HELPER ====================
+
 // Handle tambah siswa manual
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
     // Generate nomor pendaftaran
@@ -30,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
         'kondisi_medis' => $_POST['kondisi_medis'],
         'kontak_darurat' => $_POST['kontak_darurat'],
         'nama_kontak_darurat' => $_POST['nama_kontak_darurat'],
-        'status_pendaftaran' => 'dikonfirmasi', // Langsung dikonfirmasi karena input manual
+        'status_pendaftaran' => 'dikonfirmasi',
         'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin'
     ];
 
@@ -63,6 +134,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $stmt = $db->prepare("UPDATE pendaftaran_siswa SET status_pendaftaran = ?, catatan_admin = ? WHERE id = ?");
     if ($stmt->execute([$status, $catatan, $id])) {
         $success = "Status pendaftaran berhasil diupdate!";
+        
+        // Panggil update status otomatis untuk pengecekan ulang
+        updateStatusOtomatis($db, $id);
     } else {
         $error = "Gagal mengupdate status pendaftaran!";
     }
@@ -73,31 +147,24 @@ if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
     try {
-        // Mulai transaksi
         $db->beginTransaction();
 
-        // 1. Hapus dulu data evaluasi_kemajuan terkait
+        // Hapus data terkait
         $stmt1 = $db->prepare("DELETE FROM evaluasi_kemajuan WHERE pendaftaran_id = ?");
         $stmt1->execute([$id]);
 
-        // 2. Hapus data jadwal_kursus terkait
         $stmt2 = $db->prepare("DELETE FROM jadwal_kursus WHERE pendaftaran_id = ?");
         $stmt2->execute([$id]);
 
-        // 3. Hapus data pembayaran terkait (jika ada tabel pembayaran)
-        // $stmt3 = $db->prepare("DELETE FROM pembayaran WHERE pendaftaran_id = ?");
-        // $stmt3->execute([$id]);
+        $stmt3 = $db->prepare("DELETE FROM pembayaran WHERE pendaftaran_id = ?");
+        $stmt3->execute([$id]);
 
-        // 4. Baru hapus data pendaftaran
         $stmt4 = $db->prepare("DELETE FROM pendaftaran_siswa WHERE id = ?");
         $stmt4->execute([$id]);
 
-        // Commit transaksi
         $db->commit();
-
         $success = "Pendaftaran berhasil dihapus beserta data terkait!";
     } catch (PDOException $e) {
-        // Rollback jika ada error
         $db->rollBack();
         $error = "Gagal menghapus pendaftaran! Error: " . $e->getMessage();
     }
@@ -108,7 +175,7 @@ $status_filter = $_GET['status'] ?? '';
 $search = $_GET['search'] ?? '';
 
 // Build query
-$query = "SELECT ps.*, pk.nama_paket, pk.harga 
+$query = "SELECT ps.*, pk.nama_paket, pk.harga, pk.jumlah_pertemuan, pk.tipe_mobil as tipe_paket
           FROM pendaftaran_siswa ps 
           LEFT JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
           WHERE 1=1";
@@ -135,19 +202,18 @@ $stmt = $db->prepare($query);
 $stmt->execute($params);
 $pendaftaran = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get status counts for filter
+// Get status counts
 $status_counts = $db->query("
     SELECT status_pendaftaran, COUNT(*) as count 
     FROM pendaftaran_siswa 
     GROUP BY status_pendaftaran
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Get paket kursus untuk form tambah siswa - DIUBAH: hilangkan WHERE status
-$paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
+// Get paket kursus
+$paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -158,21 +224,17 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         .sidebar {
             transition: all 0.3s ease;
         }
-
         .sidebar.collapsed {
             width: 70px;
         }
-
         .sidebar.collapsed .sidebar-text {
             display: none;
         }
-
         .main-content {
             transition: all 0.3s ease;
         }
     </style>
 </head>
-
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <!-- Sidebar -->
@@ -190,12 +252,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                     <div class="flex items-center space-x-4">
                         <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100">
                             <i class="fas fa-bars text-gray-600"></i>
-                        </button>
-                        <div class="text-right">
-                            <p class="text-sm font-medium text-gray-900"><?= $_SESSION['admin_username'] ?></p>
-                            <p class="text-xs text-gray-500"><?= date('l, d F Y') ?></p>
-                        </div>
-                    </div>
+                        </button>                    </div>
                 </div>
             </header>
 
@@ -287,11 +344,11 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Paket Kursus *</label>
-                                        <select name="paket_kursus_id" required
+                                        <select name="paket_kursus_id" required id="paketSelect"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             <option value="">Pilih Paket</option>
                                             <?php foreach ($paket_kursus as $paket): ?>
-                                                <option value="<?= $paket['id'] ?>">
+                                                <option value="<?= $paket['id'] ?>" data-tipe="<?= $paket['tipe_mobil'] ?>">
                                                     <?= htmlspecialchars($paket['nama_paket']) ?> - Rp <?= number_format($paket['harga'], 0, ',', '.') ?>
                                                 </option>
                                             <?php endforeach; ?>
@@ -301,10 +358,11 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Mobil *</label>
-                                            <select name="tipe_mobil" required
+                                            <select name="tipe_mobil" required id="tipeMobil"
                                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="manual">Manual</option>
                                                 <option value="matic">Matic</option>
+                                                <option value="keduanya">Keduanya</option>
                                             </select>
                                         </div>
                                         <div>
@@ -477,7 +535,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket'] ?? '-') ?></div>
-                                                <div class="text-sm text-gray-500">Rp <?= number_format($data['harga'] ?? 0, 0, ',', '.') ?></div>
+                                                <div class="text-sm text-gray-500"><?= $data['jumlah_pertemuan'] ?? 0 ?> pertemuan</div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <?= date('d M Y', strtotime($data['dibuat_pada'])) ?>
@@ -623,6 +681,15 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
             }
         }
 
+        // Auto-fill tipe mobil based on selected paket
+        document.getElementById('paketSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const tipeMobil = selectedOption.getAttribute('data-tipe');
+            if (tipeMobil) {
+                document.getElementById('tipeMobil').value = tipeMobil;
+            }
+        });
+
         // View Detail Function
         function viewDetail(id) {
             fetch(`pendaftaran_detail.php?id=${id}`)
@@ -674,5 +741,4 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga FROM paket_kursus")->fe
         }
     </script>
 </body>
-
 </html>

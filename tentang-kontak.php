@@ -40,8 +40,8 @@ try {
             'jam_operasional_weekday' => 'Senin–Sabtu: 08:00–20:00',
             'jam_operasional_weekend' => 'Minggu: 08:00–15:00',
             'whatsapp' => '+6281234567890',
-            'embed_map' => 'https://www.google.com/maps/embed?pb=    !1m18!1m12!1m3!1d3951.2345678901234!2d111.9012031!3d-8.0866823!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78e3c4fe9397f1%3A0xfc0e685cc4d51cc9!2sKursus%20Mengemudi%20KRISHNA!5e0!3m2!1sen!2sid!4v1712345678901!5m2!1sen!2sid',
-            'link_map' => 'https://maps.app.goo.gl/AQwKp9buZ7LhVFrk8?g_st=aw    '
+            'embed_map' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3951.2345678901234!2d111.9012031!3d-8.0866823!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e78e3c4fe9397f1%3A0xfc0e685cc4d51cc9!2sKursus%20Mengemudi%20KRISHNA!5e0!3m2!1sen!2sid!4v1712345678901!5m2!1sen!2sid',
+            'link_map' => 'https://maps.app.goo.gl/AQwKp9buZ7LhVFrk8?g_st=aw'
         ];
     }
 } catch (PDOException $e) {
@@ -49,6 +49,20 @@ try {
     $tentang = [];
     $kontak = [];
     $misi = [];
+}
+
+// Fungsi untuk membersihkan username media sosial
+function cleanSocialUsername($username) {
+    if (empty($username)) return '';
+    // Hapus spasi di awal dan akhir
+    $username = trim($username);
+    // Hapus karakter @ di awal jika ada
+    $username = ltrim($username, '@');
+    // Hapus spasi di tengah (jika ada)
+    $username = str_replace(' ', '', $username);
+    // Hapus karakter yang tidak valid
+    $username = preg_replace('/[^\w\.\-]/', '', $username);
+    return $username;
 }
 ?>
 
@@ -92,9 +106,9 @@ try {
 
                 <!-- Kartu Sejarah -->
                 <div>
-                    <div class=" p-8 rounded-2xl shadow-lg h-full">
+                    <div class="p-8 rounded-2xl shadow-lg h-full">
                         <h3 class="text-2xl font-bold mb-4">Sejarah Kami</h3>
-                        <p class=" leading-relaxed">
+                        <p class="leading-relaxed">
                             <?= nl2br(htmlspecialchars($tentang['deskripsi_sejarah'])) ?>
                         </p>
                     </div>
@@ -139,11 +153,14 @@ try {
                             </div>
                             <div>
                                 <h5 class="font-semibold text-gray-800 text-sm md:text-base">Facebook</h5>
-                                <?php if (!empty($kontak['facebook'])): ?>
+                                <?php 
+                                if (!empty($kontak['facebook'])):
+                                    $fb_username = cleanSocialUsername($kontak['facebook']);
+                                ?>
                                     <p class="text-gray-600 text-sm">
-                                        <a href="https://facebook.com/    <?= htmlspecialchars(ltrim($kontak['facebook'], '@')) ?>"
+                                        <a href="https://facebook.com/<?= htmlspecialchars($fb_username) ?>"
                                             target="_blank" class="hover:underline">
-                                            Kursus Mengemudi Krishna
+                                            <?= !empty($fb_username) ? htmlspecialchars($fb_username) : 'Krishna Driving Course' ?>
                                         </a>
                                     </p>
                                 <?php else: ?>
@@ -180,11 +197,14 @@ try {
                             </div>
                             <div>
                                 <h5 class="font-semibold text-gray-800 text-sm md:text-base">Instagram</h5>
-                                <?php if (!empty($kontak['instagram'])): ?>
+                                <?php 
+                                if (!empty($kontak['instagram'])):
+                                    $ig_username = cleanSocialUsername($kontak['instagram']);
+                                ?>
                                     <p class="text-gray-600 text-sm">
-                                        <a href="https://instagram.com/    <?= htmlspecialchars(ltrim($kontak['instagram'], '@')) ?>"
+                                        <a href="https://instagram.com/<?= htmlspecialchars($ig_username) ?>"
                                             target="_blank" class="hover:underline">
-                                            @<?= htmlspecialchars(ltrim($kontak['instagram'], '@')) ?>
+                                            @<?= htmlspecialchars($ig_username) ?>
                                         </a>
                                     </p>
                                 <?php else: ?>
@@ -222,9 +242,12 @@ try {
                             </div>
                             <div>
                                 <h5 class="font-semibold text-gray-800 text-sm md:text-base">YouTube</h5>
-                                <?php if (!empty($kontak['youtube'])): ?>
+                                <?php 
+                                if (!empty($kontak['youtube'])):
+                                    $yt_username = cleanSocialUsername($kontak['youtube']);
+                                ?>
                                     <p class="text-gray-600 text-sm">
-                                        <a href="https://youtube.com/    <?= htmlspecialchars($kontak['youtube']) ?>"
+                                        <a href="https://youtube.com/@<?= htmlspecialchars($yt_username) ?>"
                                             target="_blank" class="hover:underline">
                                             Krishna Driving Course
                                         </a>
@@ -258,11 +281,14 @@ try {
                             </div>
                             <div>
                                 <h5 class="font-semibold text-gray-800 text-sm md:text-base">TikTok</h5>
-                                <?php if (!empty($kontak['tiktok'])): ?>
+                                <?php 
+                                if (!empty($kontak['tiktok'])):
+                                    $tt_username = cleanSocialUsername($kontak['tiktok']);
+                                ?>
                                     <p class="text-gray-600 text-sm">
-                                        <a href="https://tiktok.com/@    <?= htmlspecialchars(ltrim($kontak['tiktok'], '@')) ?>"
+                                        <a href="https://tiktok.com/@<?= htmlspecialchars($tt_username) ?>"
                                             target="_blank" class="hover:underline">
-                                            @<?= htmlspecialchars(ltrim($kontak['tiktok'], '@')) ?>
+                                            @<?= htmlspecialchars($tt_username) ?>
                                         </a>
                                     </p>
                                 <?php else: ?>

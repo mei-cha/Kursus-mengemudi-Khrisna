@@ -2,73 +2,118 @@
 session_start();
 require_once '../config/database.php';
 
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Check if admin is logged in
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header('Location: login.php');
     exit;
 }
 
-$db = (new Database())->getConnection();
+$db = null;
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
 $target_dir = "../assets/images/galeri/";
 
 // Auto create folder jika tidak ada
 if (!file_exists($target_dir)) {
     if (!mkdir($target_dir, 0777, true)) {
-        die("Error: Gagal membuat folder galeri. Silakan buat manual folder: " . $target_dir);
+        $error = "Error: Gagal membuat folder galeri. Silakan buat manual folder: " . $target_dir;
     }
 }
 
 // Pastikan folder writable
-if (!is_writable($target_dir)) {
-    die("Error: Folder tidak dapat ditulisi. Periksa permissions folder: " . $target_dir);
+if (!is_writable($target_dir) && file_exists($target_dir)) {
+    $error = "Error: Folder tidak dapat ditulisi. Periksa permissions folder: " . $target_dir;
 }
 
 // Handle image upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['gambar'])) {
-    $kategori = $_POST['kategori'];
+    $kategori = $_POST['kategori'] ?? '';
     $gambar = $_FILES['gambar'];
-    $gambar_name = time() . '_' . basename($gambar['name']);
-    $target_file = $target_dir . $gambar_name;
-
-    // Validasi
-    if ($check = getimagesize($gambar["tmp_name"]) === false) {
-        $error = "File bukan gambar!";
-    }
-    // Check file size (max 5MB)
-    elseif ($gambar["size"] > 5000000) {
-        $error = "Ukuran file terlalu besar! Maksimal 5MB.";
-    }
-    // Allow certain file formats
-    elseif (!in_array(strtolower(pathinfo($gambar_name, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif'])) {
-        $error = "Hanya file JPG, JPEG, PNG & GIF yang diizinkan.";
-    }
-    // Upload file
-    elseif (move_uploaded_file($gambar["tmp_name"], $target_file)) {
-        $stmt = $db->prepare("INSERT INTO galeri (gambar, kategori, status) VALUES (?, ?, 'aktif')");
-        if ($stmt->execute([$gambar_name, $kategori])) {
-            $success = "Gambar berhasil diupload!";
+    
+    // Validasi kategori
+    if (empty($kategori)) {
+        $error = "Silakan pilih kategori.";
+    } elseif ($gambar['error'] !== UPLOAD_ERR_OK) {
+        $error = "Error upload file: " . $this->uploadErrorToString($gambar['error']);
+    } else {
+        // Validasi file
+        if ($check = getimagesize($gambar["tmp_name"]) === false) {
+            $error = "File bukan gambar!";
+        } elseif ($gambar["size"] > 5000000) {
+            $error = "Ukuran file terlalu besar! Maksimal 5MB.";
+        } elseif (!in_array(strtolower(pathinfo($gambar['name'], PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+            $error = "Hanya file JPG, JPEG, PNG, GIF & WEBP yang diizinkan.";
         } else {
-            $error = "Gagal menyimpan data ke database!";
-            // Delete uploaded file if database failed
-            if (file_exists($target_file)) {
-                unlink($target_file);
+            // Generate unique filename
+            $file_extension = strtolower(pathinfo($gambar['name'], PATHINFO_EXTENSION));
+            $gambar_name = time() . '_' . uniqid() . '.' . $file_extension;
+            $target_file = $target_dir . $gambar_name;
+
+            // Upload file
+            if (move_uploaded_file($gambar["tmp_name"], $target_file)) {
+                try {
+                    // Cek struktur tabel dan gunakan query yang sesuai
+                    $stmt = $db->prepare("INSERT INTO galeri (gambar, kategori) VALUES (?, ?)");
+                    if ($stmt->execute([$gambar_name, $kategori])) {
+                        $success = "Gambar berhasil diupload!";
+                    } else {
+                        $error = "Gagal menyimpan data ke database!";
+                        // Delete uploaded file if database failed
+                        if (file_exists($target_file)) {
+                            unlink($target_file);
+                        }
+                    }
+                } catch (Exception $e) {
+                    $error = "Database error: " . $e->getMessage();
+                    // Coba dengan query alternatif jika masih error
+                    if (strpos($e->getMessage(), 'judul') !== false) {
+                        // Coba dengan memberikan nilai default untuk judul
+                        try {
+                            $stmt = $db->prepare("INSERT INTO galeri (gambar, kategori, judul) VALUES (?, ?, ?)");
+                            if ($stmt->execute([$gambar_name, $kategori, 'Gambar ' . ucfirst($kategori)])) {
+                                $success = "Gambar berhasil diupload!";
+                                $error = null; // Clear error
+                            }
+                        } catch (Exception $e2) {
+                            $error = "Database error (alternative): " . $e2->getMessage();
+                        }
+                    }
+                    if (file_exists($target_file)) {
+                        unlink($target_file);
+                    }
+                }
+            } else {
+                $error = "Terjadi kesalahan saat upload gambar! Periksa permissions folder.";
             }
         }
-    } else {
-        $error = "Terjadi kesalahan saat upload gambar! Periksa permissions folder.";
     }
 }
 
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-    $id = $_POST['id'];
-    $status = $_POST['status'];
+    $id = $_POST['id'] ?? '';
+    $status = $_POST['status'] ?? '';
 
-    $stmt = $db->prepare("UPDATE galeri SET status = ? WHERE id = ?");
-    if ($stmt->execute([$status, $id])) {
-        $success = "Status galeri berhasil diupdate!";
-    } else {
-        $error = "Gagal mengupdate status galeri!";
+    if (!empty($id) && !empty($status)) {
+        try {
+            $stmt = $db->prepare("UPDATE galeri SET status = ? WHERE id = ?");
+            if ($stmt->execute([$status, $id])) {
+                $success = "Status galeri berhasil diupdate!";
+            } else {
+                $error = "Gagal mengupdate status galeri!";
+            }
+        } catch (Exception $e) {
+            $error = "Database error: " . $e->getMessage();
+        }
     }
 }
 
@@ -76,23 +121,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
-    // Get image filename first
-    $stmt = $db->prepare("SELECT gambar FROM galeri WHERE id = ?");
-    $stmt->execute([$id]);
-    $gambar = $stmt->fetch(PDO::FETCH_ASSOC);
+    try {
+        // Get image filename first
+        $stmt = $db->prepare("SELECT gambar FROM galeri WHERE id = ?");
+        $stmt->execute([$id]);
+        $gambar = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($gambar) {
-        $stmt = $db->prepare("DELETE FROM galeri WHERE id = ?");
-        if ($stmt->execute([$id])) {
-            // Delete image file
-            $file_path = "../assets/images/galeri/" . $gambar['gambar'];
-            if (file_exists($file_path)) {
-                unlink($file_path);
+        if ($gambar) {
+            $stmt = $db->prepare("DELETE FROM galeri WHERE id = ?");
+            if ($stmt->execute([$id])) {
+                // Delete image file
+                $file_path = $target_dir . $gambar['gambar'];
+                if (file_exists($file_path)) {
+                    unlink($file_path);
+                }
+                $success = "Gambar berhasil dihapus!";
+            } else {
+                $error = "Gagal menghapus gambar dari database!";
             }
-            $success = "Gambar berhasil dihapus!";
-        } else {
-            $error = "Gagal menghapus gambar dari database!";
         }
+    } catch (Exception $e) {
+        $error = "Database error: " . $e->getMessage();
     }
 }
 
@@ -100,40 +149,65 @@ if (isset($_GET['delete'])) {
 $kategori_filter = $_GET['kategori'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-// Build query
-$query = "SELECT * FROM galeri WHERE 1=1";
-$params = [];
+// Get gallery data
+$galeri = [];
+$kategori_counts = [];
+$status_counts = [];
 
-if ($kategori_filter) {
-    $query .= " AND kategori = ?";
-    $params[] = $kategori_filter;
+try {
+    // Build query for gallery - hanya ambil field yang diperlukan
+    $query = "SELECT id, gambar, kategori, status, created_at FROM galeri WHERE 1=1";
+    $params = [];
+
+    if ($kategori_filter) {
+        $query .= " AND kategori = ?";
+        $params[] = $kategori_filter;
+    }
+
+    if ($status_filter) {
+        $query .= " AND status = ?";
+        $params[] = $status_filter;
+    }
+
+    $query .= " ORDER BY created_at DESC";
+
+    $stmt = $db->prepare($query);
+    $stmt->execute($params);
+    $galeri = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get category counts
+    $kategori_counts = $db->query("
+        SELECT kategori, COUNT(*) as count 
+        FROM galeri 
+        GROUP BY kategori
+    ")->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get status counts
+    $status_counts = $db->query("
+        SELECT status, COUNT(*) as count 
+        FROM galeri 
+        GROUP BY status
+    ")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $error = "Error loading gallery data: " . $e->getMessage();
 }
 
-if ($status_filter) {
-    $query .= " AND status = ?";
-    $params[] = $status_filter;
+// Helper function for upload errors
+function uploadErrorToString($error_code) {
+    $upload_errors = array(
+        UPLOAD_ERR_INI_SIZE   => 'File melebihi ukuran maksimal yang diizinkan server.',
+        UPLOAD_ERR_FORM_SIZE  => 'File melebihi ukuran maksimal yang ditentukan form.',
+        UPLOAD_ERR_PARTIAL    => 'File hanya terupload sebagian.',
+        UPLOAD_ERR_NO_FILE    => 'Tidak ada file yang diupload.',
+        UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary tidak ditemukan.',
+        UPLOAD_ERR_CANT_WRITE => 'Gagal menulis file ke disk.',
+        UPLOAD_ERR_EXTENSION  => 'Upload dihentikan oleh ekstensi PHP.'
+    );
+    
+    return $upload_errors[$error_code] ?? 'Unknown upload error';
 }
-
-$query .= " ORDER BY created_at DESC";
-
-$stmt = $db->prepare($query);
-$stmt->execute($params);
-$galeri = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get category counts
-$kategori_counts = $db->query("
-    SELECT kategori, COUNT(*) as count 
-    FROM galeri 
-    GROUP BY kategori
-")->fetchAll(PDO::FETCH_ASSOC);
-
-// Get status counts
-$status_counts = $db->query("
-    SELECT status, COUNT(*) as count 
-    FROM galeri 
-    GROUP BY status
-")->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 
@@ -158,6 +232,42 @@ $status_counts = $db->query("
 
         .main-content {
             transition: all 0.3s ease;
+        }
+        
+        /* Style untuk image preview */
+        .image-preview-container {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-preview-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .image-preview-container:hover .remove-preview-btn {
+            opacity: 1;
+        }
+        
+        /* Drag and drop styles */
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+            border-style: solid !important;
         }
     </style>
 </head>
@@ -188,13 +298,15 @@ $status_counts = $db->query("
             <main class="flex-1 overflow-y-auto p-6">
                 <?php if (isset($success)): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                        <?= $success ?>
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <?= htmlspecialchars($success) ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if (isset($error)): ?>
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        <?= $error ?>
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
 
@@ -215,17 +327,34 @@ $status_counts = $db->query("
 
                         <!-- Form Upload Gambar (Hidden by default) -->
                         <div id="uploadForm" class="hidden mt-6">
-                            <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6" id="uploadGalleryForm">
                                 <!-- Kolom Kiri: Upload Gambar -->
                                 <div class="space-y-4">
-
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             Gambar <span class="text-red-500">*</span>
                                         </label>
-                                        <label for="gambar" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50">
-                                            <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2"></i>
-                                            <span class="text-xs text-gray-600">Klik atau seret file ke sini</span>
+                                        
+                                        <!-- File Input Area -->
+                                        <div id="fileDropArea" 
+                                             class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 cursor-pointer transition hover:border-blue-400 hover:bg-blue-50">
+                                            <div id="uploadIcon" class="text-center mb-3">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-xs text-gray-600">Klik atau seret file ke sini</p>
+                                                <p class="text-xs text-gray-500 mt-1">Ukuran maksimal: 5MB</p>
+                                                <p class="text-xs text-gray-500">Format: JPG, PNG, GIF, WEBP</p>
+                                            </div>
+                                            
+                                            <!-- Preview Container -->
+                                            <div id="imagePreview" class="hidden w-full h-full flex items-center justify-center p-2">
+                                                <div class="image-preview-container relative">
+                                                    <img id="previewImage" class="max-h-32 max-w-full object-contain rounded shadow" alt="Preview">
+                                                    <div class="remove-preview-btn" onclick="removePreview()">
+                                                        <i class="fas fa-times"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
                                             <input
                                                 id="gambar"
                                                 type="file"
@@ -233,15 +362,18 @@ $status_counts = $db->query("
                                                 required
                                                 accept="image/*"
                                                 class="hidden"
-                                                onchange="document.getElementById('file-name').textContent = this.files[0]?.name || 'Tidak ada file dipilih'" />
-                                        </label>
-                                        <p id="file-name" class="text-xs text-gray-500 mt-2 text-center italic">Tidak ada file dipilih</p>
+                                                onchange="handleFileSelect(this)" />
+                                        </div>
+                                        
+                                        <!-- File Info -->
+                                        <div id="fileInfo" class="text-xs text-gray-500 mt-2 text-center italic">
+                                            Tidak ada file dipilih
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Kolom Kanan: Kategori & Submit -->
                                 <div class="space-y-4">
-
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">
                                             Kategori <span class="text-red-500">*</span>
@@ -263,6 +395,7 @@ $status_counts = $db->query("
                                     <div class="pt-4 border-t border-gray-100">
                                         <button
                                             type="submit"
+                                            id="submitBtn"
                                             class="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition flex items-center justify-center space-x-2">
                                             <i class="fas fa-upload mr-1.5"></i>
                                             <span>Upload Gambar</span>
@@ -273,6 +406,7 @@ $status_counts = $db->query("
                         </div>
                     </div>
                 </div>
+
                 <!-- Filters -->
                 <div class="bg-white rounded-lg shadow mb-6">
                     <div class="p-6">
@@ -479,8 +613,6 @@ $status_counts = $db->query("
         </div>
     </div>
 
-    <!-- sidebar -->
-    <script src="../assets/js/sidebar.js"></script>
     <script>
         function toggleUploadForm() {
             const form = document.getElementById('uploadForm');
@@ -496,6 +628,94 @@ $status_counts = $db->query("
                 icon.classList.add('fa-plus');
             }
         }
+
+        // Handle file selection with preview
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Hanya file JPG, JPEG, PNG, GIF & WEBP yang diizinkan.');
+                resetFileInput();
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Ukuran file terlalu besar! Maksimal 5MB.');
+                resetFileInput();
+                return;
+            }
+
+            // Show preview
+            showImagePreview(file);
+            
+            // Update file info
+            updateFileInfo(file);
+        }
+
+        // Show image preview
+        function showImagePreview(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const previewImage = document.getElementById('previewImage');
+                const imagePreview = document.getElementById('imagePreview');
+                const uploadIcon = document.getElementById('uploadIcon');
+                
+                previewImage.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                uploadIcon.classList.add('hidden');
+                
+                // Add border style to drop area
+                document.getElementById('fileDropArea').classList.add('border-blue-400', 'bg-blue-50');
+            }
+            
+            reader.readAsDataURL(file);
+        }
+
+        // Remove preview and reset
+        function removePreview() {
+            const imagePreview = document.getElementById('imagePreview');
+            const uploadIcon = document.getElementById('uploadIcon');
+            const fileInput = document.getElementById('gambar');
+            const fileInfo = document.getElementById('fileInfo');
+            const dropArea = document.getElementById('fileDropArea');
+            
+            // Reset everything
+            imagePreview.classList.add('hidden');
+            uploadIcon.classList.remove('hidden');
+            fileInput.value = '';
+            
+            // Remove border style
+            dropArea.classList.remove('border-blue-400', 'bg-blue-50');
+            dropArea.classList.add('border-dashed');
+            
+            // Reset file info
+            fileInfo.textContent = 'Tidak ada file dipilih';
+            fileInfo.classList.remove('text-green-600', 'font-medium');
+        }
+
+        // Reset file input
+        function resetFileInput() {
+            const fileInput = document.getElementById('gambar');
+            fileInput.value = '';
+            removePreview();
+        }
+
+        // Update file information
+        function updateFileInfo(file) {
+            const fileInfo = document.getElementById('fileInfo');
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+            
+            fileInfo.innerHTML = `
+                <span class="text-green-600 font-medium">${file.name}</span><br>
+                <span class="text-gray-600">Ukuran: ${fileSize} MB | Tipe: ${file.type}</span>
+            `;
+        }
+
         // View Image Modal
         function viewImage(imageName, title) {
             document.getElementById('modalImage').src = `../assets/images/galeri/${imageName}`;
@@ -522,14 +742,33 @@ $status_counts = $db->query("
             }
         }
 
-        // Drag and drop file upload enhancement
+        // Drag and drop functionality
         document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.querySelector('input[type="file"]');
-            const dropZone = fileInput.closest('.border-dashed');
+            const dropArea = document.getElementById('fileDropArea');
+            const fileInput = document.getElementById('gambar');
 
-            if (dropZone) {
+            if (dropArea) {
+                // Prevent default drag behaviors
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, preventDefaults, false);
+                    dropArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                // Highlight drop area when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                dropArea.addEventListener('drop', handleDrop, false);
+
+                // Click to select file
+                dropArea.addEventListener('click', () => {
+                    fileInput.click();
                 });
 
                 function preventDefaults(e) {
@@ -537,50 +776,50 @@ $status_counts = $db->query("
                     e.stopPropagation();
                 }
 
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, highlight, false);
-                });
-
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, unhighlight, false);
-                });
-
                 function highlight() {
-                    dropZone.classList.add('border-blue-400', 'bg-blue-50', 'border-solid');
-                    dropZone.classList.remove('border-dashed');
+                    dropArea.classList.add('drag-active');
+                    dropArea.classList.remove('border-dashed');
                 }
 
                 function unhighlight() {
-                    dropZone.classList.remove('border-blue-400', 'bg-blue-50', 'border-solid');
-                    dropZone.classList.add('border-dashed');
+                    dropArea.classList.remove('drag-active');
+                    dropArea.classList.add('border-dashed');
                 }
-
-                dropZone.addEventListener('drop', handleDrop, false);
 
                 function handleDrop(e) {
                     const dt = e.dataTransfer;
                     const files = dt.files;
-                    fileInput.files = files;
-
-                    // Show file name
+                    
                     if (files.length > 0) {
-                        const fileName = files[0].name;
-                        const infoText = dropZone.querySelector('.text-sm.text-gray-600');
-                        if (infoText) {
-                            infoText.textContent = `File dipilih: ${fileName}`;
-                            infoText.classList.add('text-blue-600', 'font-medium');
-                        }
+                        fileInput.files = files;
+                        handleFileSelect(fileInput);
                     }
                 }
             }
         });
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Escape to close modal
-            if (e.key === 'Escape') {
-                closeImageModal();
+        // Form submission with visual feedback
+        document.getElementById('uploadGalleryForm').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('gambar');
+            const submitBtn = document.getElementById('submitBtn');
+            const kategoriSelect = document.querySelector('select[name="kategori"]');
+            
+            if (!fileInput.files[0]) {
+                e.preventDefault();
+                alert('Silakan pilih gambar terlebih dahulu.');
+                return;
             }
+            
+            if (!kategoriSelect.value) {
+                e.preventDefault();
+                alert('Silakan pilih kategori.');
+                return;
+            }
+            
+            // Change button state during upload
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i><span>Mengupload...</span>';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75');
         });
     </script>
 </body>

@@ -54,13 +54,6 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                     </div>
                 </div>
             </div>
-            <div class="flex space-x-3">
-                <!-- TOMBOL EDIT DIHAPUS - HANYA TINGGAL TOMBOL KEMBALI -->
-                <button onclick="window.history.back()"
-                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
-                    <i class="fas fa-arrow-left mr-2"></i>Kembali
-                </button>
-            </div>
         </div>
     </div>
 
@@ -195,9 +188,7 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Telepon Darurat</label>
                             <p class="text-gray-900">
-                                <a href="tel:<?= $data['kontak_darurat'] ?>" class="text-blue-600 hover:text-blue-800">
-                                    <i class="fas fa-phone mr-2"></i><?= $data['kontak_darurat'] ?>
-                                </a>
+                                <i class="fas fa-phone mr-2"></i><?= $data['kontak_darurat'] ?>
                             </p>
                         </div>
                     </div>
@@ -240,33 +231,6 @@ $status_class = $status_badges[$data['status_pendaftaran']] ?? 'bg-gray-100 text
                     </div>
                 </div>
             <?php endif; ?>
-
-            <!-- Quick Actions -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <i class="fas fa-bolt text-orange-500 mr-3"></i>
-                        Quick Actions
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-3">
-                        <a href="https://wa.me/<?= $data['telepon'] ?>?text=Halo%20<?= urlencode($data['nama_lengkap']) ?>%2C%20kami%20dari%20Krishna%20Driving%20Course"
-                            target="_blank"
-                            class="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
-                            <i class="fab fa-whatsapp mr-2"></i>WhatsApp
-                        </a>
-                        <a href="mailto:<?= $data['email'] ?>"
-                            class="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                            <i class="fas fa-envelope mr-2"></i>Email
-                        </a>
-                        <a href="jadwal.php?siswa=<?= $id ?>"
-                            class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
-                            <i class="fas fa-calendar mr-2"></i>Jadwal
-                        </a>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

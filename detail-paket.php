@@ -96,133 +96,123 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
     <div class="max-w-7xl mx-auto px-4">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Main Content -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <!-- Header -->
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <h1 class="text-2xl md:text-3xl font-bold mb-2"><?= htmlspecialchars($paket['nama_paket']) ?></h1>
-                                <div class="flex items-center space-x-2">
-                                    <span class="px-3 py-1 bg-blue-500 bg-opacity-30 rounded-full text-sm">
-                                        <i class="fas fa-<?= $paket['tipe_mobil'] == 'manual' ? 'cog' : ($paket['tipe_mobil'] == 'matic' ? 'bolt' : 'sync') ?> mr-1"></i>
-                                        <?= ucfirst($paket['tipe_mobil']) ?>
-                                    </span>
-                                    <span class="text-blue-100">
-                                        <i class="fas fa-check-circle mr-1"></i>Tersedia
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="mt-4 md:mt-0">
-                                <div class="text-3xl font-bold">Rp <?= $harga_formatted ?></div>
-                                <div class="text-blue-200 text-sm">Harga paket</div>
-                            </div>
+<div class="lg:col-span-2">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold mb-2"><?= htmlspecialchars($paket['nama_paket']) ?></h1>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-3 py-1 bg-blue-500 bg-opacity-30 rounded-full text-sm">
+                            <i class="fas fa-<?= $paket['tipe_mobil'] == 'manual' ? 'cog' : ($paket['tipe_mobil'] == 'matic' ? 'bolt' : 'sync') ?> mr-1"></i>
+                            <?= ucfirst($paket['tipe_mobil']) ?>
+                        </span>
+                        <span class="text-blue-100">
+                            <i class="fas fa-check-circle mr-1"></i>Tersedia
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Highlights - Diubah menjadi 3 kolom -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-blue-50 rounded-lg p-5 text-center border border-blue-100">
+                    <div class="text-2xl font-bold text-blue-600 mb-1"><?= $pertemuan ?></div>
+                    <div class="text-sm font-medium text-blue-800 mb-1">Pertemuan</div>
+                    <div class="text-xs text-blue-600">@50 menit</div>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-5 text-center border border-green-100">
+                    <div class="text-2xl font-bold text-green-600 mb-1"><?= $durasi_text ?></div>
+                    <div class="text-sm font-medium text-green-800 mb-1">Durasi Total</div>
+                    <div class="text-xs text-green-600"><?= $paket['durasi_jam'] ?> menit</div>
+                </div>
+                
+                <div class="bg-amber-50 rounded-lg p-5 text-center border border-amber-100">
+                    <div class="text-2xl font-bold text-amber-600 mb-1">Rp <?= $harga_formatted ?></div>
+                    <div class="text-sm font-medium text-amber-800 mb-1">Harga Paket</div>
+                    <div class="text-xs text-amber-600">Termasuk semua materi</div>
+                </div>
+            </div>
+            
+            <!-- Deskripsi -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Deskripsi Paket</h3>
+                <div class="prose max-w-none">
+                    <p class="text-gray-600 leading-relaxed"><?= nl2br(htmlspecialchars($paket['deskripsi'])) ?></p>
+                </div>
+            </div>
+            
+            <!-- Fitur -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Fitur Included</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <?php if ($paket['termasuk_teori']): ?>
+                    <div class="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <div class="p-2 bg-blue-100 rounded-lg mr-4">
+                            <i class="fas fa-book text-blue-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Pelajaran Teori</div>
+                            <div class="text-sm text-gray-600">Materi teori lengkap</div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($paket['termasuk_praktik']): ?>
+                    <div class="flex items-center bg-green-50 p-4 rounded-lg border border-green-100">
+                        <div class="p-2 bg-green-100 rounded-lg mr-4">
+                            <i class="fas fa-road text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Pelajaran Praktik</div>
+                            <div class="text-sm text-gray-600">Praktik langsung mengemudi</div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="flex items-center bg-purple-50 p-4 rounded-lg border border-purple-100">
+                        <div class="p-2 bg-purple-100 rounded-lg mr-4">
+                            <i class="fas fa-car text-purple-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Mobil <?= ucfirst($paket['tipe_mobil']) ?></div>
+                            <div class="text-sm text-gray-600">Kendaraan sesuai pilihan</div>
                         </div>
                     </div>
                     
-                    <!-- Content -->
-                    <div class="p-6">
-                        <!-- Highlights -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-blue-600 mb-1"><?= $pertemuan ?></div>
-                                <div class="text-sm text-blue-800">Pertemuan</div>
-                                <div class="text-xs text-blue-600 mt-1">@50 menit</div>
-                            </div>
-                            
-                            <div class="bg-green-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-green-600 mb-1"><?= $durasi_text ?></div>
-                                <div class="text-sm text-green-800">Durasi Total</div>
-                                <div class="text-xs text-green-600 mt-1"><?= $paket['durasi_jam'] ?> menit</div>
-                            </div>
-                            
-                            <div class="bg-purple-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-purple-600 mb-1"><?= $paket['maksimal_siswa'] ?></div>
-                                <div class="text-sm text-purple-800">Maks. Siswa</div>
-                                <div class="text-xs text-purple-600 mt-1">per sesi</div>
-                            </div>
-                            
-                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl font-bold text-yellow-600 mb-1"><?= number_format($paket['harga'] / $pertemuan, 0, ',', '.') ?></div>
-                                <div class="text-sm text-yellow-800">Per Paket</div>
-                                <div class="text-xs text-yellow-600 mt-1">Rp/paket</div>
-                            </div>
+                    <div class="flex items-center bg-amber-50 p-4 rounded-lg border border-amber-100">
+                        <div class="p-2 bg-amber-100 rounded-lg mr-4">
+                            <i class="fas fa-users text-amber-600"></i>
                         </div>
-                        
-                        <!-- Deskripsi -->
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">Deskripsi Paket</h3>
-                            <div class="prose max-w-none">
-                                <p class="text-gray-600 leading-relaxed"><?= nl2br(htmlspecialchars($paket['deskripsi'])) ?></p>
-                            </div>
-                        </div>
-                        
-                        <!-- Fitur -->
-                        <div class="mb-8">
-                            <h3 class="text-xl font-bold text-gray-800 mb-4">Fitur Included</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <?php if ($paket['termasuk_teori']): ?>
-                                <div class="flex items-center bg-blue-50 p-4 rounded-lg">
-                                    <div class="p-2 bg-blue-100 rounded-lg mr-4">
-                                        <i class="fas fa-book text-blue-600"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-gray-800">Pelajaran Teori</div>
-                                        <div class="text-sm text-gray-600">Materi teori lengkap</div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-                                
-                                <?php if ($paket['termasuk_praktik']): ?>
-                                <div class="flex items-center bg-green-50 p-4 rounded-lg">
-                                    <div class="p-2 bg-green-100 rounded-lg mr-4">
-                                        <i class="fas fa-road text-green-600"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-gray-800">Pelajaran Praktik</div>
-                                        <div class="text-sm text-gray-600">Praktik langsung mengemudi</div>
-                                    </div>
-                                </div>
-                                <?php endif; ?>
-                                
-                                <div class="flex items-center bg-purple-50 p-4 rounded-lg">
-                                    <div class="p-2 bg-purple-100 rounded-lg mr-4">
-                                        <i class="fas fa-car text-purple-600"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-gray-800">Mobil <?= ucfirst($paket['tipe_mobil']) ?></div>
-                                        <div class="text-sm text-gray-600">Kendaraan sesuai pilihan</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex items-center bg-yellow-50 p-4 rounded-lg">
-                                    <div class="p-2 bg-yellow-100 rounded-lg mr-4">
-                                        <i class="fas fa-users text-yellow-600"></i>
-                                    </div>
-                                    <div>
-                                        <div class="font-medium text-gray-800">Instruktur Profesional</div>
-                                        <div class="text-sm text-gray-600">Pengajar berpengalaman</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- CTA Buttons -->
-                        <div class="pt-6 border-t border-gray-200">
-                            <div class="flex flex-col sm:flex-row gap-4">
-                                <button onclick="pilihPaket(<?= $paket['id'] ?>)" 
-                                        class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-lg font-bold hover:from-blue-700 hover:to-blue-800 transition duration-300 text-lg">
-                                    <i class="fas fa-shopping-cart mr-2"></i>Daftar Sekarang
-                                </button>
-                                <a href="paket-kursus.php" 
-                                   class="flex-1 border border-gray-300 text-gray-700 py-4 rounded-lg font-bold hover:bg-gray-50 transition duration-300 text-lg text-center">
-                                    <i class="fas fa-arrow-left mr-2"></i>Kembali
-                                </a>
-                            </div>
+                        <div>
+                            <div class="font-medium text-gray-800">Instruktur Profesional</div>
+                            <div class="text-sm text-gray-600">Pengajar berpengalaman</div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- CTA Buttons -->
+            <div class="pt-6 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="pilihPaket(<?= $paket['id'] ?>)" 
+                            class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-lg font-bold hover:from-blue-700 hover:to-blue-800 transition duration-300 text-lg">
+                        <i class="fas fa-shopping-cart mr-2"></i>Daftar Sekarang
+                    </button>
+                    <a href="paket-kursus.php" 
+                       class="flex-1 border border-gray-300 text-gray-700 py-4 rounded-lg font-bold hover:bg-gray-50 transition duration-300 text-lg text-center">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             
             <!-- Sidebar -->
             <div class="lg:col-span-1">

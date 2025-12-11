@@ -82,7 +82,6 @@ $kategori_info = [
 
         .category-btn:hover {
             border-color: #2563eb;
-            color: #2563eb;
         }
     </style>
 </head>

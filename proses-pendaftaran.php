@@ -1,7 +1,32 @@
 <?php
-// proses-pendaftaran.php
 session_start();
 require_once 'config/database.php';
+ 
+// Di awal file, setelah session_start()
+error_log("=== PROSES PENDAFTARAN DIMULAI ===");
+error_log("POST Data: " . print_r($_POST, true));
+
+// Validasi tambahan untuk tipe_mobil
+if (empty($_POST['tipe_mobil'])) {
+    error_log("ERROR: tipe_mobil kosong!");
+    
+    // Coba cari dari paket_kursus jika tipe_mobil kosong
+    if (!empty($_POST['paket_kursus_id'])) {
+        try {
+            $stmt = $db->prepare("SELECT tipe_mobil FROM paket_kursus WHERE id = :id");
+            $stmt->bindParam(':id', $_POST['paket_kursus_id']);
+            $stmt->execute();
+            $paket = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($paket && !empty($paket['tipe_mobil'])) {
+                $_POST['tipe_mobil'] = $paket['tipe_mobil'];
+                error_log("tipe_mobil diambil dari database: " . $_POST['tipe_mobil']);
+            }
+        } catch (PDOException $e) {
+            error_log("Error mengambil tipe_mobil dari paket: " . $e->getMessage());
+        }
+    }
+}
 
 // Buat koneksi database
 $database = new Database();
@@ -10,220 +35,147 @@ $db = $database->getConnection();
 // Set header untuk JSON response
 header('Content-Type: application/json');
 
-// Cek apakah request POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        // Validasi input
+        $errors = [];
+        
+        // Required fields
+        $required_fields = [
+            'nama_lengkap', 'email', 'telepon', 'tanggal_lahir', 
+            'jenis_kelamin', 'alamat', 'paket_kursus_id', 
+            'tipe_mobil', 'jadwal_preferensi'
+        ];
+        
+        foreach ($required_fields as $field) {
+            if (empty($_POST[$field])) {
+                $errors[] = "Field $field wajib diisi";
+            }
+        }
+        
+        // Validasi email
+        if (!empty($_POST['email']) && !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Format email tidak valid";
+        }
+        
+        // Validasi telepon
+        if (!empty($_POST['telepon']) && !preg_match('/^0[0-9]{9,12}$/', $_POST['telepon'])) {
+            $errors[] = "Format nomor telepon tidak valid";
+        }
+        
+        // Validasi tanggal lahir (minimal 17 tahun)
+        if (!empty($_POST['tanggal_lahir'])) {
+            $birthDate = new DateTime($_POST['tanggal_lahir']);
+            $today = new DateTime();
+            $age = $today->diff($birthDate)->y;
+            
+            if ($age < 17) {
+                $errors[] = "Minimal usia 17 tahun untuk mengikuti kursus";
+            }
+        }
+        
+        // Validasi jadwal_preferensi
+        $jadwal_valid = ['pagi', 'siang', 'sore'];
+        if (!empty($_POST['jadwal_preferensi']) && !in_array($_POST['jadwal_preferensi'], $jadwal_valid)) {
+            $errors[] = "Jadwal preferensi tidak valid";
+        }
+        
+        // Validasi tipe_mobil
+        $tipe_mobil_valid = ['manual', 'matic', 'keduanya'];
+        if (!empty($_POST['tipe_mobil']) && !in_array($_POST['tipe_mobil'], $tipe_mobil_valid)) {
+            $errors[] = "Tipe mobil tidak valid";
+        }
+        
+        // Jika ada errors, return error
+        if (!empty($errors)) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Validasi gagal',
+                'errors' => $errors
+            ]);
+            exit;
+        }
+        
+        // Generate nomor pendaftaran
+        $nomor_pendaftaran = 'KRISHNA-' . date('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+        
+        // Prepare data untuk database
+        $data = [
+            'nomor_pendaftaran' => $nomor_pendaftaran,
+            'nama_lengkap' => $_POST['nama_lengkap'],
+            'email' => $_POST['email'],
+            'telepon' => $_POST['telepon'],
+            'alamat' => $_POST['alamat'],
+            'tanggal_lahir' => $_POST['tanggal_lahir'],
+            'jenis_kelamin' => $_POST['jenis_kelamin'],
+            'paket_kursus_id' => $_POST['paket_kursus_id'],
+            'tipe_mobil' => $_POST['tipe_mobil'],
+            'jadwal_preferensi' => $_POST['jadwal_preferensi'],
+            'pengalaman_mengemudi' => $_POST['pengalaman_mengemudi'] ?? 'pemula',
+            'kondisi_medis' => $_POST['kondisi_medis'] ?? null,
+            'kontak_darurat' => $_POST['kontak_darurat'] ?? null,
+            'nama_kontak_darurat' => $_POST['nama_kontak_darurat'] ?? null,
+            'status_pendaftaran' => 'baru',
+            'catatan_admin' => null,
+            'dibuat_pada' => date('Y-m-d H:i:s')
+        ];
+        
+        // Prepare SQL query
+        $columns = implode(', ', array_keys($data));
+        $placeholders = ':' . implode(', :', array_keys($data));
+        
+        $sql = "INSERT INTO pendaftaran ($columns) VALUES ($placeholders)";
+        $stmt = $db->prepare($sql);
+        
+        // Bind parameters
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        
+        // Execute query
+        if ($stmt->execute()) {
+            // Get the last inserted ID
+            $last_id = $db->lastInsertId();
+            
+            // Return success response
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Pendaftaran berhasil! Nomor pendaftaran Anda telah dibuat.',
+                'data' => [
+                    'nomor_pendaftaran' => $nomor_pendaftaran,
+                    'id' => $last_id
+                ]
+            ]);
+        } else {
+            // Get error info
+            $errorInfo = $stmt->errorInfo();
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan data ke database',
+                'error_details' => $errorInfo
+            ]);
+        }
+        
+    } catch (PDOException $e) {
+        // Database error
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan database',
+            'error_details' => $e->getMessage()
+        ]);
+    } catch (Exception $e) {
+        // General error
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan',
+            'error_details' => $e->getMessage()
+        ]);
+    }
+} else {
+    // Method not allowed
     echo json_encode([
         'status' => 'error',
         'message' => 'Method tidak diizinkan'
     ]);
-    exit;
-}
-
-try {
-    // Ambil data dari form
-    $data = [
-        'nama_lengkap' => $_POST['nama_lengkap'] ?? '',
-        'email' => $_POST['email'] ?? '',
-        'telepon' => $_POST['telepon'] ?? '',
-        'tanggal_lahir' => $_POST['tanggal_lahir'] ?? '',
-        'jenis_kelamin' => $_POST['jenis_kelamin'] ?? 'L',
-        'alamat' => $_POST['alamat'] ?? '',
-        'tanggal_kursus' => $_POST['tanggal_kursus'] ?? '',
-        'paket_kursus_id' => $_POST['paket_kursus_id'] ?? 0,
-        'tipe_mobil' => $_POST['tipe_mobil'] ?? 'manual',
-        'pengalaman' => $_POST['pengalaman'] ?? 'pemula',
-        'kondisi_medis' => $_POST['kondisi_medis'] ?? '',
-        'kontak_darurat' => $_POST['kontak_darurat'] ?? '',
-        'nama_kontak_darurat' => $_POST['nama_kontak_darurat'] ?? '',
-        'persetujuan' => isset($_POST['persetujuan']) ? 1 : 0
-    ];
-
-    // Handle jadwal preferensi (checkbox array)
-    $jadwal_preferensi = $_POST['jadwal_preferensi'] ?? [];
-    // Ambil hanya nilai pertama jika multiple (sesuai enum di database)
-    $data['jadwal_preferensi'] = !empty($jadwal_preferensi) ? strtolower($jadwal_preferensi[0]) : 'pagi';
-
-    // Validasi data wajib
-    $errors = [];
-
-    // Validasi field wajib
-    $required_fields = [
-        'nama_lengkap' => 'Nama lengkap',
-        'email' => 'Email',
-        'telepon' => 'Telepon',
-        'alamat' => 'Alamat',
-        'tanggal_lahir' => 'Tanggal lahir',
-        'jenis_kelamin' => 'Jenis kelamin',
-        'paket_kursus_id' => 'Paket kursus'
-    ];
-
-    foreach ($required_fields as $field => $label) {
-        if (empty(trim($data[$field]))) {
-            $errors[] = "$label wajib diisi";
-        }
-    }
-
-    // Validasi tanggal lahir
-    if (!empty($data['tanggal_lahir'])) {
-        $tanggal_lahir = DateTime::createFromFormat('Y-m-d', $data['tanggal_lahir']);
-        if (!$tanggal_lahir || $tanggal_lahir->format('Y-m-d') !== $data['tanggal_lahir']) {
-            $errors[] = 'Format tanggal lahir tidak valid';
-        }
-
-        // Cek usia minimal 17 tahun
-        $usia = $tanggal_lahir->diff(new DateTime())->y;
-        if ($usia < 17) {
-            $errors[] = 'Usia minimal 17 tahun untuk mendaftar kursus mengemudi';
-        }
-    }
-
-    // Validasi email
-    if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Format email tidak valid';
-    }
-
-    // Validasi telepon (minimal 10 digit)
-    if (!empty($data['telepon']) && !preg_match('/^[0-9]{10,13}$/', $data['telepon'])) {
-        $errors[] = 'Nomor telepon harus 10-13 digit angka';
-    }
-
-    // Validasi paket kursus
-    if (!empty($data['paket_kursus_id'])) {
-        $stmt = $db->prepare("SELECT id FROM paket_kursus WHERE id = ? AND tersedia = 1");
-        $stmt->execute([$data['paket_kursus_id']]);
-        if (!$stmt->fetch()) {
-            $errors[] = 'Paket kursus tidak tersedia';
-        }
-    }
-
-    // Validasi jadwal preferensi
-    if (empty($jadwal_preferensi)) {
-        $errors[] = 'Pilih minimal satu jadwal preferensi';
-    }
-
-    // Validasi persetujuan
-    if (!$data['persetujuan']) {
-        $errors[] = 'Harap menyetujui persyaratan';
-    }
-
-    // Jika ada error, kembalikan error
-    if (!empty($errors)) {
-        http_response_code(400);
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Validasi gagal',
-            'errors' => $errors
-        ]);
-        exit;
-    }
-
-    // Generate nomor pendaftaran (sesuai dengan proses yang ada)
-    $tahun = date('Y');
-    $bulan = date('m');
-    $stmt = $db->query("SELECT COUNT(*) as total FROM pendaftaran_siswa WHERE YEAR(dibuat_pada) = $tahun");
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    $urutan = $result['total'] + 1;
-    $nomor_pendaftaran = "KDS-" . $tahun . $bulan . str_pad($urutan, 4, '0', STR_PAD_LEFT);
-
-    // Format data untuk database
-    if (!empty($data['tanggal_lahir'])) {
-        $tanggal_lahir_db = $data['tanggal_lahir'];
-    } else {
-        $tanggal_lahir_db = null;
-    }
-
-    // Convert tipe_mobil ke lowercase (sesuai enum di database)
-    $tipe_mobil_db = strtolower($data['tipe_mobil']);
-
-    // Convert pengalaman ke format database
-    $pengalaman_db = strtolower($data['pengalaman']);
-    if ($pengalaman_db === 'menengah') {
-        $pengalaman_db = 'pernah_kursus';
-    } elseif ($pengalaman_db === 'lanjutan') {
-        $pengalaman_db = 'pernah_ujian';
-    }
-
-    // Insert data ke database
-    $sql = "INSERT INTO pendaftaran_siswa (
-        nomor_pendaftaran, nama_lengkap, email, telepon, alamat, tanggal_lahir,
-        jenis_kelamin, paket_kursus_id, tipe_mobil, jadwal_preferensi,
-        pengalaman_mengemudi, kondisi_medis, kontak_darurat, nama_kontak_darurat,
-        status_pendaftaran
-    ) VALUES (
-        :nomor_pendaftaran, :nama_lengkap, :email, :telepon, :alamat, :tanggal_lahir,
-        :jenis_kelamin, :paket_kursus_id, :tipe_mobil, :jadwal_preferensi,
-        :pengalaman_mengemudi, :kondisi_medis, :kontak_darurat, :nama_kontak_darurat,
-        'baru'
-    )";
-
-    $stmt = $db->prepare($sql);
-
-    // Bind parameters
-    $stmt->bindParam(':nomor_pendaftaran', $nomor_pendaftaran);
-    $stmt->bindParam(':nama_lengkap', $data['nama_lengkap']);
-    $stmt->bindParam(':email', $data['email']);
-    $stmt->bindParam(':telepon', $data['telepon']);
-    $stmt->bindParam(':alamat', $data['alamat']);
-    $stmt->bindParam(':tanggal_lahir', $tanggal_lahir_db);
-    $stmt->bindParam(':jenis_kelamin', $data['jenis_kelamin']);
-    $stmt->bindParam(':paket_kursus_id', $data['paket_kursus_id'], PDO::PARAM_INT);
-    $stmt->bindParam(':tipe_mobil', $tipe_mobil_db);
-    $stmt->bindParam(':jadwal_preferensi', $data['jadwal_preferensi']);
-    $stmt->bindParam(':pengalaman_mengemudi', $pengalaman_db);
-    $stmt->bindParam(':kondisi_medis', $data['kondisi_medis']);
-    $stmt->bindParam(':kontak_darurat', $data['kontak_darurat']);
-    $stmt->bindParam(':nama_kontak_darurat', $data['nama_kontak_darurat']);
-
-    // Eksekusi query
-    if ($stmt->execute()) {
-        $lastId = $db->lastInsertId();
-
-        // Ambil data paket untuk konfirmasi
-        $stmt_paket = $db->prepare("SELECT nama_paket, harga FROM paket_kursus WHERE id = ?");
-        $stmt_paket->execute([$data['paket_kursus_id']]);
-        $paket = $stmt_paket->fetch(PDO::FETCH_ASSOC);
-
-        // Simpan data di session
-        $_SESSION['pendaftaran_success'] = true;
-        $_SESSION['pendaftaran_data'] = [
-            'id' => $lastId,
-            'nomor_pendaftaran' => $nomor_pendaftaran,
-            'nama_lengkap' => $data['nama_lengkap'],
-            'email' => $data['email'],
-            'telepon' => $data['telepon'],
-            'paket' => $paket['nama_paket'] ?? '',
-            'harga' => $paket['harga'] ?? 0,
-            'tanggal_daftar' => date('Y-m-d H:i:s')
-        ];
-
-        http_response_code(200);
-        echo json_encode([
-            'status' => 'success',
-            'message' => 'Pendaftaran berhasil disimpan!',
-            'data' => [
-                'nomor_pendaftaran' => $nomor_pendaftaran,
-                'id' => $lastId
-            ],
-            'redirect_url' => 'konfirmasi-pendaftaran.php'
-        ]);
-    } else {
-        throw new Exception('Gagal menyimpan data ke database');
-    }
-
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Terjadi kesalahan database: ' . $e->getMessage()
-    ]);
-    error_log("Database error: " . $e->getMessage());
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Terjadi kesalahan: ' . $e->getMessage()
-    ]);
-    error_log("Pendaftaran error: " . $e->getMessage());
 }
 ?>

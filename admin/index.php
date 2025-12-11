@@ -65,10 +65,6 @@ $recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibua
                         <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100">
                             <i class="fas fa-bars text-gray-600"></i>
                         </button>
-                        <div class="text-right">
-                            <p class="text-sm font-medium text-gray-900"><?= $_SESSION['admin_username'] ?></p>
-                            <p class="text-xs text-gray-500"><?= date('l, d F Y') ?></p>
-                        </div>
                     </div>
                 </div>
             </header>
