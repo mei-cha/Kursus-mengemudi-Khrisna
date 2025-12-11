@@ -1,6 +1,29 @@
 <?php
 require_once 'config/database.php';
 include 'includes/header.php';
+
+// Fungsi untuk membersihkan username media sosial
+function cleanSocialUsername($username) {
+    if (empty($username)) return '';
+    $username = trim($username);
+    $username = ltrim($username, '@');
+    $username = str_replace(' ', '', $username);
+    $username = preg_replace('/[^\w\.\-]/', '', $username);
+    return $username;
+}
+
+// Fungsi untuk format WhatsApp
+function formatWhatsAppNumber($phone) {
+    if (empty($phone)) return '';
+    $phone = preg_replace('/[^0-9]/', '', $phone);
+    if (substr($phone, 0, 1) == '0') {
+        $phone = '62' . substr($phone, 1);
+    } elseif (substr($phone, 0, 2) == '08') {
+        $phone = '62' . substr($phone, 1);
+    }
+    return $phone;
+}
+
 $database = new Database();
 $db = $database->getConnection();
 
@@ -52,18 +75,7 @@ try {
 }
 
 // Fungsi untuk membersihkan username media sosial
-function cleanSocialUsername($username) {
-    if (empty($username)) return '';
-    // Hapus spasi di awal dan akhir
-    $username = trim($username);
-    // Hapus karakter @ di awal jika ada
-    $username = ltrim($username, '@');
-    // Hapus spasi di tengah (jika ada)
-    $username = str_replace(' ', '', $username);
-    // Hapus karakter yang tidak valid
-    $username = preg_replace('/[^\w\.\-]/', '', $username);
-    return $username;
-}
+
 ?>
 
 <!-- Tentang & Kontak Section (GABUNGAN) -->
@@ -204,7 +216,7 @@ function cleanSocialUsername($username) {
                                     <p class="text-gray-600 text-sm">
                                         <a href="https://instagram.com/<?= htmlspecialchars($ig_username) ?>"
                                             target="_blank" class="hover:underline">
-                                            @<?= htmlspecialchars($ig_username) ?>
+                                            <?= htmlspecialchars($ig_username) ?>
                                         </a>
                                     </p>
                                 <?php else: ?>
@@ -288,7 +300,7 @@ function cleanSocialUsername($username) {
                                     <p class="text-gray-600 text-sm">
                                         <a href="https://tiktok.com/@<?= htmlspecialchars($tt_username) ?>"
                                             target="_blank" class="hover:underline">
-                                            @<?= htmlspecialchars($tt_username) ?>
+                                            <?= htmlspecialchars($tt_username) ?>
                                         </a>
                                     </p>
                                 <?php else: ?>

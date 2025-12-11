@@ -71,7 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Generate nomor pendaftaran
-        $nomor_pendaftaran = 'KRISHNA-' . date('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+        $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+
         
         // Prepare data untuk database - GUNAKAN TABEL pendaftaran_siswa
         $data = [

@@ -214,19 +214,19 @@ select[readonly]:focus {
                 'campuran' => [
                     'icon' => 'fas fa-cogs',
                     'nama' => 'Paket Campuran',
-                    'deskripsi' => 'Belajar manual & matic dalam satu paket',
+                    'deskripsi' => 'Paket manual dan matic',
                     'warna' => 'from-blue-600 via-blue-700 to-blue-800'
                 ],
                 'extra' => [
                     'icon' => 'fas fa-moon',
                     'nama' => 'Paket Extra',
-                    'deskripsi' => 'Kursus malam & hari libur',
+                    'deskripsi' => 'Kursus dengan waktu flexibel',
                     'warna' => 'from-blue-600 via-blue-700 to-blue-800'
                 ],
                 'pelancaran' => [
                     'icon' => 'fas fa-bolt',
                     'nama' => 'Paket Pelancaran',
-                    'deskripsi' => 'Kursus singkat untuk yang sudah punya dasar',
+                    'deskripsi' => 'Kursus singkat untuk pelancaran',
                     'warna' => 'from-blue-600 via-blue-700 to-blue-800'
                 ]
             ];
@@ -264,25 +264,12 @@ select[readonly]:focus {
                 <?php endif; ?>
                 
                 <div class="text-2xl font-bold mb-4">Mulai Rp <?= number_format($harga_terendah, 0, ',', '.') ?></div>
-                <a href="javascript:void(0)" onclick="showPackageDetail('<?= $kategori ?>')"
-                    class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                    Lihat Detail
-                </a>
+                <a href="paket-kursus.php"
+    class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+    Lihat Detail
+</a>
             </div>
             <?php endforeach; ?>
-        </div>
-
-        <!-- Section Detail Paket (Hidden by Default) -->
-        <div id="packageDetail" class="hidden mt-12 bg-gray-50 rounded-2xl p-6 shadow-inner">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="detailTitle" class="text-2xl font-bold text-gray-800">Detail Paket</h3>
-                <button onclick="hidePackageDetail()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div id="packageList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Paket akan ditampilkan di sini via JavaScript -->
-            </div>
         </div>
 
         <!-- CTA Tetap Biru -->
@@ -900,109 +887,6 @@ select[readonly]:focus {
         }
     }
 
-    // JavaScript untuk Menampilkan Detail Paket
-    function showPackageDetail(category) {
-        const detailSection = document.getElementById('packageDetail');
-        const packageList = document.getElementById('packageList');
-        const detailTitle = document.getElementById('detailTitle');
-
-        // Filter paket berdasarkan kategori
-        let filteredPackages = [];
-        let title = '';
-
-        switch (category) {
-            case 'reguler':
-                filteredPackages = allPackages.filter(pkg =>
-                    pkg.nama_paket.toLowerCase().includes('reguler')
-                );
-                title = 'Paket Reguler';
-                break;
-            case 'campuran':
-                filteredPackages = allPackages.filter(pkg =>
-                    pkg.nama_paket.toLowerCase().includes('campuran') ||
-                    pkg.tipe_mobil === 'keduanya'
-                );
-                title = 'Paket Campuran';
-                break;
-            case 'extra':
-                filteredPackages = allPackages.filter(pkg =>
-                    pkg.nama_paket.toLowerCase().includes('extra')
-                );
-                title = 'Paket Extra';
-                break;
-            case 'pelancaran':
-                filteredPackages = allPackages.filter(pkg =>
-                    pkg.nama_paket.toLowerCase().includes('pelancaran')
-                );
-                title = 'Paket Pelancaran';
-                break;
-        }
-
-        // Update title
-        detailTitle.textContent = title;
-
-        // Clear previous content
-        packageList.innerHTML = '';
-
-        // Add packages to the list
-        if (filteredPackages.length > 0) {
-            filteredPackages.forEach(pkg => {
-                const pertemuan = Math.floor(pkg.durasi_jam / 50);
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition duration-300 border border-gray-100';
-                card.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h4 class="text-lg font-bold text-gray-800">${pkg.nama_paket}</h4>
-                        <p class="text-sm text-gray-600 mt-1">${pkg.deskripsi || 'Paket lengkap belajar mengemudi'}</p>
-                    </div>
-                    <span class="bg-blue-100 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full capitalize">
-                        ${pkg.tipe_mobil_text || pkg.tipe_mobil}
-                    </span>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="text-center p-2 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-600">Durasi</div>
-                        <div class="font-bold text-gray-800">${pertemuan} Pertemuan</div>
-                    </div>
-                    <div class="text-center p-2 bg-gray-50 rounded-lg">
-                        <div class="text-sm text-gray-600">Total</div>
-                        <div class="font-bold text-gray-800">${pkg.durasi_jam} Menit</div>
-                    </div>
-                </div>
-                
-                <div class="text-2xl font-bold text-blue-600 mb-4 text-center">
-                    Rp ${formatNumber(pkg.harga)}
-                </div>
-                
-                <button onclick="pilihPaket(${pkg.id}, '${pkg.tipe_mobil}', '${pkg.nama_paket}')" 
-                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
-                    <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket Ini
-                </button>
-            `;
-                packageList.appendChild(card);
-            });
-        } else {
-            packageList.innerHTML = `
-            <div class="col-span-3 text-center py-8">
-                <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-600">Belum ada paket dalam kategori ini.</p>
-            </div>
-        `;
-        }
-
-        // Show the detail section
-        detailSection.classList.remove('hidden');
-
-        // Scroll to detail section
-        detailSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function hidePackageDetail() {
-        document.getElementById('packageDetail').classList.add('hidden');
-    }
-
     function formatNumber(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
@@ -1441,14 +1325,6 @@ if (!tipeMobilSelect.value) {
         }
     });
 
-    // Close detail when clicking outside
-    document.addEventListener('click', function (e) {
-        const detailSection = document.getElementById('packageDetail');
-        if (!detailSection.contains(e.target) && !e.target.closest('button[onclick*="showPackageDetail"]')) {
-            hidePackageDetail();
-        }
-    });
-
     // Form submission dengan AJAX
     document.getElementById('formPendaftaran').addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -1504,66 +1380,70 @@ if (!tipeMobilSelect.value) {
                 select.disabled = true;
             });
 
-if (result.status === 'success') {
-    // Simpan data di sessionStorage untuk langsung ditampilkan di konfirmasi
-    sessionStorage.setItem('recent_registration', JSON.stringify({
-        nomor_pendaftaran: result.data.nomor_pendaftaran,
-        id: result.data.id,
-        timestamp: new Date().getTime()
-    }));
-    
-    // Show success message in form
-    formStatus.className = 'bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg';
-    formStatus.innerHTML = `
-        <div class="text-center">
-            <i class="fas fa-check-circle text-3xl mb-3 text-green-500"></i>
-            <h4 class="font-bold text-lg mb-2">Pendaftaran Berhasil!</h4>
-            <p class="mb-2">${result.message}</p>
-            <p class="font-bold mt-3">Nomor Pendaftaran: <span class="text-blue-600">${result.data.nomor_pendaftaran}</span></p>
-            <p class="text-sm text-gray-600 mt-2">Harap simpan nomor ini untuk verifikasi.</p>
-            <div class="mt-4">
-                <button onclick="showKonfirmasiPopup(${result.data.id})" 
-                        class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                    <i class="fas fa-eye mr-2"></i>Lihat Konfirmasi
-                </button>
-            </div>
-        </div>
-    `;
-    
-    // Scroll to success message
-    formStatus.scrollIntoView({ behavior: 'smooth' });
+            if (result.status === 'success') {
+                // Show success message in form
+                formStatus.className = 'bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg';
+                formStatus.innerHTML = `
+                    <div class="text-center p-4">
+    <i class="fas fa-check-circle text-4xl mb-3 text-green-500"></i>
 
-    // Reset form
-    form.reset();
-    
-    // Reset tipe mobil
-    const tipeMobilSelect = document.getElementById('tipe_mobil');
-    const tipeMobilNote = document.getElementById('tipeMobilNote');
-    if (tipeMobilSelect) {
-        tipeMobilSelect.disabled = false;
-        tipeMobilSelect.value = 'manual';
-        resetValidation(tipeMobilSelect);
-    }
-    if (tipeMobilNote) {
-        tipeMobilNote.classList.add('hidden');
-    }
-    
-    // Reset total harga
-    updateTotalHarga();
-    
-    // Reset semua validasi visual
-    document.querySelectorAll('.error-input, .success-input').forEach(el => {
-        el.classList.remove('error-input', 'success-input');
-    });
-    document.querySelectorAll('.valid-indicator').forEach(el => {
-        el.style.display = 'none';
-    });
-    document.querySelectorAll('.error-message').forEach(el => {
-        el.style.display = 'none';
-    });
-    document.querySelectorAll('.error-label').forEach(el => {
-        el.classList.remove('error-label');
-    });
+    <h4 class="font-bold text-xl mb-2">Pendaftaran Berhasil!</h4>
+
+    <p class="mb-2">${result.message}</p>
+
+    <p class="font-bold mt-3">
+        Nomor Pendaftaran:
+        <span class="text-blue-600">${result.data.nomor_pendaftaran}</span>
+    </p>
+
+    <p class="text-sm text-gray-600 mt-2">
+        Harap simpan nomor ini untuk verifikasi.
+    </p>
+
+    <p class="text-sm text-gray-700 mt-3">
+        Untuk melihat status pendaftaran, silakan buka halaman 
+        <a href="cek-status.php" class="text-blue-600 underline">Cek Status</a>
+        dan masukkan nomor pendaftaran Anda.
+    </p>
+</div>
+
+                `;
+                formStatus.classList.remove('hidden');
+                
+                // Scroll to success message
+                formStatus.scrollIntoView({ behavior: 'smooth' });
+
+                // Reset form
+                form.reset();
+                
+                // Reset tipe mobil
+                const tipeMobilSelect = document.getElementById('tipe_mobil');
+                const tipeMobilNote = document.getElementById('tipeMobilNote');
+                if (tipeMobilSelect) {
+                    tipeMobilSelect.disabled = false;
+                    tipeMobilSelect.value = 'manual';
+                    resetValidation(tipeMobilSelect);
+                }
+                if (tipeMobilNote) {
+                    tipeMobilNote.classList.add('hidden');
+                }
+                
+                // Reset total harga
+                updateTotalHarga();
+                
+                // Reset semua validasi visual
+                document.querySelectorAll('.error-input, .success-input').forEach(el => {
+                    el.classList.remove('error-input', 'success-input');
+                });
+                document.querySelectorAll('.valid-indicator').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.querySelectorAll('.error-label').forEach(el => {
+                    el.classList.remove('error-label');
+                });
                 
             } else {
                 // Show error message in form
@@ -1604,33 +1484,6 @@ if (result.status === 'success') {
             submitBtn.disabled = false;
         }
     });
-
-    // Fungsi untuk menampilkan konfirmasi dalam popup (modal)
-function showKonfirmasiPopup(id) {
-    // Arahkan langsung ke halaman konfirmasi
-    window.location.href = `konfirmasi-pendaftaran.php?id=${id}`;
-}
-
-// Fungsi untuk auto-redirect jika ada data di sessionStorage
-document.addEventListener('DOMContentLoaded', function() {
-    const recentReg = sessionStorage.getItem('recent_registration');
-    if (recentReg) {
-        try {
-            const data = JSON.parse(recentReg);
-            // Hapus dari sessionStorage
-            sessionStorage.removeItem('recent_registration');
-            
-            // Cek jika masih valid (kurang dari 5 menit)
-            const fiveMinutes = 5 * 60 * 1000;
-            if (new Date().getTime() - data.timestamp < fiveMinutes) {
-                // Auto-redirect ke konfirmasi
-                window.location.href = `konfirmasi-pendaftaran.php?id=${data.id}`;
-            }
-        } catch(e) {
-            console.error('Error parsing recent registration:', e);
-        }
-    }
-});
 </script>   
 
 <?php include 'includes/footer.php'; ?>

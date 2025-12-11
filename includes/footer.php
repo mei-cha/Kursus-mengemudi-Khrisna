@@ -1,39 +1,10 @@
 <?php
-require_once 'config/database.php';
+// footer.php - VERSI SIMPLIFIED
 
-// Fungsi untuk membersihkan username media sosial
-function cleanSocialUsername($username) {
-    if (empty($username)) return '';
-    // Hapus spasi di awal dan akhir
-    $username = trim($username);
-    // Hapus karakter @ di awal jika ada
-    $username = ltrim($username, '@');
-    // Hapus spasi di tengah (jika ada)
-    $username = str_replace(' ', '', $username);
-    // Hapus karakter yang tidak valid
-    $username = preg_replace('/[^\w\.\-]/', '', $username);
-    return $username;
-}
+// Ambil koneksi dari global scope (sudah dibuat di halaman utama)
+global $db;
 
-// Fungsi untuk format nomor WhatsApp
-function formatWhatsAppNumber($phone) {
-    if (empty($phone)) return '';
-    // Hapus semua karakter non-digit
-    $phone = preg_replace('/[^0-9]/', '', $phone);
-    // Pastikan dimulai dengan 62 (kode Indonesia)
-    if (substr($phone, 0, 1) == '0') {
-        $phone = '62' . substr($phone, 1);
-    } elseif (substr($phone, 0, 2) == '08') {
-        $phone = '62' . substr($phone, 1);
-    } elseif (substr($phone, 0, 3) == '628') {
-        // Sudah benar
-    } elseif (substr($phone, 0, 3) == '+62') {
-        $phone = substr($phone, 1);
-    }
-    return $phone;
-}
-
-// Data default jika query gagal
+// Data default
 $data = [
     'alamat' => 'Jl. Raya Contoh No. 123, Jakarta Selatan',
     'telepon_1' => '+6281234567890',
@@ -46,43 +17,48 @@ $data = [
     'tiktok' => 'krishnadriving'
 ];
 
-try {
-    // Coba koneksi ke database
-    $db = (new Database())->getConnection();
-    
-    // Query yang lebih sederhana dan aman
-    $stmt = $db->query("SELECT * FROM kontak_kami LIMIT 1");
-    
-    if ($stmt) {
-        $db_data = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($db_data) {
-            // Gabungkan data dari database dengan data default
-            $data = array_merge($data, $db_data);
+// Coba ambil data dari database jika koneksi ada
+if (isset($db) && $db) {
+    try {
+        $stmt = $db->query("SELECT * FROM kontak_kami LIMIT 1");
+        if ($stmt) {
+            $db_data = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($db_data) {
+                $data = array_merge($data, $db_data);
+            }
         }
+    } catch (Exception $e) {
+        // Tetap gunakan data default
+        error_log("Footer error: " . $e->getMessage());
     }
-} catch (Exception $e) {
-    // Tetap gunakan data default jika ada error
-    error_log("Footer database error: " . $e->getMessage());
 }
 
-// Persiapkan data untuk WhatsApp
-$whatsapp_number = formatWhatsAppNumber($data['telepon_1']);
+// Gunakan fungsi dari halaman utama jika tersedia
+if (function_exists('cleanSocialUsername')) {
+    $fb_username = cleanSocialUsername($data['facebook']);
+    $ig_username = cleanSocialUsername($data['instagram']);
+    $yt_username = cleanSocialUsername($data['youtube']);
+    $tt_username = cleanSocialUsername($data['tiktok']);
+} else {
+    // Fallback sederhana
+    $fb_username = trim(str_replace('@', '', $data['facebook']));
+    $ig_username = trim(str_replace('@', '', $data['instagram']));
+    $yt_username = trim(str_replace('@', '', $data['youtube']));
+    $tt_username = trim(str_replace('@', '', $data['tiktok']));
+}
 
-// Persiapkan link media sosial
-$facebook_link = !empty($data['facebook']) ? 
-    'https://facebook.com/' . cleanSocialUsername($data['facebook']) : '#';
-
-$instagram_link = !empty($data['instagram']) ? 
-    'https://instagram.com/' . cleanSocialUsername($data['instagram']) : '#';
-
-$youtube_link = !empty($data['youtube']) ? 
-    'https://youtube.com/@' . cleanSocialUsername($data['youtube']) : '#';
-
-$tiktok_link = !empty($data['tiktok']) ? 
-    'https://tiktok.com/@' . cleanSocialUsername($data['tiktok']) : '#';
+// Format WhatsApp
+if (function_exists('formatWhatsAppNumber')) {
+    $whatsapp_number = formatWhatsAppNumber($data['telepon_1']);
+} else {
+    $whatsapp_number = preg_replace('/[^0-9]/', '', $data['telepon_1']);
+    if (substr($whatsapp_number, 0, 1) == '0') {
+        $whatsapp_number = '62' . substr($whatsapp_number, 1);
+    }
+}
 ?>
 
-<!-- Footer -->
+<!-- Footer HTML -->
 <footer class="bg-gray-800 text-white py-12 mt-12">
     <div class="max-w-7xl mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -103,7 +79,7 @@ $tiktok_link = !empty($data['tiktok']) ?
                 </p>
                 <div class="flex space-x-3">
                     <?php if (!empty($data['facebook'])): ?>
-                    <a href="<?= htmlspecialchars($facebook_link) ?>"
+                    <a href="https://facebook.com/<?= htmlspecialchars($fb_username) ?>"
                         target="_blank"
                         class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-facebook text-lg"></i>
@@ -111,7 +87,7 @@ $tiktok_link = !empty($data['tiktok']) ?
                     <?php endif; ?>
                     
                     <?php if (!empty($data['instagram'])): ?>
-                    <a href="<?= htmlspecialchars($instagram_link) ?>"
+                    <a href="https://instagram.com/<?= htmlspecialchars($ig_username) ?>"
                         target="_blank"
                         class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-instagram text-lg"></i>
@@ -119,7 +95,7 @@ $tiktok_link = !empty($data['tiktok']) ?
                     <?php endif; ?>
                     
                     <?php if (!empty($data['youtube'])): ?>
-                    <a href="<?= htmlspecialchars($youtube_link) ?>"
+                    <a href="https://youtube.com/@<?= htmlspecialchars($yt_username) ?>"
                         target="_blank"
                         class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-youtube text-lg"></i>
@@ -127,7 +103,7 @@ $tiktok_link = !empty($data['tiktok']) ?
                     <?php endif; ?>
                     
                     <?php if (!empty($data['tiktok'])): ?>
-                    <a href="<?= htmlspecialchars($tiktok_link) ?>"
+                    <a href="https://tiktok.com/@<?= htmlspecialchars($tt_username) ?>"
                         target="_blank"
                         class="text-gray-400 hover:text-white transition duration-300">
                         <i class="fab fa-tiktok text-lg"></i>
