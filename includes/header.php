@@ -65,7 +65,7 @@ try {
                 <!-- Logo - HANYA UNTUK DESKTOP & MOBILE HEADER -->
                 <div class="flex items-center">
                     <img src="./assets/images/logo1.png" alt="logo" class="w-10 h-10 mr-3 rounded-full object-cover">
-                    <span class="text-xl font-bold text-gray-800">Kursus Krishna</span>
+                    <span class="text-xl font-bold text-gray-800">Krishna Kursus</span>
                 </div>
 
                 <!-- Desktop Menu - DENGAN ACTIVE STATE -->

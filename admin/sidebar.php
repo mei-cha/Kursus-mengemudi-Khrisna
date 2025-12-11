@@ -12,7 +12,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <div class="p-6 border-b border-gray-200 bg-white flex items-center justify-between">
             <div class="flex items-center">
                 <img src="../assets/images/logo1.png" alt="logo" class="w-10 h-10 mr-3 rounded-full object-cover">
-                <span class="text-xl font-bold text-gray-800 sidebar-text">Krishna Driving</span>
+                <span class="text-xl font-bold text-gray-800 sidebar-text">Krishna Kursus</span>
             </div>
             <!-- Tombol Close untuk Mobile -->
             <button id="close-sidebar"
