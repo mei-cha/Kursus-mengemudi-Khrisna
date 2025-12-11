@@ -122,15 +122,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <span class="sidebar-text">Tentang & Kontak</span>
                     </a>
                 </li>
-
-                <!-- Export Data -->
-                <li>
-                    <a href="export.php"
-                        class="flex items-center px-4 py-3 rounded-lg font-medium <?= $current_page == 'export.php' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' ?>">
-                        <i class="fas fa-file-export w-6 mr-3"></i>
-                        <span class="sidebar-text">Export Data</span>
-                    </a>
-                </li>
             </ul>
         </nav>
 

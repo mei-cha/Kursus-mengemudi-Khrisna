@@ -167,7 +167,7 @@ if (isset($_GET['delete'])) {
     try {
         $db->beginTransaction();
 
-        $stmt1 = $db->prepare("DELETE FROM evaluasi_kemajuan WHERE pendaftaran_id = ?");
+        $stmt1 = $db->prepare("DELETE FROM pendaftaran_siswa WHERE id = ?");
         $stmt1->execute([$id]);
 
         $stmt2 = $db->prepare("DELETE FROM jadwal_kursus WHERE pendaftaran_id = ?");
@@ -175,9 +175,6 @@ if (isset($_GET['delete'])) {
 
         $stmt3 = $db->prepare("DELETE FROM pembayaran WHERE pendaftaran_id = ?");
         $stmt3->execute([$id]);
-
-        $stmt4 = $db->prepare("DELETE FROM pendaftaran_siswa WHERE id = ?");
-        $stmt4->execute([$id]);
 
         $db->commit();
         $success = "Pendaftaran berhasil dihapus beserta data terkait!";
@@ -310,6 +307,7 @@ if (isset($_GET['success'])) {
             border-color: #d1d5db !important;
             box-shadow: none !important;
         }
+        
     </style>
 </head>
 <body class="bg-gray-100">

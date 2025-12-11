@@ -126,16 +126,16 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
                     <div class="text-xs text-blue-600">50 menit</div>
                 </div>
                 
-                <div class="bg-green-50 rounded-lg p-5 text-center border border-green-100">
-                    <div class="text-2xl font-bold text-green-600 mb-1"><?= $durasi_text ?></div>
-                    <div class="text-sm font-medium text-green-800 mb-1">Durasi Total</div>
-                    <div class="text-xs text-green-600"><?= $paket['durasi_jam'] ?> menit</div>
+                <div class="bg-blue-50 rounded-lg p-5 text-center border border-blue-100">
+                    <div class="text-2xl font-bold text-blue-600 mb-1"><?= $durasi_text ?></div>
+                    <div class="text-sm font-medium text-blue-800 mb-1">Durasi Total</div>
+                    <div class="text-xs text-blue-600"><?= $paket['durasi_jam'] ?> menit</div>
                 </div>
                 
-                <div class="bg-amber-50 rounded-lg p-5 text-center border border-amber-100">
-                    <div class="text-2xl font-bold text-amber-600 mb-1">Rp <?= $harga_formatted ?></div>
-                    <div class="text-sm font-medium text-amber-800 mb-1">Harga Paket</div>
-                    <div class="text-xs text-amber-600">Termasuk semua materi</div>
+                <div class="bg-blue-50 rounded-lg p-5 text-center border border-blue-100">
+                    <div class="text-2xl font-bold text-red-400 mb-1">Rp <?= $harga_formatted ?></div>
+                    <div class="text-sm font-medium text-blue-800 mb-1">Harga Paket</div>
+                    <div class="text-xs text-blue-600">Termasuk semua materi</div>
                 </div>
             </div>
             
@@ -164,7 +164,7 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
                     <?php endif; ?>
                     
                     <?php if ($paket['termasuk_praktik']): ?>
-                    <div class="flex items-center bg-green-50 p-4 rounded-lg border border-green-100">
+                    <div class="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <div class="p-2 bg-green-100 rounded-lg mr-4">
                             <i class="fas fa-road text-green-600"></i>
                         </div>
@@ -175,7 +175,7 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
                     </div>
                     <?php endif; ?>
                     
-                    <div class="flex items-center bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <div class="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <div class="p-2 bg-purple-100 rounded-lg mr-4">
                             <i class="fas fa-car text-purple-600"></i>
                         </div>
@@ -185,7 +185,7 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
                         </div>
                     </div>
                     
-                    <div class="flex items-center bg-amber-50 p-4 rounded-lg border border-amber-100">
+                    <div class="flex items-center bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <div class="p-2 bg-amber-100 rounded-lg mr-4">
                             <i class="fas fa-users text-amber-600"></i>
                         </div>
@@ -318,22 +318,16 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
 
 <!-- JavaScript untuk pilih paket -->
 <script>
-function pilihPaket(paketId) {
-    // Coba cari form pendaftaran di halaman ini
-    const selectElement = document.getElementById('paket_kursus_id');
-    
-    if (selectElement) {
-        // Jika ada form di halaman yang sama
-        selectElement.value = paketId;
-        document.getElementById('daftar').scrollIntoView({
-            behavior: 'smooth'
-        });
-        
-        showNotification('Paket berhasil dipilih! Silakan lanjutkan pendaftaran.', 'success');
-    } else {
-        // Redirect ke halaman pendaftaran
-        window.location.href = `pendaftaran.php?paket_id=${paketId}`;
+// Fungsi pilih paket untuk form pendaftaran
+function pilihPaket(paketId, namaPaket = '') {
+    // Simpan data paket di localStorage
+    localStorage.setItem('selected_package_id', paketId);
+    if (namaPaket) {
+        localStorage.setItem('selected_package_name', namaPaket);
     }
+    
+    // Redirect ke halaman index.php dengan anchor #daftar
+    window.location.href = `index.php#daftar`;
 }
 
 // Fungsi notifikasi

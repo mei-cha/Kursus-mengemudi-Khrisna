@@ -620,30 +620,30 @@ $payment_types = $db->query("
                                 <?php endif; ?>
                                 
                                 <?php if ($status_filter): ?>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-800">
                                     <i class="fas fa-filter mr-1"></i>
                                     Status: <?= ucfirst($status_filter) ?>
-                                    <a href="<?= remove_filter('status') ?>" class="ml-1 text-green-600 hover:text-green-800">
+                                    <a href="<?= remove_filter('status') ?>" class="ml-1 text-red-500 hover:text-green-800">
                                         <i class="fas fa-times"></i>
                                     </a>
                                 </span>
                                 <?php endif; ?>
                                 
                                 <?php if ($tipe_filter): ?>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-800">
                                     <i class="fas fa-money-bill-wave mr-1"></i>
                                     Tipe: <?= ucfirst($tipe_filter) ?>
-                                    <a href="<?= remove_filter('tipe') ?>" class="ml-1 text-purple-600 hover:text-purple-800">
+                                    <a href="<?= remove_filter('tipe') ?>" class="ml-1 text-red-500 hover:text-purple-800">
                                         <i class="fas fa-times"></i>
                                     </a>
                                 </span>
                                 <?php endif; ?>
                                 
                                 <?php if ($metode_filter): ?>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-800">
                                     <i class="fas fa-credit-card mr-1"></i>
                                     Metode: <?= ucfirst($metode_filter) ?>
-                                    <a href="<?= remove_filter('metode') ?>" class="ml-1 text-orange-600 hover:text-orange-800">
+                                    <a href="<?= remove_filter('metode') ?>" class="ml-1 text-red-500 hover:text-orange-800">
                                         <i class="fas fa-times"></i>
                                     </a>
                                 </span>

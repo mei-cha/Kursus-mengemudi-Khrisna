@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $misi_json = json_encode($misi_array, JSON_UNESCAPED_UNICODE);
 
-        // Hanya menyimpan tahun_berdiri, statistik lainnya dihapus
+        // Hanya menyimpan tahun_berdiri
         $tahun_berdiri = (int) ($_POST['tahun_berdiri'] ?? 2010);
 
         try {

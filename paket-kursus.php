@@ -2,7 +2,7 @@
 
 <!-- Header Paket Kursus -->
 <section class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white py-12">
-    <div class="max-w-7xl mx-auto px-4">
+    <div class="max-w-7xl mx-auto text-center px-4">
         <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Semua Paket Kursus</h1>
         <p class="text-lg text-blue-100">Temukan paket kursus mengemudi yang tepat untuk kebutuhan Anda</p>
     </div>

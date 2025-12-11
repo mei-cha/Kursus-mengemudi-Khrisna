@@ -464,12 +464,12 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <div class="flex flex-wrap gap-1">
                                                     <?php if ($paket['termasuk_teori']): ?>
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                                             <i class="fas fa-book mr-1"></i>Teori
                                                         </span>
                                                     <?php endif; ?>
                                                     <?php if ($paket['termasuk_praktik']): ?>
-                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                                             <i class="fas fa-road mr-1"></i>Praktik
                                                         </span>
                                                     <?php endif; ?>
