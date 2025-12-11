@@ -112,7 +112,7 @@ $tipe_filter = $_GET['tipe'] ?? '';
 $metode_filter = $_GET['metode'] ?? '';
 $search = $_GET['search'] ?? '';
 
-// Build query
+// Build query - PERBAIKAN: ORDER BY id DESC (bukan tanggal_pembayaran)
 $query = "SELECT p.*, ps.nama_lengkap, ps.nomor_pendaftaran, pk.nama_paket, pk.harga 
           FROM pembayaran p 
           JOIN pendaftaran_siswa ps ON p.pendaftaran_id = ps.id 
@@ -145,7 +145,8 @@ if ($search) {
     $params[] = $search_term;
 }
 
-$query .= " ORDER BY p.tanggal_pembayaran DESC";
+// PERBAIKAN: ORDER BY id DESC untuk urutan yang benar
+$query .= " ORDER BY p.id DESC";
 
 $stmt = $db->prepare($query);
 $stmt->execute($params);
@@ -164,7 +165,7 @@ $pending_registrations = $db->query("
     FROM pendaftaran_siswa ps 
     JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
     WHERE ps.status_pendaftaran = 'baru' 
-    ORDER BY ps.dibuat_pada DESC
+    ORDER BY ps.id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 // Get payment type statistics
@@ -542,7 +543,8 @@ $payment_types = $db->query("
                 <!-- Filters -->
                 <div class="bg-white rounded-xl shadow mb-6">
                     <div class="p-6">
-                        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- PERBAIKAN: Form harus memiliki id dan method="GET" -->
+                        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4" id="filterForm">
                             <!-- Search Input -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
@@ -590,10 +592,12 @@ $payment_types = $db->query("
                         </form>
                         
                         <div class="flex space-x-2 mt-4">
-                            <button type="submit" 
+                            <!-- PERBAIKAN: Button Filter harus di dalam form -->
+                            <button type="submit" form="filterForm"
                                     class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">
                                 <i class="fas fa-filter mr-2"></i>Filter
                             </button>
+                            <!-- PERBAIKAN: Link reset harus benar -->
                             <a href="pembayaran.php" 
                                class="bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-700 transition duration-300">
                                 <i class="fas fa-refresh mr-2"></i>Reset
@@ -769,7 +773,7 @@ $payment_types = $db->query("
                                                 <button onclick="confirmDelete(<?= $data['id'] ?>)" 
                                                         class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
                                                         title="Hapus">
-                                                    <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>

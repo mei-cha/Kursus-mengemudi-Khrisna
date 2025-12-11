@@ -97,7 +97,8 @@ if ($tanggal_filter) {
     $params[] = $tanggal_filter;
 }
 
-$query .= " ORDER BY jk.tanggal_jadwal ASC, jk.jam_mulai ASC";
+// PERBAIKAN: ORDER BY id DESC untuk menampilkan data terbaru di atas
+$query .= " ORDER BY jk.id DESC";
 
 $stmt = $db->prepare($query);
 $stmt->execute($params);
@@ -115,7 +116,7 @@ $active_registrations = $db->query("
     FROM pendaftaran_siswa ps 
     JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
     WHERE ps.status_pendaftaran IN ('dikonfirmasi', 'diproses')
-    ORDER BY ps.nama_lengkap
+    ORDER BY ps.id DESC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 // PERBAIKAN: Query untuk instruktur - hilangkan WHERE status karena kolom status tidak ada

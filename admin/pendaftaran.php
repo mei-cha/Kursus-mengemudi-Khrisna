@@ -76,46 +76,72 @@ function updateStatusOtomatis($db, $pendaftaran_id) {
 }
 // ==================== END FUNGSI HELPER ====================
 
-// Handle tambah siswa manual
+// Handle tambah siswa manual dengan validasi duplikasi
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
-    $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-
-    $data = [
-        'nomor_pendaftaran' => $nomor_pendaftaran,
-        'nama_lengkap' => $_POST['nama_lengkap'],
-        'email' => $_POST['email'],
-        'telepon' => $_POST['telepon'],
-        'alamat' => $_POST['alamat'],
-        'tanggal_lahir' => $_POST['tanggal_lahir'],
-        'jenis_kelamin' => $_POST['jenis_kelamin'],
-        'paket_kursus_id' => $_POST['paket_kursus_id'],
-        'tipe_mobil' => $_POST['tipe_mobil'],
-        'jadwal_preferensi' => $_POST['jadwal_preferensi'],
-        'pengalaman_mengemudi' => $_POST['pengalaman_mengemudi'],
-        'kondisi_medis' => $_POST['kondisi_medis'],
-        'kontak_darurat' => $_POST['kontak_darurat'],
-        'nama_kontak_darurat' => $_POST['nama_kontak_darurat'],
-        'status_pendaftaran' => 'baru',
-        'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin'
-    ];
-
-    try {
-        $stmt = $db->prepare("
-            INSERT INTO pendaftaran_siswa 
-            (nomor_pendaftaran, nama_lengkap, email, telepon, alamat, tanggal_lahir, 
-             jenis_kelamin, paket_kursus_id, tipe_mobil, jadwal_preferensi, 
-             pengalaman_mengemudi, kondisi_medis, kontak_darurat, nama_kontak_darurat,
-             status_pendaftaran, catatan_admin) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-
-        if ($stmt->execute(array_values($data))) {
-            $success = "Siswa berhasil ditambahkan dengan nomor pendaftaran: " . $nomor_pendaftaran;
-        } else {
-            $error = "Gagal menambahkan siswa!";
+    // Validasi email duplikat
+    $email = $_POST['email'];
+    $stmt_check = $db->prepare("SELECT COUNT(*) FROM pendaftaran_siswa WHERE email = ?");
+    $stmt_check->execute([$email]);
+    $email_count = $stmt_check->fetchColumn();
+    
+    if ($email_count > 0) {
+        $error = "Email sudah terdaftar!";
+    } else {
+        // Generate nomor pendaftaran yang unik
+        $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+        
+        // Validasi nomor pendaftaran unik
+        $stmt_check_nomor = $db->prepare("SELECT COUNT(*) FROM pendaftaran_siswa WHERE nomor_pendaftaran = ?");
+        $stmt_check_nomor->execute([$nomor_pendaftaran]);
+        $nomor_count = $stmt_check_nomor->fetchColumn();
+        
+        // Jika nomor sudah ada, generate ulang
+        while ($nomor_count > 0) {
+            $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+            $stmt_check_nomor->execute([$nomor_pendaftaran]);
+            $nomor_count = $stmt_check_nomor->fetchColumn();
         }
-    } catch (PDOException $e) {
-        $error = "Error: " . $e->getMessage();
+
+        $data = [
+            'nomor_pendaftaran' => $nomor_pendaftaran,
+            'nama_lengkap' => $_POST['nama_lengkap'],
+            'email' => $_POST['email'],
+            'telepon' => $_POST['telepon'],
+            'alamat' => $_POST['alamat'],
+            'tanggal_lahir' => $_POST['tanggal_lahir'],
+            'jenis_kelamin' => $_POST['jenis_kelamin'],
+            'paket_kursus_id' => $_POST['paket_kursus_id'],
+            'tipe_mobil' => $_POST['tipe_mobil'],
+            'jadwal_preferensi' => $_POST['jadwal_preferensi'],
+            'pengalaman_mengemudi' => $_POST['pengalaman_mengemudi'],
+            'kondisi_medis' => $_POST['kondisi_medis'],
+            'kontak_darurat' => $_POST['kontak_darurat'],
+            'nama_kontak_darurat' => $_POST['nama_kontak_darurat'],
+            'status_pendaftaran' => 'baru',
+            'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin'
+        ];
+
+        try {
+            $stmt = $db->prepare("
+                INSERT INTO pendaftaran_siswa 
+                (nomor_pendaftaran, nama_lengkap, email, telepon, alamat, tanggal_lahir, 
+                 jenis_kelamin, paket_kursus_id, tipe_mobil, jadwal_preferensi, 
+                 pengalaman_mengemudi, kondisi_medis, kontak_darurat, nama_kontak_darurat,
+                 status_pendaftaran, catatan_admin) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+
+            if ($stmt->execute(array_values($data))) {
+                $success = "Siswa berhasil ditambahkan dengan nomor pendaftaran: " . $nomor_pendaftaran;
+                // Refresh halaman untuk mencegah resubmit
+                header("Location: pendaftaran.php?success=" . urlencode($success));
+                exit;
+            } else {
+                $error = "Gagal menambahkan siswa!";
+            }
+        } catch (PDOException $e) {
+            $error = "Error: " . $e->getMessage();
+        }
     }
 }
 
@@ -165,7 +191,7 @@ if (isset($_GET['delete'])) {
 $status_filter = $_GET['status'] ?? '';
 $search = $_GET['search'] ?? '';
 
-// Build query
+// Build query dengan ORDER BY id DESC
 $query = "SELECT ps.*, pk.nama_paket, pk.harga, pk.durasi_jam, pk.tipe_mobil as tipe_paket
           FROM pendaftaran_siswa ps 
           LEFT JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
@@ -187,7 +213,8 @@ if ($search) {
     $params[] = $search_term;
 }
 
-$query .= " ORDER BY ps.dibuat_pada DESC";
+// PERBAIKAN: ORDER BY id DESC untuk urutan yang benar
+$query .= " ORDER BY ps.id DESC";
 
 $stmt = $db->prepare($query);
 $stmt->execute($params);
@@ -202,6 +229,11 @@ $status_counts = $db->query("
 
 // Get paket kursus
 $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
+
+// Handle success message from redirect
+if (isset($_GET['success'])) {
+    $success = urldecode($_GET['success']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -983,7 +1015,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam
             }
         }
 
-        // ==================== VALIDASI FUNGSI (SAMA DENGAN INDEX) ====================
+        // ==================== VALIDASI FUNGSI ====================
         
         // Format nomor telepon saat input
         function formatPhoneNumber(input) {
@@ -1212,7 +1244,7 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam
             return isValid;
         }
 
-        // ==================== EVENT LISTENERS (SAMA DENGAN INDEX) ====================
+        // ==================== EVENT LISTENERS ====================
         
         document.addEventListener('DOMContentLoaded', function() {
             // Validasi Nama Lengkap
@@ -1340,11 +1372,17 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam
             // Initial update harga
             updateTotalHarga();
             
-            // Form submission
+            // Form submission dengan pencegahan double submit
             const form = document.getElementById('formPendaftaran');
             if (form) {
+                let isSubmitting = false;
+                
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    
+                    if (isSubmitting) {
+                        return;
+                    }
                     
                     // Enable semua select yang disabled sementara untuk submit
                     const disabledSelects = document.querySelectorAll('select[readonly]');
@@ -1367,8 +1405,20 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam
                         return;
                     }
                     
-                    // Submit form
-                    this.submit();
+                    // Set flag submitting
+                    isSubmitting = true;
+                    
+                    // Disable submit button untuk mencegah double click
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+                    }
+                    
+                    // Submit form dengan timeout kecil
+                    setTimeout(() => {
+                        this.submit();
+                    }, 500);
                     
                     // Kembalikan status readonly
                     disabledSelects.forEach(select => {

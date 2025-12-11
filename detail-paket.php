@@ -123,7 +123,7 @@ $title = "Detail Paket - " . htmlspecialchars($paket['nama_paket']);
                 <div class="bg-blue-50 rounded-lg p-5 text-center border border-blue-100">
                     <div class="text-2xl font-bold text-blue-600 mb-1"><?= $pertemuan ?></div>
                     <div class="text-sm font-medium text-blue-800 mb-1">Pertemuan</div>
-                    <div class="text-xs text-blue-600">@50 menit</div>
+                    <div class="text-xs text-blue-600">50 menit</div>
                 </div>
                 
                 <div class="bg-green-50 rounded-lg p-5 text-center border border-green-100">

@@ -91,7 +91,7 @@ $kategori_info = [
     <!-- Header Section -->
     <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-16">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">Galeri Krishna Driving</h1>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Galeri Kursus Mengemudi Krishna</h1>
             <p class="text-xl text-blue-100 max-w-3xl mx-auto">
                 Lihat momen seru, fasilitas, dan aktivitas belajar mengemudi di Krishna Driving
             </p>

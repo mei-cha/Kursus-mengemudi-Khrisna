@@ -16,8 +16,8 @@ $pendaftaran_baru = $db->query("SELECT COUNT(*) as total FROM pendaftaran_siswa 
 $total_testimoni = $db->query("SELECT COUNT(*) as total FROM testimoni")->fetch()['total'];
 $testimoni_menunggu = $db->query("SELECT COUNT(*) as total FROM testimoni WHERE status = 'menunggu'")->fetch()['total'];
 
-// Get recent registrations
-$recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY dibuat_pada DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
+// Get recent registrations - PERBAIKAN QUERY: ORDER BY id DESC
+$recent_pendaftaran = $db->query("SELECT * FROM pendaftaran_siswa ORDER BY id DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
