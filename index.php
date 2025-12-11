@@ -454,40 +454,6 @@ select[readonly]:focus {
     </div>
 </section>
 
-<!-- Galeri Section -->
-<section id="galeri" class="py-16 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Galeri Aktivitas</h2>
-            <p class="text-xl text-gray-600">Lihat momen-momen belajar mengemudi di Krishna Driving</p>
-        </div>
-
-        <?php if (empty($galeri)): ?>
-            <div class="text-center py-12">
-                <i class="fas fa-images text-6xl text-gray-300 mb-4"></i>
-                <h3 class="text-2xl font-bold text-gray-600 mb-2">Galeri Sedang Tidak Tersedia</h3>
-                <p class="text-gray-500">Silakan kunjungi lagi nanti.</p>
-            </div>
-        <?php else: ?>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <?php foreach ($galeri as $item): ?>
-                    <div class="group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition duration-300">
-                        <img src="assets/images/galeri/<?= $item['gambar'] ?>" alt="<?= htmlspecialchars($item['judul']) ?>"
-                            class="w-full h-48 object-cover group-hover:scale-110 transition duration-300">
-                        <div
-                            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition duration-300 flex items-center justify-center">
-                            <div class="text-white text-center opacity-0 group-hover:opacity-100 transition duration-300 p-4">
-                                <h4 class="font-bold text-sm"><?= htmlspecialchars($item['judul']) ?></h4>
-                                <p class="text-xs mt-1"><?= htmlspecialchars($item['deskripsi']) ?></p>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-</section>
-
 <!-- Form Pendaftaran Section -->
 <section id="daftar" class="py-16 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4">
