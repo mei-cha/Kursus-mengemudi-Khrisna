@@ -23,12 +23,13 @@ function cekStatusPembayaran($db, $pendaftaran_id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// PERBAIKAN 1: Ganti dengan komentar SQL yang benar
 function cekJumlahPertemuan($db, $pendaftaran_id) {
     $stmt = $db->prepare("
         SELECT 
             ps.id,
             pk.durasi_jam,
-            FLOOR(pk.durasi_jam / 50) as jumlah_pertemuan, // 50 menit per pertemuan
+            FLOOR(pk.durasi_jam / 50) as jumlah_pertemuan, -- 50 menit per pertemuan
             COUNT(jk.id) as pertemuan_selesai
         FROM pendaftaran_siswa ps
         JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id
