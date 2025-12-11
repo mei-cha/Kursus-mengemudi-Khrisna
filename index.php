@@ -1504,59 +1504,66 @@ if (!tipeMobilSelect.value) {
                 select.disabled = true;
             });
 
-            if (result.status === 'success') {
-                // Show success message in form
-                formStatus.className = 'bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg';
-                formStatus.innerHTML = `
-                    <div class="text-center">
-                        <i class="fas fa-check-circle text-3xl mb-3 text-green-500"></i>
-                        <h4 class="font-bold text-lg mb-2">Pendaftaran Berhasil!</h4>
-                        <p class="mb-2">${result.message}</p>
-                        <p class="font-bold mt-3">Nomor Pendaftaran: <span class="text-blue-600">${result.data.nomor_pendaftaran}</span></p>
-                        <p class="text-sm text-gray-600 mt-2">Harap simpan nomor ini untuk verifikasi.</p>
-                        <div class="mt-4">
-                            <a href="konfirmasi-pendaftaran.php" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                                Lihat Konfirmasi
-                            </a>
-                        </div>
-                    </div>
-                `;
-                formStatus.classList.remove('hidden');
-                
-                // Scroll to success message
-                formStatus.scrollIntoView({ behavior: 'smooth' });
+if (result.status === 'success') {
+    // Simpan data di sessionStorage untuk langsung ditampilkan di konfirmasi
+    sessionStorage.setItem('recent_registration', JSON.stringify({
+        nomor_pendaftaran: result.data.nomor_pendaftaran,
+        id: result.data.id,
+        timestamp: new Date().getTime()
+    }));
+    
+    // Show success message in form
+    formStatus.className = 'bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg';
+    formStatus.innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-check-circle text-3xl mb-3 text-green-500"></i>
+            <h4 class="font-bold text-lg mb-2">Pendaftaran Berhasil!</h4>
+            <p class="mb-2">${result.message}</p>
+            <p class="font-bold mt-3">Nomor Pendaftaran: <span class="text-blue-600">${result.data.nomor_pendaftaran}</span></p>
+            <p class="text-sm text-gray-600 mt-2">Harap simpan nomor ini untuk verifikasi.</p>
+            <div class="mt-4">
+                <button onclick="showKonfirmasiPopup(${result.data.id})" 
+                        class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-eye mr-2"></i>Lihat Konfirmasi
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Scroll to success message
+    formStatus.scrollIntoView({ behavior: 'smooth' });
 
-                // Reset form
-                form.reset();
-                
-                // Reset tipe mobil
-                const tipeMobilSelect = document.getElementById('tipe_mobil');
-                const tipeMobilNote = document.getElementById('tipeMobilNote');
-                if (tipeMobilSelect) {
-                    tipeMobilSelect.disabled = false;
-                    tipeMobilSelect.value = 'manual';
-                    resetValidation(tipeMobilSelect);
-                }
-                if (tipeMobilNote) {
-                    tipeMobilNote.classList.add('hidden');
-                }
-                
-                // Reset total harga
-                updateTotalHarga();
-                
-                // Reset semua validasi visual
-                document.querySelectorAll('.error-input, .success-input').forEach(el => {
-                    el.classList.remove('error-input', 'success-input');
-                });
-                document.querySelectorAll('.valid-indicator').forEach(el => {
-                    el.style.display = 'none';
-                });
-                document.querySelectorAll('.error-message').forEach(el => {
-                    el.style.display = 'none';
-                });
-                document.querySelectorAll('.error-label').forEach(el => {
-                    el.classList.remove('error-label');
-                });
+    // Reset form
+    form.reset();
+    
+    // Reset tipe mobil
+    const tipeMobilSelect = document.getElementById('tipe_mobil');
+    const tipeMobilNote = document.getElementById('tipeMobilNote');
+    if (tipeMobilSelect) {
+        tipeMobilSelect.disabled = false;
+        tipeMobilSelect.value = 'manual';
+        resetValidation(tipeMobilSelect);
+    }
+    if (tipeMobilNote) {
+        tipeMobilNote.classList.add('hidden');
+    }
+    
+    // Reset total harga
+    updateTotalHarga();
+    
+    // Reset semua validasi visual
+    document.querySelectorAll('.error-input, .success-input').forEach(el => {
+        el.classList.remove('error-input', 'success-input');
+    });
+    document.querySelectorAll('.valid-indicator').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.error-message').forEach(el => {
+        el.style.display = 'none';
+    });
+    document.querySelectorAll('.error-label').forEach(el => {
+        el.classList.remove('error-label');
+    });
                 
             } else {
                 // Show error message in form
@@ -1597,6 +1604,33 @@ if (!tipeMobilSelect.value) {
             submitBtn.disabled = false;
         }
     });
+
+    // Fungsi untuk menampilkan konfirmasi dalam popup (modal)
+function showKonfirmasiPopup(id) {
+    // Arahkan langsung ke halaman konfirmasi
+    window.location.href = `konfirmasi-pendaftaran.php?id=${id}`;
+}
+
+// Fungsi untuk auto-redirect jika ada data di sessionStorage
+document.addEventListener('DOMContentLoaded', function() {
+    const recentReg = sessionStorage.getItem('recent_registration');
+    if (recentReg) {
+        try {
+            const data = JSON.parse(recentReg);
+            // Hapus dari sessionStorage
+            sessionStorage.removeItem('recent_registration');
+            
+            // Cek jika masih valid (kurang dari 5 menit)
+            const fiveMinutes = 5 * 60 * 1000;
+            if (new Date().getTime() - data.timestamp < fiveMinutes) {
+                // Auto-redirect ke konfirmasi
+                window.location.href = `konfirmasi-pendaftaran.php?id=${data.id}`;
+            }
+        } catch(e) {
+            console.error('Error parsing recent registration:', e);
+        }
+    }
+});
 </script>   
 
 <?php include 'includes/footer.php'; ?>

@@ -1,32 +1,6 @@
 <?php
 session_start();
 require_once 'config/database.php';
- 
-// Di awal file, setelah session_start()
-error_log("=== PROSES PENDAFTARAN DIMULAI ===");
-error_log("POST Data: " . print_r($_POST, true));
-
-// Validasi tambahan untuk tipe_mobil
-if (empty($_POST['tipe_mobil'])) {
-    error_log("ERROR: tipe_mobil kosong!");
-    
-    // Coba cari dari paket_kursus jika tipe_mobil kosong
-    if (!empty($_POST['paket_kursus_id'])) {
-        try {
-            $stmt = $db->prepare("SELECT tipe_mobil FROM paket_kursus WHERE id = :id");
-            $stmt->bindParam(':id', $_POST['paket_kursus_id']);
-            $stmt->execute();
-            $paket = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($paket && !empty($paket['tipe_mobil'])) {
-                $_POST['tipe_mobil'] = $paket['tipe_mobil'];
-                error_log("tipe_mobil diambil dari database: " . $_POST['tipe_mobil']);
-            }
-        } catch (PDOException $e) {
-            error_log("Error mengambil tipe_mobil dari paket: " . $e->getMessage());
-        }
-    }
-}
 
 // Buat koneksi database
 $database = new Database();
@@ -99,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Generate nomor pendaftaran
         $nomor_pendaftaran = 'KRISHNA-' . date('Ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
         
-        // Prepare data untuk database
+        // Prepare data untuk database - GUNAKAN TABEL pendaftaran_siswa
         $data = [
             'nomor_pendaftaran' => $nomor_pendaftaran,
             'nama_lengkap' => $_POST['nama_lengkap'],
@@ -120,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'dibuat_pada' => date('Y-m-d H:i:s')
         ];
         
-        // Prepare SQL query
+        // Prepare SQL query - GUNAKAN TABEL pendaftaran_siswa
         $columns = implode(', ', array_keys($data));
         $placeholders = ':' . implode(', :', array_keys($data));
         
-        $sql = "INSERT INTO pendaftaran ($columns) VALUES ($placeholders)";
+        $sql = "INSERT INTO pendaftaran_siswa ($columns) VALUES ($placeholders)";
         $stmt = $db->prepare($sql);
         
         // Bind parameters
@@ -136,6 +110,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             // Get the last inserted ID
             $last_id = $db->lastInsertId();
+            
+            // Simpan di session untuk konfirmasi langsung
+            $_SESSION['last_registration_id'] = $last_id;
+            $_SESSION['last_registration_nomor'] = $nomor_pendaftaran;
+            $_SESSION['last_registration_phone'] = $_POST['telepon'];
             
             // Return success response
             echo json_encode([
@@ -152,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode([
                 'status' => 'error',
                 'message' => 'Gagal menyimpan data ke database',
-                'error_details' => $errorInfo
+                'error_details' => $errorInfo[2]
             ]);
         }
         

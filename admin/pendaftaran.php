@@ -27,7 +27,8 @@ function cekJumlahPertemuan($db, $pendaftaran_id) {
     $stmt = $db->prepare("
         SELECT 
             ps.id,
-            pk.jumlah_pertemuan,
+            pk.durasi_jam,
+            FLOOR(pk.durasi_jam / 50) as jumlah_pertemuan, // 50 menit per pertemuan
             COUNT(jk.id) as pertemuan_selesai
         FROM pendaftaran_siswa ps
         JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id
@@ -174,8 +175,8 @@ if (isset($_GET['delete'])) {
 $status_filter = $_GET['status'] ?? '';
 $search = $_GET['search'] ?? '';
 
-// Build query
-$query = "SELECT ps.*, pk.nama_paket, pk.harga, pk.jumlah_pertemuan, pk.tipe_mobil as tipe_paket
+// Build query - DIUBAH: ganti pk.jumlah_pertemuan dengan pk.durasi_jam
+$query = "SELECT ps.*, pk.nama_paket, pk.harga, pk.durasi_jam, pk.tipe_mobil as tipe_paket
           FROM pendaftaran_siswa ps 
           LEFT JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
           WHERE 1=1";
@@ -210,7 +211,7 @@ $status_counts = $db->query("
 ")->fetchAll(PDO::FETCH_ASSOC);
 
 // Get paket kursus
-$paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
+$paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -535,7 +536,14 @@ $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil FROM paket_
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket'] ?? '-') ?></div>
-                                                <div class="text-sm text-gray-500"><?= $data['jumlah_pertemuan'] ?? 0 ?> pertemuan</div>
+                                                <div class="text-sm text-gray-500">
+                                                    <?php 
+                                                    // Hitung jumlah pertemuan dari durasi_jam (50 menit per pertemuan)
+                                                    $durasi_jam = $data['durasi_jam'] ?? 0;
+                                                    $jumlah_pertemuan = floor($durasi_jam / 50);
+                                                    echo $jumlah_pertemuan > 0 ? $jumlah_pertemuan . ' pertemuan' : '-';
+                                                    ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <?= date('d M Y', strtotime($data['dibuat_pada'])) ?>
