@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 $db = (new Database())->getConnection();
 $id = $_GET['id'] ?? 0;
 
-// Query yang diperbaiki - hanya mengambil kolom yang ada di database
+// Query yang diperbaiki - HAPUS KOMENTAR DI DALAM SQL
 $stmt = $db->prepare("
     SELECT 
         jk.*,
@@ -20,13 +20,16 @@ $stmt = $db->prepare("
         i.nama_lengkap as nama_instruktur, 
         i.spesialisasi,
         pk.nama_paket, 
-        pk.durasi_jam
+        pk.durasi_jam,
+        k.nomor_plat, k.merk, k.model, k.tahun, k.warna, k.tipe_transmisi
     FROM jadwal_kursus jk 
     JOIN pendaftaran_siswa ps ON jk.pendaftaran_id = ps.id 
     JOIN instruktur i ON jk.instruktur_id = i.id 
     JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
+    LEFT JOIN kendaraan k ON jk.kendaraan_id = k.id
     WHERE jk.id = ?
 ");
+
 $stmt->execute([$id]);
 $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -144,10 +147,29 @@ $tipe_class = $tipe_badges[$data['tipe_sesi']] ?? 'bg-gray-100 text-gray-800 bor
                         </div>
                         <?php endif; ?>
                         
-                        <?php if (!empty($data['mobil_digunakan'])): ?>
+                        <!-- Informasi Kendaraan -->
+                        <?php if (!empty($data['nomor_plat'])): ?>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Mobil Digunakan</label>
-                            <p class="text-gray-900"><?= htmlspecialchars($data['mobil_digunakan']) ?></p>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Kendaraan Digunakan</label>
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-car text-blue-500 mr-3"></i>
+                                    <div>
+                                        <p class="font-medium text-gray-900"><?= htmlspecialchars($data['merk'] . ' ' . $data['model']) ?></p>
+                                        <p class="text-sm text-gray-600"><?= htmlspecialchars($data['nomor_plat']) ?> • <?= $data['tahun'] ?> • <?= htmlspecialchars($data['warna']) ?></p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2 mt-2">
+                                    <span class="px-2 py-1 text-xs rounded-full <?= $data['tipe_transmisi'] == 'manual' ? 'bg-yellow-100 text-yellow-800' : 'bg-purple-100 text-purple-800' ?>">
+                                        <?= ucfirst($data['tipe_transmisi']) ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Kendaraan Digunakan</label>
+                            <p class="text-gray-400">-</p>
                         </div>
                         <?php endif; ?>
                     </div>

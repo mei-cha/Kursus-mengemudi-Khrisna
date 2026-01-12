@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_schedule'])) {
         'jam_selesai' => $_POST['jam_selesai'],
         'tipe_sesi' => $_POST['tipe_sesi'],
         'lokasi' => $_POST['lokasi'] ?? '',
-        'mobil_digunakan' => $_POST['mobil_digunakan'] ?? '',
+        'kendaraan_id' => $_POST['kendaraan_id'] ?? null, // PERUBAHAN DI SINI
         'status' => 'terjadwal'
     ];
 
@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_schedule'])) {
     $form_data['student_name'] = $_POST['student_name'] ?? '';
     $form_data['student_nomor'] = $_POST['student_nomor'] ?? '';
     $form_data['student_paket'] = $_POST['student_paket'] ?? '';
+    $form_data['vehicle_display'] = $_POST['vehicle_display'] ?? ''; // Tambah ini
 
     try {
         // Cek apakah instruktur sudah memiliki jadwal pada tanggal dan waktu yang sama
@@ -102,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_schedule'])) {
                 // Jika tidak ada konflik, tambahkan jadwal
                 $stmt = $db->prepare("
                     INSERT INTO jadwal_kursus 
-                    (pendaftaran_id, instruktur_id, tanggal_jadwal, jam_mulai, jam_selesai, tipe_sesi, lokasi, mobil_digunakan, status) 
+                    (pendaftaran_id, instruktur_id, tanggal_jadwal, jam_mulai, jam_selesai, tipe_sesi, lokasi, kendaraan_id, status) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
 
@@ -151,12 +152,14 @@ $status_filter = $_GET['status'] ?? '';
 $tipe_filter = $_GET['tipe'] ?? '';
 $tanggal_filter = $_GET['tanggal'] ?? '';
 
-// Query untuk data jadwal
+// Query untuk data jadwal - JOIN dengan kendaraan untuk mendapatkan detail kendaraan
 $query = "SELECT jk.*, ps.nama_lengkap, ps.nomor_pendaftaran, 
-                 i.nama_lengkap as nama_instruktur 
+                 i.nama_lengkap as nama_instruktur,
+                 k.nomor_plat, k.merk, k.model, k.tahun
           FROM jadwal_kursus jk 
           JOIN pendaftaran_siswa ps ON jk.pendaftaran_id = ps.id 
           JOIN instruktur i ON jk.instruktur_id = i.id 
+          LEFT JOIN kendaraan k ON jk.kendaraan_id = k.id  -- PERUBAHAN: LEFT JOIN untuk kendaraan
           WHERE 1=1";
 
 $params = [];
@@ -199,6 +202,15 @@ $active_registrations = $db->query("
 
 // Query untuk instruktur
 $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur ORDER BY nama_lengkap")->fetchAll(PDO::FETCH_ASSOC);
+
+// ========== TAMBAHAN: Query untuk kendaraan ==========
+// Ambil data kendaraan yang tersedia (status = 'tersedia')
+$kendaraan = $db->query("
+    SELECT id, nomor_plat, merk, model, tahun, tipe_transmisi, warna, status_ketersediaan
+    FROM kendaraan 
+    WHERE status_ketersediaan = 'tersedia' OR status_ketersediaan = 'dipakai'
+    ORDER BY merk, model
+")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -301,6 +313,64 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
         
         .conflict-message i {
             margin-right: 0.25rem;
+        }
+        
+        /* Vehicle dropdown styling */
+        .vehicle-option {
+            padding: 0.5rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+        
+        .vehicle-option:hover {
+            background-color: #f8fafc;
+        }
+        
+        .vehicle-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f1f5f9;
+        }
+        
+        .vehicle-option.selected {
+            background-color: #dbeafe;
+            border-left: 3px solid #3b82f6;
+        }
+        
+        .vehicle-status-badge {
+            font-size: 0.7rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+        }
+        
+        .vehicle-status-tersedia {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .vehicle-status-dipakai {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .vehicle-status-servis {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .vehicle-transmission-badge {
+            font-size: 0.7rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+        }
+        
+        .vehicle-transmission-manual {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .vehicle-transmission-matic {
+            background-color: #e9d5ff;
+            color: #7c3aed;
         }
     </style>
 </head>
@@ -478,12 +548,88 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                         value="<?= isset($form_data['lokasi']) ? htmlspecialchars($form_data['lokasi']) : '' ?>">
                                 </div>
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Mobil Digunakan</label>
-                                    <input type="text" name="mobil_digunakan"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Mobil yang akan digunakan"
-                                        value="<?= isset($form_data['mobil_digunakan']) ? htmlspecialchars($form_data['mobil_digunakan']) : '' ?>">
+                                <!-- ========== MODIFIKASI: Dropdown untuk Kendaraan (kendaraan_id) ========== -->
+                                <div class="search-container">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kendaraan Digunakan</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-car text-gray-400"></i>
+                                        </div>
+                                        <input type="text" 
+                                               id="vehicleSearch" 
+                                               placeholder="Cari mobil berdasarkan plat, merk, atau model..."
+                                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               autocomplete="off"
+                                               value="<?= isset($form_data['vehicle_display']) ? htmlspecialchars($form_data['vehicle_display']) : '' ?>">
+                                        
+                                        <!-- PERUBAHAN DI SINI: ganti name="mobil_digunakan" menjadi name="kendaraan_id" -->
+                                        <input type="hidden" name="kendaraan_id" id="kendaraanId" value="<?= isset($form_data['kendaraan_id']) ? htmlspecialchars($form_data['kendaraan_id']) : '' ?>">
+                                        
+                                        <!-- Hidden field untuk menyimpan display text -->
+                                        <input type="hidden" name="vehicle_display" id="vehicleDisplay" value="<?= isset($form_data['vehicle_display']) ? htmlspecialchars($form_data['vehicle_display']) : '' ?>">
+                                    </div>
+                                    
+                                    <!-- Vehicle Search Results Dropdown -->
+                                    <div id="vehicleSearchResults" class="hidden bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto mt-1">
+                                        <?php foreach ($kendaraan as $kendaraan_item): ?>
+                                            <?php
+                                            $status_badges = [
+                                                'tersedia' => 'vehicle-status-tersedia',
+                                                'dipakai' => 'vehicle-status-dipakai',
+                                                'servis' => 'vehicle-status-servis'
+                                            ];
+                                            $transmission_badges = [
+                                                'manual' => 'vehicle-transmission-manual',
+                                                'matic' => 'vehicle-transmission-matic'
+                                            ];
+                                            $status_class = $status_badges[$kendaraan_item['status_ketersediaan']] ?? '';
+                                            $transmission_class = $transmission_badges[$kendaraan_item['tipe_transmisi']] ?? '';
+                                            $is_disabled = $kendaraan_item['status_ketersediaan'] === 'servis';
+                                            $display_text = "{$kendaraan_item['nomor_plat']} - {$kendaraan_item['merk']} {$kendaraan_item['model']} ({$kendaraan_item['tahun']})";
+                                            ?>
+                                            <div class="vehicle-option p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer <?= $is_disabled ? 'disabled' : '' ?>"
+                                                 data-id="<?= $kendaraan_item['id'] ?>"
+                                                 data-display="<?= htmlspecialchars($display_text) ?>"
+                                                 onclick="<?= $is_disabled ? '' : "selectVehicle(this)" ?>"
+                                                 title="<?= $is_disabled ? 'Kendaraan sedang dalam servis' : '' ?>">
+                                                <div class="flex justify-between items-center">
+                                                    <div class="flex-1">
+                                                        <div class="font-medium text-gray-900"><?= htmlspecialchars($kendaraan_item['merk']) ?> <?= htmlspecialchars($kendaraan_item['model']) ?></div>
+                                                        <div class="text-sm text-gray-600"><?= htmlspecialchars($kendaraan_item['nomor_plat']) ?> • <?= $kendaraan_item['tahun'] ?> • <?= htmlspecialchars($kendaraan_item['warna']) ?></div>
+                                                    </div>
+                                                    <div class="flex space-x-1">
+                                                        <span class="vehicle-status-badge <?= $status_class ?>"><?= ucfirst($kendaraan_item['status_ketersediaan']) ?></span>
+                                                        <span class="vehicle-transmission-badge <?= $transmission_class ?>"><?= ucfirst($kendaraan_item['tipe_transmisi']) ?></span>
+                                                    </div>
+                                                </div>
+                                                <?php if ($is_disabled): ?>
+                                                    <div class="text-xs text-red-500 mt-1 flex items-center">
+                                                        <i class="fas fa-wrench mr-1"></i>
+                                                        <span>Sedang dalam servis</span>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    
+                                    <!-- Vehicle Info Display -->
+                                    <div id="selectedVehicleInfo" class="mt-2 <?= (isset($form_data['vehicle_display']) && $form_data['vehicle_display']) ? '' : 'hidden' ?>">
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-car text-blue-500 mr-2"></i>
+                                                        <span class="font-medium text-blue-900" id="infoMobil">
+                                                            <?= isset($form_data['vehicle_display']) ? htmlspecialchars($form_data['vehicle_display']) : '' ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" onclick="clearVehicleSelection()" class="text-gray-400 hover:text-gray-600">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Loading indicator -->
@@ -628,6 +774,7 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instruktur</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal & Waktu</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kendaraan</th> <!-- Ganti nama kolom -->
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                 </tr>
@@ -665,6 +812,18 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?= $tipe_class ?> capitalize">
                                                     <?= $data['tipe_sesi'] ?>
                                                 </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <?php if ($data['nomor_plat']): ?>
+                                                    <div class="text-sm text-gray-900">
+                                                        <?= htmlspecialchars($data['merk'] . ' ' . $data['model']) ?>
+                                                    </div>
+                                                    <div class="text-xs text-gray-500">
+                                                        <?= htmlspecialchars($data['nomor_plat']) ?> • <?= $data['tahun'] ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <span class="text-xs text-gray-400">-</span>
+                                                <?php endif; ?>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <?php
@@ -713,7 +872,7 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                                             Tidak ada jadwal yang ditemukan.
                                         </td>
                                     </tr>
@@ -802,9 +961,13 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
         </div>
     </div>
 
-    <!-- sidebar -->
-    <script src="../assets/js/sidebar.js"></script>
+    <!-- JavaScript -->
     <script>
+        // Data kendaraan dari PHP
+        let vehicles = <?php 
+            echo json_encode($kendaraan);
+        ?>;
+
         // Toggle schedule form visibility
         function toggleScheduleForm() {
             const container = document.getElementById('scheduleFormContainer');
@@ -820,6 +983,7 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                 icon.classList.remove('fa-times');
                 icon.classList.add('fa-plus');
                 clearStudentSelection();
+                clearVehicleSelection();
                 resetFormValidation();
             }
         }
@@ -829,11 +993,18 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
             echo json_encode($active_registrations);
         ?>;
 
-        // Search functionality
+        // Search functionality for students
         const studentSearch = document.getElementById('studentSearch');
         const studentSearchResults = document.getElementById('studentSearchResults');
         const pendaftaranId = document.getElementById('pendaftaranId');
         const selectedStudentInfo = document.getElementById('selectedStudentInfo');
+
+        // Search functionality for vehicles
+        const vehicleSearch = document.getElementById('vehicleSearch');
+        const vehicleSearchResults = document.getElementById('vehicleSearchResults');
+        const kendaraanId = document.getElementById('kendaraanId'); // PERUBAHAN: ganti mobilDigunakan menjadi kendaraanId
+        const vehicleDisplay = document.getElementById('vehicleDisplay'); // Input hidden untuk display text
+        const selectedVehicleInfo = document.getElementById('selectedVehicleInfo');
 
         // Initialize form with existing data if any
         document.addEventListener('DOMContentLoaded', function() {
@@ -841,6 +1012,9 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                 // Check instructor availability with existing data
                 setTimeout(checkInstructorAvailability, 500);
             <?php endif; ?>
+            
+            // Initialize vehicle search
+            setupVehicleSearch();
         });
 
         studentSearch.addEventListener('input', function() {
@@ -905,6 +1079,46 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
             }
         });
 
+        // Setup vehicle search functionality
+        function setupVehicleSearch() {
+            vehicleSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                if (searchTerm.length < 1) {
+                    vehicleSearchResults.classList.add('hidden');
+                    return;
+                }
+                
+                // Filter vehicles
+                const filtered = vehicles.filter(vehicle => {
+                    const searchFields = [
+                        vehicle.nomor_plat?.toLowerCase() || '',
+                        vehicle.merk?.toLowerCase() || '',
+                        vehicle.model?.toLowerCase() || '',
+                        vehicle.tahun?.toString() || '',
+                        vehicle.warna?.toLowerCase() || ''
+                    ];
+                    
+                    return searchFields.some(field => field.includes(searchTerm));
+                });
+                
+                // Show all vehicles if no search term
+                const displayVehicles = searchTerm.length > 0 ? filtered : vehicles;
+                
+                if (displayVehicles.length > 0) {
+                    vehicleSearchResults.classList.remove('hidden');
+                } else {
+                    vehicleSearchResults.innerHTML = `
+                        <div class="p-4 text-center text-gray-500">
+                            <i class="fas fa-car text-xl mb-2"></i>
+                            <p>Kendaraan tidak ditemukan</p>
+                        </div>
+                    `;
+                    vehicleSearchResults.classList.remove('hidden');
+                }
+            });
+        }
+
         // Select student for schedule
         function selectScheduleStudent(element) {
             const id = element.getAttribute('data-id');
@@ -935,6 +1149,35 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
             checkInstructorAvailability();
         }
 
+        // Select vehicle for schedule
+        function selectVehicle(element) {
+            const vehicleId = element.getAttribute('data-id');
+            const displayText = element.getAttribute('data-display');
+            
+            // Set hidden input untuk ID kendaraan
+            kendaraanId.value = vehicleId;
+            
+            // Set hidden input untuk display text
+            vehicleDisplay.value = displayText;
+            
+            // Update search field
+            vehicleSearch.value = displayText;
+            vehicleSearchResults.classList.add('hidden');
+            
+            // Show vehicle info
+            document.getElementById('infoMobil').textContent = displayText;
+            selectedVehicleInfo.classList.remove('hidden');
+            
+            // Mark selected option
+            const options = vehicleSearchResults.querySelectorAll('.vehicle-option');
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-id') === vehicleId) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
         // Clear student selection
         function clearStudentSelection() {
             pendaftaranId.value = '';
@@ -947,15 +1190,29 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
             resetFormValidation();
         }
 
+        // Clear vehicle selection
+        function clearVehicleSelection() {
+            kendaraanId.value = '';
+            vehicleDisplay.value = '';
+            vehicleSearch.value = '';
+            selectedVehicleInfo.classList.add('hidden');
+            vehicleSearchResults.classList.add('hidden');
+            
+            // Remove selected class from all options
+            const options = vehicleSearchResults.querySelectorAll('.vehicle-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+        }
+
         // Hide search results when clicking outside
         document.addEventListener('click', function(event) {
             const searchContainer = document.querySelector('.search-container');
             if (searchContainer && !searchContainer.contains(event.target)) {
                 studentSearchResults.classList.add('hidden');
+                vehicleSearchResults.classList.add('hidden');
             }
         });
 
-        // Tambah event listener untuk enter key
+        // Tambah event listener untuk enter key (student search)
         studentSearch.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -964,6 +1221,22 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                     selectScheduleStudent(firstResult);
                 }
             }
+        });
+
+        // Tambah event listener untuk enter key (vehicle search)
+        vehicleSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstEnabledResult = vehicleSearchResults.querySelector('.vehicle-option:not(.disabled)');
+                if (firstEnabledResult) {
+                    selectVehicle(firstEnabledResult);
+                }
+            }
+        });
+
+        // Show vehicle dropdown when clicking on search field
+        vehicleSearch.addEventListener('focus', function() {
+            vehicleSearchResults.classList.remove('hidden');
         });
 
         // Check instructor availability

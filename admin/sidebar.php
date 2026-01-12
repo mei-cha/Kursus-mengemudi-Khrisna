@@ -98,6 +98,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             </a>
                         </li>
                         <li>
+                            <a href="kendaraan.php"
+                                class="flex items-center px-4 py-2 rounded-lg font-medium <?= $current_page == 'kendaraan.php' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' ?>">
+                                <i class="fas fa-car w-5 mr-2"></i>
+                                <span class="sidebar-text">Kendaraan</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="testimoni.php"
                                 class="flex items-center px-4 py-2 rounded-lg font-medium <?= $current_page == 'testimoni.php' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' ?>">
                                 <i class="fas fa-star w-5 mr-2"></i>
