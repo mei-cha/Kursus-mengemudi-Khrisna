@@ -1,10 +1,93 @@
-<?php include 'includes/header.php'; ?>
+<?php 
+// Mulai session dan include konfigurasi database
+session_start();
+require_once 'config/database.php';
+
+// Buat koneksi database
+$database = new Database();
+$db = $database->getConnection();
+
+// Ambil parameter kategori dari URL
+$kategori = isset($_GET['kategori']) ? $_GET['kategori'] : '';
+
+// Query untuk mendapatkan data paket kursus
+try {
+    if (!empty($kategori)) {
+        // Filter berdasarkan kategori
+        $sql = "SELECT *, 
+                CASE 
+                    WHEN tipe_mobil = 'manual' THEN 'Manual'
+                    WHEN tipe_mobil = 'matic' THEN 'Matic'
+                    WHEN tipe_mobil = 'keduanya' THEN 'Keduanya'
+                    ELSE tipe_mobil 
+                END as tipe_mobil_text 
+                FROM paket_kursus 
+                WHERE tersedia = 1 
+                AND kategori = :kategori 
+                ORDER BY harga";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->bindParam(':kategori', $kategori, PDO::PARAM_STR);
+        $stmt->execute();
+        $paket_kursus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        // Tampilkan semua paket
+        $sql = "SELECT *, 
+                CASE 
+                    WHEN tipe_mobil = 'manual' THEN 'Manual'
+                    WHEN tipe_mobil = 'matic' THEN 'Matic'
+                    WHEN tipe_mobil = 'keduanya' THEN 'Keduanya'
+                    ELSE tipe_mobil 
+                END as tipe_mobil_text 
+                FROM paket_kursus 
+                WHERE tersedia = 1 
+                ORDER BY harga";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute();
+        $paket_kursus = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (PDOException $e) {
+    $paket_kursus = [];
+    error_log("Database error (paket): " . $e->getMessage());
+}
+
+include 'includes/header.php'; 
+?>
 
 <!-- Header Paket Kursus -->
 <section class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white py-12">
     <div class="max-w-7xl mx-auto text-center px-4">
-        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Semua Paket Kursus</h1>
-        <p class="text-lg text-blue-100">Temukan paket kursus mengemudi yang tepat untuk kebutuhan Anda</p>
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+            <?php 
+            if (!empty($kategori)) {
+                $kategori_names = [
+                    'reguler' => 'Paket Reguler',
+                    'campuran' => 'Paket Campuran', 
+                    'extra' => 'Paket Extra',
+                    'pelancaran' => 'Paket Pelancaran'
+                ];
+                echo $kategori_names[$kategori] ?? 'Paket ' . ucfirst($kategori);
+            } else {
+                echo 'Semua Paket Kursus';
+            }
+            ?>
+        </h1>
+        <p class="text-lg text-blue-100">
+            <?php if (!empty($kategori)): ?>
+                Temukan paket kursus <?= $kategori ?> yang tepat untuk kebutuhan Anda
+            <?php else: ?>
+                Temukan paket kursus mengemudi yang tepat untuk kebutuhan Anda
+            <?php endif; ?>
+        </p>
+        
+        <?php if (!empty($kategori)): ?>
+            <div class="mt-4">
+                <a href="paket-kursus.php" class="inline-flex items-center text-blue-200 hover:text-white transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i> Kembali ke Semua Paket
+                </a>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 
@@ -55,12 +138,27 @@
                         </div>
                     </div>
                 </div>
+                
+                <?php if (!empty($kategori)): ?>
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex items-center">
+                            <i class="fas fa-filter text-blue-600 mr-2"></i>
+                            <p class="text-sm text-blue-800">
+                                Menampilkan paket dengan kategori: <span class="font-semibold"><?= ucfirst($kategori) ?></span>
+                                (<?= count($paket_kursus) ?> paket)
+                            </p>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
             
             <!-- Info Jumlah Paket -->
             <div class="flex justify-between items-center mb-6">
                 <p class="text-gray-700">
                     <span id="jumlahPaket" class="font-semibold text-blue-600"><?= count($paket_kursus) ?></span> paket tersedia
+                    <?php if (!empty($kategori)): ?>
+                        dalam kategori <span class="font-semibold"><?= ucfirst($kategori) ?></span>
+                    <?php endif; ?>
                 </p>
                 <div class="flex items-center space-x-2 text-sm text-gray-600">
                     <i class="fas fa-info-circle"></i>
@@ -75,7 +173,18 @@
                 <div class="col-span-full text-center py-12">
                     <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
                     <h3 class="text-xl font-semibold text-gray-600 mb-2">Tidak Ada Paket Tersedia</h3>
-                    <p class="text-gray-500">Silakan coba lagi nanti.</p>
+                    <p class="text-gray-500">
+                        <?php if (!empty($kategori)): ?>
+                            Tidak ada paket ditemukan untuk kategori "<?= ucfirst($kategori) ?>".
+                        <?php else: ?>
+                            Silakan coba lagi nanti.
+                        <?php endif; ?>
+                    </p>
+                    <?php if (!empty($kategori)): ?>
+                        <a href="paket-kursus.php" class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+                            <i class="fas fa-arrow-left mr-2"></i>Lihat Semua Paket
+                        </a>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <?php foreach ($paket_kursus as $paket): ?>
@@ -90,7 +199,8 @@
                 ?>
                 <div class="paket-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100"
                      data-tipe="<?= $paket['tipe_mobil'] ?>"
-                     data-harga="<?= $paket['harga'] ?>">
+                     data-harga="<?= $paket['harga'] ?>"
+                     data-kategori="<?= $paket['kategori'] ?? 'reguler' ?>">
                     <!-- Badge -->
                     <div class="px-6 pt-6">
                         <span class="inline-block <?= $warna_badge ?> text-xs font-semibold px-3 py-1 rounded-full capitalize">
@@ -129,7 +239,7 @@
                                     class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
                                 <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
                             </button>
-                            <a href="detail-paket.php?id=<?= $paket['id'] ?>" 
+                            <a href="detail-paket-kursus.php?id=<?= $paket['id'] ?>" 
                                class="flex-1 border border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 text-center">
                                 <i class="fas fa-info-circle mr-2"></i>Detail
                             </a>
@@ -146,6 +256,7 @@
 <script>
 // Data paket dari PHP
 const semuaPaket = <?= json_encode($paket_kursus) ?>;
+const kategoriAktif = "<?= $kategori ?>";
 
 // Fungsi filter paket
 function filterPaket() {
@@ -180,6 +291,9 @@ function filterPaket() {
                 <i class="fas fa-search text-5xl text-gray-300 mb-4"></i>
                 <h3 class="text-xl font-semibold text-gray-600 mb-2">Tidak Ada Paket yang Sesuai</h3>
                 <p class="text-gray-500">Silakan coba filter lain.</p>
+                ${kategoriAktif ? `<a href="paket-kursus.php" class="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
+                    <i class="fas fa-arrow-left mr-2"></i>Lihat Semua Paket
+                </a>` : ''}
             </div>
         `;
         return;
@@ -209,7 +323,8 @@ function filterPaket() {
         return `
             <div class="paket-card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100"
                  data-tipe="${paket.tipe_mobil}"
-                 data-harga="${paket.harga}">
+                 data-harga="${paket.harga}"
+                 data-kategori="${paket.kategori || 'reguler'}">
                 <div class="px-6 pt-6">
                     <span class="inline-block ${badgeColor} text-xs font-semibold px-3 py-1 rounded-full capitalize">
                         <i class="fas fa-${badgeIcon} mr-1"></i>
@@ -246,7 +361,7 @@ function filterPaket() {
                                 class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition duration-300">
                             <i class="fas fa-shopping-cart mr-2"></i>Pilih Paket
                         </button>
-                        <a href="detail-paket.php?id=${paket.id}" 
+                        <a href="detail-paket-kursus.php?id=${paket.id}" 
                            class="flex-1 border border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-300 text-center">
                             <i class="fas fa-info-circle mr-2"></i>Detail
                         </a>
@@ -289,6 +404,11 @@ function capitalizeFirst(string) {
 
 // Inisialisasi filter saat halaman dimuat
 document.addEventListener('DOMContentLoaded', function() {
+    // Jika ada kategori aktif, atur filter tipe ke "semua"
+    if (kategoriAktif) {
+        document.getElementById('filterTipe').value = 'semua';
+    }
+    
     filterPaket(); // Menampilkan semua paket dengan urutan default
 });
 </script>

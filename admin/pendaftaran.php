@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 session_start();
 require_once '../config/database.php';
 
@@ -114,11 +117,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
             'tipe_mobil' => $_POST['tipe_mobil'],
             'jadwal_preferensi' => $_POST['jadwal_preferensi'],
             'pengalaman_mengemudi' => $_POST['pengalaman_mengemudi'],
-            'kondisi_medis' => $_POST['kondisi_medis'],
-            'kontak_darurat' => $_POST['kontak_darurat'],
-            'nama_kontak_darurat' => $_POST['nama_kontak_darurat'],
-            'status_pendaftaran' => 'baru',
-            'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin'
+            'kondisi_medis' => $_POST['kondisi_medis'] ?? '',
+            'kontak_darurat' => $_POST['kontak_darurat'] ?? '',
+            'nama_kontak_darurat' => $_POST['nama_kontak_darurat'] ?? '',
+            'status_pendaftaran' => 'dikonfirmasi', // Langsung dikonfirmasi untuk offline
+            'catatan_admin' => $_POST['catatan_admin'] ?? 'Pendaftaran manual oleh admin',
+            'sumber_pendaftaran' => 'offline' // Tandai sebagai offline
         ];
 
         try {
@@ -127,11 +131,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
                 (nomor_pendaftaran, nama_lengkap, email, telepon, alamat, tanggal_lahir, 
                  jenis_kelamin, paket_kursus_id, tipe_mobil, jadwal_preferensi, 
                  pengalaman_mengemudi, kondisi_medis, kontak_darurat, nama_kontak_darurat,
-                 status_pendaftaran, catatan_admin) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 status_pendaftaran, catatan_admin, sumber_pendaftaran, dibuat_pada) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'offline', NOW())
             ");
 
-            if ($stmt->execute(array_values($data))) {
+            if ($stmt->execute([
+                $data['nomor_pendaftaran'],
+                $data['nama_lengkap'],
+                $data['email'],
+                $data['telepon'],
+                $data['alamat'],
+                $data['tanggal_lahir'],
+                $data['jenis_kelamin'],
+                $data['paket_kursus_id'],
+                $data['tipe_mobil'],
+                $data['jadwal_preferensi'],
+                $data['pengalaman_mengemudi'],
+                $data['kondisi_medis'],
+                $data['kontak_darurat'],
+                $data['nama_kontak_darurat'],
+                $data['status_pendaftaran'],
+                $data['catatan_admin']
+            ])) {
                 $success = "Siswa berhasil ditambahkan dengan nomor pendaftaran: " . $nomor_pendaftaran;
                 // Refresh halaman untuk mencegah resubmit
                 header("Location: pendaftaran.php?success=" . urlencode($success));
@@ -187,6 +208,8 @@ if (isset($_GET['delete'])) {
 // Get filter parameters
 $status_filter = $_GET['status'] ?? '';
 $search = $_GET['search'] ?? '';
+$sumber_filter = $_GET['sumber'] ?? '';
+$tab_active = $_GET['tab'] ?? 'all'; // Tab aktif
 
 // Build query dengan ORDER BY id DESC
 $query = "SELECT ps.*, pk.nama_paket, pk.harga, pk.durasi_jam, pk.tipe_mobil as tipe_paket
@@ -199,6 +222,17 @@ $params = [];
 if ($status_filter) {
     $query .= " AND ps.status_pendaftaran = ?";
     $params[] = $status_filter;
+}
+
+// Filter berdasarkan tab aktif
+if ($tab_active === 'online') {
+    $query .= " AND ps.sumber_pendaftaran = 'online'";
+} elseif ($tab_active === 'offline') {
+    $query .= " AND ps.sumber_pendaftaran = 'offline'";
+} elseif ($sumber_filter) {
+    // Fallback untuk filter dropdown lama
+    $query .= " AND ps.sumber_pendaftaran = ?";
+    $params[] = $sumber_filter;
 }
 
 if ($search) {
@@ -224,6 +258,20 @@ $status_counts = $db->query("
     GROUP BY status_pendaftaran
 ")->fetchAll(PDO::FETCH_ASSOC);
 
+// Get sumber counts untuk semua dan per kategori
+$sumber_counts = $db->query("
+    SELECT 
+        SUM(CASE WHEN sumber_pendaftaran = 'online' THEN 1 ELSE 0 END) as online,
+        SUM(CASE WHEN sumber_pendaftaran = 'offline' THEN 1 ELSE 0 END) as offline,
+        COUNT(*) as total
+    FROM pendaftaran_siswa
+")->fetch(PDO::FETCH_ASSOC);
+
+// Get jumlah per tab
+$count_all = $sumber_counts['total'] ?? 0;
+$count_online = $sumber_counts['online'] ?? 0;
+$count_offline = $sumber_counts['offline'] ?? 0;
+
 // Get paket kursus
 $paket_kursus = $db->query("SELECT id, nama_paket, harga, tipe_mobil, durasi_jam FROM paket_kursus")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -240,6 +288,7 @@ if (isset($_GET['success'])) {
     <title>Kelola Pendaftaran - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .sidebar {
             transition: all 0.3s ease;
@@ -252,6 +301,20 @@ if (isset($_GET['success'])) {
         }
         .main-content {
             transition: all 0.3s ease;
+        }
+        /* Styling untuk tab */
+        .tab-active {
+            border-bottom-width: 2px;
+            color: #2563eb;
+        }
+        .tab-active-all {
+            border-bottom-color: #6b7280;
+        }
+        .tab-active-online {
+            border-bottom-color: #3b82f6;
+        }
+        .tab-active-offline {
+            border-bottom-color: #10b981;
         }
         /* Styling untuk validasi */
         .error-input {
@@ -307,7 +370,14 @@ if (isset($_GET['success'])) {
             border-color: #d1d5db !important;
             box-shadow: none !important;
         }
-        
+        .badge-online {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-offline {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -321,8 +391,8 @@ if (isset($_GET['success'])) {
             <header class="bg-white shadow">
                 <div class="flex justify-between items-center px-6 py-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-800">Kelola pendaftaran</h1>
-                        <p class="text-gray-600">Kelola pendaftran siswa</p>
+                        <h1 class="text-2xl font-bold text-gray-800">Kelola Pendaftaran</h1>
+                        <p class="text-gray-600">Kelola pendaftaran siswa online & offline</p>
                     </div>
                     <div class="flex items-center space-x-4">
                         <button id="sidebar-toggle" class="p-2 rounded-lg hover:bg-gray-100">
@@ -336,22 +406,52 @@ if (isset($_GET['success'])) {
             <main class="flex-1 overflow-y-auto p-6">
                 <?php if (isset($success)): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                        <?= $success ?>
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <?= htmlspecialchars($success) ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if (isset($error)): ?>
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        <?= $error ?>
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
+
+                <!-- Ringkasan Sumber Pendaftaran -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow p-4 text-center">
+                        <div class="p-2 bg-blue-100 rounded-lg inline-block mb-2">
+                            <i class="fas fa-globe text-blue-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900"><?= $count_online ?></div>
+                        <div class="text-sm text-gray-600">Pendaftaran Online</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 text-center">
+                        <div class="p-2 bg-green-100 rounded-lg inline-block mb-2">
+                            <i class="fas fa-building text-green-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900"><?= $count_offline ?></div>
+                        <div class="text-sm text-gray-600">Pendaftaran Offline</div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4 text-center">
+                        <div class="p-2 bg-purple-100 rounded-lg inline-block mb-2">
+                            <i class="fas fa-users text-purple-600"></i>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-900"><?= $count_all ?></div>
+                        <div class="text-sm text-gray-600">Total Pendaftaran</div>
+                    </div>
+                </div>
 
                 <!-- Tambah Siswa Manual Button -->
                 <div class="bg-white rounded-lg shadow mb-6">
                     <div class="p-6">
                         <div class="flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg font-medium text-gray-900">Tambah Siswa</h3>
+                                <h3 class="text-lg font-medium text-gray-900">
+                                    <i class="fas fa-user-plus text-blue-600 mr-2"></i>
+                                    Tambah Siswa Offline
+                                </h3>
                                 <p class="text-gray-600">Untuk pendaftaran langsung di kantor</p>
                             </div>
                             <button onclick="toggleTambahForm()"
@@ -365,6 +465,7 @@ if (isset($_GET['success'])) {
                         <div id="tambahForm" class="mt-6 hidden">
                             <form method="POST" class="space-y-7" id="formPendaftaran" novalidate>
                                 <input type="hidden" name="tambah_siswa" value="1">
+                                <input type="hidden" name="sumber_pendaftaran" value="offline">
 
                                 <!-- Data Pribadi -->
                                 <div class="space-y-5">
@@ -478,53 +579,53 @@ if (isset($_GET['success'])) {
                                     </div>
                                 </div>
 
+                                <!-- Preferensi Kursus -->
                                 <div class="space-y-5 pt-4 border-t border-gray-200">
-    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-        <i class="fas fa-car text-blue-600"></i> Preferensi Kursus
-    </h3>
+                                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-car text-blue-600"></i> Preferensi Kursus
+                                    </h3>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Paket Kursus -->
-        <div class="input-wrapper">
-            <label for="paket_kursus_id" class="block text-sm text-gray-700 mb-1">Paket Kursus *</label>
-            <select id="paket_kursus_id" name="paket_kursus_id" required onchange="onPackageSelectChange()"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
-                <option value="">Pilih Paket</option>
-                <?php foreach ($paket_kursus as $paket): ?>
-                    <option value="<?= $paket['id'] ?>" 
-                            data-harga="<?= $paket['harga'] ?>"
-                            data-tipe-mobil="<?= $paket['tipe_mobil'] ?>">
-                        <?= htmlspecialchars($paket['nama_paket']) ?> 
-                        (<?= $paket['tipe_mobil_text'] ?? ucfirst($paket['tipe_mobil']) ?>)
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <span class="valid-indicator">
-                <i class="fas fa-check"></i>
-            </span>
-            <div class="error-message" id="paket_kursus_id_error">Pilih paket kursus</div>
-            <p class="text-xs text-gray-500 mt-1">Pilih paket, tipe mobil akan otomatis terisi</p>
-        </div>
-        
-        <!-- Tipe Mobil -->
-<div class="input-wrapper">
-    <label for="tipe_mobil" class="block text-sm text-gray-700 mb-1">Tipe Mobil *</label>
-    <select id="tipe_mobil" name="tipe_mobil" required
-        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-100" 
-        style="pointer-events: none; cursor: not-allowed;"> <!-- READONLY STYLE -->
-        <option value="">Pilih Paket Dulu</option>
-        <option value="manual">Manual</option>
-        <option value="matic">Matic</option>
-        <option value="keduanya">Keduanya</option>
-    </select>
-    <span class="valid-indicator">
-        <i class="fas fa-check"></i>
-    </span>
-    <div class="error-message" id="tipe_mobil_error">Tipe mobil wajib diisi</div>
-    <div id="tipeMobilNote" class="text-xs text-blue-600 mt-1 hidden">
-        <i class="fas fa-info-circle mr-1"></i>Tipe mobil otomatis mengikuti paket yang dipilih
-    </div>
-</div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                        <!-- Paket Kursus -->
+                                        <div class="input-wrapper">
+                                            <label for="paket_kursus_id" class="block text-sm text-gray-700 mb-1">Paket Kursus *</label>
+                                            <select id="paket_kursus_id" name="paket_kursus_id" required onchange="onPackageSelectChange()"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                                <option value="">Pilih Paket</option>
+                                                <?php foreach ($paket_kursus as $paket): ?>
+                                                    <option value="<?= $paket['id'] ?>" 
+                                                            data-harga="<?= $paket['harga'] ?>"
+                                                            data-tipe-mobil="<?= $paket['tipe_mobil'] ?>">
+                                                        <?= htmlspecialchars($paket['nama_paket']) ?> 
+                                                        (<?= ucfirst($paket['tipe_mobil']) ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="paket_kursus_id_error">Pilih paket kursus</div>
+                                            <p class="text-xs text-gray-500 mt-1">Pilih paket, tipe mobil akan otomatis terisi</p>
+                                        </div>
+                                        
+                                        <!-- Tipe Mobil -->
+                                        <div class="input-wrapper">
+                                            <label for="tipe_mobil" class="block text-sm text-gray-700 mb-1">Tipe Mobil *</label>
+                                            <select id="tipe_mobil" name="tipe_mobil" required readonly
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-100">
+                                                <option value="">Pilih Paket Dulu</option>
+                                                <option value="manual">Manual</option>
+                                                <option value="matic">Matic</option>
+                                                <option value="keduanya">Keduanya</option>
+                                            </select>
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="tipe_mobil_error">Tipe mobil wajib diisi</div>
+                                            <div id="tipeMobilNote" class="text-xs text-blue-600 mt-1 hidden">
+                                                <i class="fas fa-info-circle mr-1"></i>Tipe mobil otomatis mengikuti paket yang dipilih
+                                            </div>
+                                        </div>
                                         
                                         <!-- Jadwal Preferensi -->
                                         <div class="input-wrapper">
@@ -606,7 +707,7 @@ if (isset($_GET['success'])) {
                                     <button type="submit"
                                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
                                         <i class="fas fa-save"></i>
-                                        Simpan Data Siswa
+                                        Simpan Data Siswa (Offline)
                                     </button>
                                 </div>
                                 
@@ -617,14 +718,49 @@ if (isset($_GET['success'])) {
                     </div>
                 </div>
 
+                <!-- Tabs untuk Filter Sumber -->
+                <div class="bg-white rounded-lg shadow mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex -mb-px">
+                            <button onclick="changeTab('all')" id="tab-all" 
+                                class="py-3 px-6 text-sm font-medium border-b-2 <?= $tab_active === 'all' ? 'tab-active tab-active-all text-gray-800' : 'border-transparent text-gray-500' ?> hover:text-gray-700 hover:border-gray-300 transition-all duration-200 flex items-center gap-2">
+                                <i class="fas fa-layer-group"></i>
+                                Semua Pendaftaran
+                                <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                    <?= $count_all ?>
+                                </span>
+                            </button>
+                            <button onclick="changeTab('online')" id="tab-online"
+                                class="py-3 px-6 text-sm font-medium border-b-2 <?= $tab_active === 'online' ? 'tab-active tab-active-online text-blue-600' : 'border-transparent text-gray-500' ?> hover:text-blue-600 hover:border-blue-500 transition-all duration-200 flex items-center gap-2">
+                                <i class="fas fa-globe"></i>
+                                Online
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                    <?= $count_online ?>
+                                </span>
+                            </button>
+                            <button onclick="changeTab('offline')" id="tab-offline"
+                                class="py-3 px-6 text-sm font-medium border-b-2 <?= $tab_active === 'offline' ? 'tab-active tab-active-offline text-green-600' : 'border-transparent text-gray-500' ?> hover:text-green-600 hover:border-green-500 transition-all duration-200 flex items-center gap-2">
+                                <i class="fas fa-building"></i>
+                                Offline
+                                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                    <?= $count_offline ?>
+                                </span>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
                 <!-- Filters -->
                 <div class="bg-white rounded-lg shadow mb-6">
                     <div class="p-6">
-                        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <!-- Tambah parameter tab -->
+                            <input type="hidden" name="tab" value="<?= $tab_active ?>">
+                            
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
                                 <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
-                                    placeholder="Cari nama, no. pendaftaran, email, telepon..."
+                                    placeholder="Cari nama, no. pendaftaran..."
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
@@ -638,12 +774,13 @@ if (isset($_GET['success'])) {
                                     <option value="dibatalkan" <?= $status_filter === 'dibatalkan' ? 'selected' : '' ?>>Dibatalkan</option>
                                 </select>
                             </div>
-                            <div class="flex items-end space-x-2">
+                            <!-- Hapus filter sumber dropdown karena sudah ada tab -->
+                            <div class="md:col-span-2 flex items-end space-x-2">
                                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">
-                                    <i class="fas fa-filter mr-2"></i>Filter
+                                    <i class="fas fa-filter mr-2"></i>Terapkan Filter
                                 </button>
-                                <a href="pendaftaran.php" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300">
-                                    <i class="fas fa-refresh mr-2"></i>Reset
+                                <a href="pendaftaran.php?tab=<?= $tab_active ?>" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300">
+                                    <i class="fas fa-refresh mr-2"></i>Reset Filter
                                 </a>
                             </div>
                         </form>
@@ -685,10 +822,24 @@ if (isset($_GET['success'])) {
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-medium text-gray-900">
-                                Data Pendaftaran (<?= count($pendaftaran) ?>)
+                                Data Pendaftaran 
+                                <span class="text-blue-600">
+                                    <?php if ($tab_active === 'all'): ?>
+                                        (Semua: <?= count($pendaftaran) ?>)
+                                    <?php elseif ($tab_active === 'online'): ?>
+                                        (Online: <?= count($pendaftaran) ?>)
+                                    <?php elseif ($tab_active === 'offline'): ?>
+                                        (Offline: <?= count($pendaftaran) ?>)
+                                    <?php endif; ?>
+                                </span>
                             </h3>
                             <div class="text-sm text-gray-600">
-                                Total: <?= count($pendaftaran) ?> pendaftaran
+                                <?php if ($status_filter): ?>
+                                    Filter Status: <span class="font-semibold"><?= ucfirst($status_filter) ?></span>
+                                <?php endif; ?>
+                                <?php if ($search): ?>
+                                    | Pencarian: <span class="font-semibold">"<?= htmlspecialchars($search) ?>"</span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -700,7 +851,7 @@ if (isset($_GET['success'])) {
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Pendaftaran</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paket</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe Mobil</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sumber</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -729,24 +880,15 @@ if (isset($_GET['success'])) {
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm text-gray-900">
-                                                    <?php 
-                                                    $tipe_mobil = $data['tipe_mobil'] ?? $data['tipe_paket'] ?? '-';
-                                                    switch($tipe_mobil) {
-                                                        case 'manual':
-                                                            echo '<span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">Manual</span>';
-                                                            break;
-                                                        case 'matic':
-                                                            echo '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Matic</span>';
-                                                            break;
-                                                        case 'keduanya':
-                                                            echo '<span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">Manual & Matic</span>';
-                                                            break;
-                                                        default:
-                                                            echo $tipe_mobil;
-                                                    }
-                                                    ?>
-                                                </div>
+                                                <?php if ($data['sumber_pendaftaran'] === 'online'): ?>
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full badge-online">
+                                                        <i class="fas fa-globe mr-1"></i>Online
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full badge-offline">
+                                                        <i class="fas fa-building mr-1"></i>Offline
+                                                    </span>
+                                                <?php endif; ?>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <?= date('d M Y', strtotime($data['dibuat_pada'])) ?>
@@ -795,7 +937,17 @@ if (isset($_GET['success'])) {
                                 <?php else: ?>
                                     <tr>
                                         <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                                            Tidak ada data pendaftaran yang ditemukan.
+                                            <i class="fas fa-inbox text-3xl text-gray-300 mb-2 block"></i>
+                                            <?php if ($tab_active === 'all'): ?>
+                                                Tidak ada data pendaftaran.
+                                            <?php elseif ($tab_active === 'online'): ?>
+                                                Tidak ada data pendaftaran online.
+                                            <?php elseif ($tab_active === 'offline'): ?>
+                                                Tidak ada data pendaftaran offline.
+                                            <?php endif; ?>
+                                            <?php if ($status_filter || $search): ?>
+                                                <br><span class="text-sm">Coba hilangkan filter untuk melihat semua data.</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endif; ?>
@@ -878,6 +1030,22 @@ if (isset($_GET['success'])) {
     <script>
         // ==================== FUNGSI UTAMA ====================
         
+        // Fungsi untuk ganti tab
+        function changeTab(tabType) {
+            // Dapatkan URL saat ini
+            let url = new URL(window.location.href);
+            let params = new URLSearchParams(url.search);
+            
+            // Set parameter tab
+            params.set('tab', tabType);
+            
+            // Hapus parameter sumber jika ada (untuk konsistensi)
+            params.delete('sumber');
+            
+            // Redirect ke URL baru
+            window.location.href = 'pendaftaran.php?' + params.toString();
+        }
+
         // Toggle form tambah siswa
         function toggleTambahForm() {
             const form = document.getElementById('tambahForm');
@@ -890,6 +1058,9 @@ if (isset($_GET['success'])) {
                 
                 // Reset form ketika dibuka
                 resetForm();
+                
+                // Scroll ke form
+                form.scrollIntoView({ behavior: 'smooth' });
             } else {
                 form.classList.add('hidden');
                 icon.classList.remove('fa-times');
@@ -935,6 +1106,11 @@ if (isset($_GET['success'])) {
                 // Reset valid indicators
                 document.querySelectorAll('.valid-indicator').forEach(el => {
                     el.style.display = 'none';
+                });
+                
+                // Reset radio buttons
+                document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.checked = false;
                 });
             }
         }
@@ -1373,26 +1549,20 @@ if (isset($_GET['success'])) {
             // Form submission dengan pencegahan double submit
             const form = document.getElementById('formPendaftaran');
             if (form) {
-                let isSubmitting = false;
-                
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
                     
-                    if (isSubmitting) {
-                        return;
-                    }
-                    
-                    // Enable semua select yang disabled sementara untuk submit
-                    const disabledSelects = document.querySelectorAll('select[readonly]');
-                    disabledSelects.forEach(select => {
-                        select.readOnly = false;
+                    // Enable semua select yang readonly sementara untuk submit
+                    const readonlySelects = document.querySelectorAll('select[readonly]');
+                    readonlySelects.forEach(select => {
+                        select.removeAttribute('readonly');
                     });
                     
                     // Validasi form
                     if (!validateForm()) {
                         // Kembalikan status readonly
-                        disabledSelects.forEach(select => {
-                            select.readOnly = true;
+                        readonlySelects.forEach(select => {
+                            select.setAttribute('readonly', 'readonly');
                         });
                         
                         // Scroll ke error pertama
@@ -1403,24 +1573,12 @@ if (isset($_GET['success'])) {
                         return;
                     }
                     
-                    // Set flag submitting
-                    isSubmitting = true;
-                    
-                    // Disable submit button untuk mencegah double click
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
-                    }
-                    
-                    // Submit form dengan timeout kecil
-                    setTimeout(() => {
-                        this.submit();
-                    }, 500);
+                    // Submit form
+                    this.submit();
                     
                     // Kembalikan status readonly
-                    disabledSelects.forEach(select => {
-                        select.readOnly = true;
+                    readonlySelects.forEach(select => {
+                        select.setAttribute('readonly', 'readonly');
                     });
                 });
             }
@@ -1438,7 +1596,11 @@ if (isset($_GET['success'])) {
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Gagal memuat detail pendaftaran');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal memuat detail pendaftaran'
+                    });
                 });
         }
 
@@ -1460,9 +1622,22 @@ if (isset($_GET['success'])) {
 
         // Delete Confirmation
         function confirmDelete(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus pendaftaran ini?')) {
-                window.location.href = `pendaftaran.php?delete=${id}`;
-            }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Tambahkan parameter tab saat ini ke URL delete
+                    const currentTab = '<?= $tab_active ?>';
+                    window.location.href = `pendaftaran.php?delete=${id}&tab=${currentTab}`;
+                }
+            });
         }
 
         // Close modals when clicking outside

@@ -10,7 +10,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 $db = (new Database())->getConnection();
 
-// Handle AJAX request for package data - TAMBAHKAN INI
+// Handle AJAX request for package data
 if (isset($_GET['ajax_get_paket']) && isset($_GET['id'])) {
     $id = $_GET['id'];
     $stmt = $db->prepare("SELECT * FROM paket_kursus WHERE id = ?");
@@ -30,20 +30,22 @@ if (isset($_GET['ajax_get_paket']) && isset($_GET['id'])) {
 // Handle add/edit package
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_paket'])) {
-        // Add new package
+        // Add new package - TAMBAHKAN KATEGORI
         $nama_paket = $_POST['nama_paket'];
         $deskripsi = $_POST['deskripsi'];
         $durasi_menit = $_POST['durasi_menit'];
         $harga = $_POST['harga'];
         $tipe_mobil = $_POST['tipe_mobil'];
+        $kategori = $_POST['kategori']; // TAMBAHAN
         $termasuk_teori = isset($_POST['termasuk_teori']) ? 1 : 0;
         $termasuk_praktik = isset($_POST['termasuk_praktik']) ? 1 : 0;
         $maksimal_siswa = $_POST['maksimal_siswa'];
         $tersedia = isset($_POST['tersedia']) ? 1 : 0;
 
-        $stmt = $db->prepare("INSERT INTO paket_kursus (nama_paket, deskripsi, durasi_jam, harga, tipe_mobil, termasuk_teori, termasuk_praktik, maksimal_siswa, tersedia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        // Query INSERT - TAMBAHKAN KATEGORI
+        $stmt = $db->prepare("INSERT INTO paket_kursus (nama_paket, deskripsi, durasi_jam, harga, tipe_mobil, kategori, termasuk_teori, termasuk_praktik, maksimal_siswa, tersedia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-        if ($stmt->execute([$nama_paket, $deskripsi, $durasi_menit, $harga, $tipe_mobil, $termasuk_teori, $termasuk_praktik, $maksimal_siswa, $tersedia])) {
+        if ($stmt->execute([$nama_paket, $deskripsi, $durasi_menit, $harga, $tipe_mobil, $kategori, $termasuk_teori, $termasuk_praktik, $maksimal_siswa, $tersedia])) {
             $_SESSION['success'] = "Paket kursus berhasil ditambahkan!";
             header('Location: paket.php');
             exit;
@@ -51,21 +53,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Gagal menambahkan paket kursus! Error: " . implode(", ", $stmt->errorInfo());
         }
     } elseif (isset($_POST['edit_paket'])) {
-        // Edit existing package
+        // Edit existing package - TAMBAHKAN KATEGORI
         $id = $_POST['id'];
         $nama_paket = $_POST['nama_paket'];
         $deskripsi = $_POST['deskripsi'];
         $durasi_menit = $_POST['durasi_menit'];
         $harga = $_POST['harga'];
         $tipe_mobil = $_POST['tipe_mobil'];
+        $kategori = $_POST['kategori']; // TAMBAHAN
         $termasuk_teori = isset($_POST['termasuk_teori']) ? 1 : 0;
         $termasuk_praktik = isset($_POST['termasuk_praktik']) ? 1 : 0;
         $maksimal_siswa = $_POST['maksimal_siswa'];
         $tersedia = isset($_POST['tersedia']) ? 1 : 0;
 
-        $stmt = $db->prepare("UPDATE paket_kursus SET nama_paket = ?, deskripsi = ?, durasi_jam = ?, harga = ?, tipe_mobil = ?, termasuk_teori = ?, termasuk_praktik = ?, maksimal_siswa = ?, tersedia = ? WHERE id = ?");
+        // Query UPDATE - TAMBAHKAN KATEGORI
+        $stmt = $db->prepare("UPDATE paket_kursus SET nama_paket = ?, deskripsi = ?, durasi_jam = ?, harga = ?, tipe_mobil = ?, kategori = ?, termasuk_teori = ?, termasuk_praktik = ?, maksimal_siswa = ?, tersedia = ? WHERE id = ?");
 
-        if ($stmt->execute([$nama_paket, $deskripsi, $durasi_menit, $harga, $tipe_mobil, $termasuk_teori, $termasuk_praktik, $maksimal_siswa, $tersedia, $id])) {
+        if ($stmt->execute([$nama_paket, $deskripsi, $durasi_menit, $harga, $tipe_mobil, $kategori, $termasuk_teori, $termasuk_praktik, $maksimal_siswa, $tersedia, $id])) {
             $_SESSION['success'] = "Paket kursus berhasil diupdate!";
             header('Location: paket.php');
             exit;
@@ -75,20 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Handle delete - Diubah bagian ini saja
+// Handle delete
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
 
-    // Check if package is being used in any registration
-    // HAPUS atau KOMENTARI bagian ini karena tabel pendaftaran tidak ada:
-    // $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM pendaftaran WHERE paket_kursus_id = ?");
-    // $check_stmt->execute([$id]);
-    // $usage = $check_stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Ganti dengan pengecekan sederhana atau langsung hapus:
-    // Atau jika nanti akan ada tabel pendaftaran, buat dulu tabelnya
-    
-    // Untuk sementara, langsung hapus tanpa pengecekan
     $stmt = $db->prepare("DELETE FROM paket_kursus WHERE id = ?");
     if ($stmt->execute([$id])) {
         $_SESSION['success'] = "Paket kursus berhasil dihapus!";
@@ -123,12 +117,16 @@ unset($_SESSION['success'], $_SESSION['error']);
 $stmt = $db->query("SELECT * FROM paket_kursus ORDER BY harga ASC");
 $paket_kursus = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get package statistics
+// Get package statistics - TAMBAHKAN STATISTIK KATEGORI
 $total_paket = $db->query("SELECT COUNT(*) as total FROM paket_kursus")->fetch()['total'];
 $paket_aktif = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE tersedia = 1")->fetch()['total'];
 $paket_manual = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE tipe_mobil = 'manual'")->fetch()['total'];
 $paket_matic = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE tipe_mobil = 'matic'")->fetch()['total'];
 $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE tipe_mobil = 'keduanya'")->fetch()['total'];
+$paket_reguler = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE kategori = 'reguler'")->fetch()['total'];
+$paket_pelancaran = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE kategori = 'pelancaran'")->fetch()['total'];
+$paket_extra = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE kategori = 'extra'")->fetch()['total'];
+$paket_campuran = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE kategori = 'campuran'")->fetch()['total'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -283,15 +281,29 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                                                     placeholder="1500000">
                                             </div>
 
-                                            <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Mobil *</label>
-                                                <select name="tipe_mobil" id="tipe_mobil" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                    <option value="">Pilih Tipe Mobil</option>
-                                                    <option value="manual">Manual</option>
-                                                    <option value="matic">Matic</option>
-                                                    <option value="keduanya">Keduanya</option>
-                                                </select>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Mobil *</label>
+                                                    <select name="tipe_mobil" id="tipe_mobil" required
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                        <option value="">Pilih Tipe Mobil</option>
+                                                        <option value="manual">Manual</option>
+                                                        <option value="matic">Matic</option>
+                                                        <option value="keduanya">Keduanya</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kategori Paket *</label>
+                                                    <select name="kategori" id="kategori" required
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                        <option value="">Pilih Kategori</option>
+                                                        <option value="reguler">Reguler</option>
+                                                        <option value="pelancaran">Pelancaran</option>
+                                                        <option value="extra">Extra</option>
+                                                        <option value="campuran">Campuran</option>
+                                                    </select>
+                                                </div>
                                             </div>
 
                                             <div class="space-y-3">
@@ -398,6 +410,57 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                     </div>
                 </div>
 
+                <!-- Kategori Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-blue-100 rounded-lg">
+                                <i class="fas fa-clock text-blue-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Reguler</p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $paket_reguler ?></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-green-100 rounded-lg">
+                                <i class="fas fa-bolt text-green-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Pelancaran</p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $paket_pelancaran ?></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-yellow-100 rounded-lg">
+                                <i class="fas fa-moon text-yellow-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Extra</p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $paket_extra ?></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 bg-purple-100 rounded-lg">
+                                <i class="fas fa-random text-purple-600 text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Campuran</p>
+                                <p class="text-2xl font-bold text-gray-900"><?= $paket_campuran ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Packages List -->
                 <div class="bg-white rounded-lg shadow">
                     <div class="px-6 py-4 border-b border-gray-200">
@@ -417,6 +480,7 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Paket</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durasi</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe Mobil</th>
@@ -431,6 +495,43 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($paket['nama_paket']) ?></div>
                                                 <div class="text-sm text-gray-500"><?= htmlspecialchars($paket['deskripsi']) ?></div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <?php
+                                                // Tentukan warna dan ikon berdasarkan kategori
+                                                $kategori_warna = '';
+                                                $kategori_icon = '';
+                                                switch($paket['kategori'] ?? 'reguler') {
+                                                    case 'reguler':
+                                                        $kategori_warna = 'bg-blue-100 text-blue-800';
+                                                        $kategori_icon = 'clock';
+                                                        $kategori_text = 'Reguler';
+                                                        break;
+                                                    case 'pelancaran':
+                                                        $kategori_warna = 'bg-green-100 text-green-800';
+                                                        $kategori_icon = 'bolt';
+                                                        $kategori_text = 'Pelancaran';
+                                                        break;
+                                                    case 'extra':
+                                                        $kategori_warna = 'bg-yellow-100 text-yellow-800';
+                                                        $kategori_icon = 'moon';
+                                                        $kategori_text = 'Extra';
+                                                        break;
+                                                    case 'campuran':
+                                                        $kategori_warna = 'bg-purple-100 text-purple-800';
+                                                        $kategori_icon = 'random';
+                                                        $kategori_text = 'Campuran';
+                                                        break;
+                                                    default:
+                                                        $kategori_warna = 'bg-gray-100 text-gray-800';
+                                                        $kategori_icon = 'question-circle';
+                                                        $kategori_text = ucfirst($paket['kategori'] ?? 'Reguler');
+                                                }
+                                                ?>
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= $kategori_warna ?>">
+                                                    <i class="fas fa-<?= $kategori_icon ?> mr-1"></i>
+                                                    <?= $kategori_text ?>
+                                                </span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <?php
@@ -600,7 +701,7 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
             document.getElementById('durasi_menit').addEventListener('input', convertToHours);
         });
 
-        // Edit Package Function - DIPERBAIKI
+        // Edit Package Function - DIPERBAIKI untuk kategori
         function editPackage(id) {
             fetch(`paket.php?ajax_get_paket=1&id=${id}`)
                 .then(response => {
@@ -617,6 +718,7 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                     document.getElementById('durasi_menit').value = data.durasi_jam;
                     document.getElementById('harga').value = data.harga;
                     document.getElementById('tipe_mobil').value = data.tipe_mobil;
+                    document.getElementById('kategori').value = data.kategori || 'reguler'; // TAMBAHAN
                     document.getElementById('maksimal_siswa').value = data.maksimal_siswa;
                     document.getElementById('termasuk_teori').checked = data.termasuk_teori == 1;
                     document.getElementById('termasuk_praktik').checked = data.termasuk_praktik == 1;
@@ -654,7 +756,7 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
                 });
         }
 
-        // Reset Form Function - DIPERBAIKI
+        // Reset Form Function - DIPERBAIKI untuk kategori
         function resetForm() {
             document.getElementById('packageForm').reset();
             
@@ -674,6 +776,10 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
             document.getElementById('termasuk_teori').checked = true;
             document.getElementById('termasuk_praktik').checked = true;
             document.getElementById('tersedia').checked = true;
+
+            // Reset selects to default
+            document.getElementById('tipe_mobil').value = '';
+            document.getElementById('kategori').value = ''; // TAMBAHAN
 
             // Reset duration to default
             document.getElementById('durasi_menit').value = 500;
@@ -702,11 +808,12 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
             }
         });
 
-        // Form validation
+        // Form validation - TAMBAHKAN VALIDASI KATEGORI
         document.getElementById('packageForm').addEventListener('submit', function(e) {
             const harga = parseInt(document.getElementById('harga').value);
             const durasi = parseInt(document.getElementById('durasi_menit').value);
             const tipeMobil = document.getElementById('tipe_mobil').value;
+            const kategori = document.getElementById('kategori').value; // TAMBAHAN
 
             if (!harga || harga < 50000) {
                 alert('Harga terlalu rendah! Minimum Rp 50.000');
@@ -722,6 +829,12 @@ $paket_keduanya = $db->query("SELECT COUNT(*) as total FROM paket_kursus WHERE t
 
             if (!tipeMobil) {
                 alert('Pilih tipe mobil!');
+                e.preventDefault();
+                return;
+            }
+
+            if (!kategori) { // TAMBAHAN
+                alert('Pilih kategori paket!');
                 e.preventDefault();
                 return;
             }
