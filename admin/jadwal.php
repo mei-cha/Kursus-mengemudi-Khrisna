@@ -24,17 +24,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_schedule'])) {
         'status' => 'terjadwal'
     ];
 
-    try {
-        $stmt = $db->prepare("
-            INSERT INTO jadwal_kursus 
-            (pendaftaran_id, instruktur_id, tanggal_jadwal, jam_mulai, jam_selesai, tipe_sesi, lokasi, mobil_digunakan, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
+    // Simpan data form untuk ditampilkan kembali jika error
+    $form_data = $data;
+    $form_data['student_name'] = $_POST['student_name'] ?? '';
+    $form_data['student_nomor'] = $_POST['student_nomor'] ?? '';
+    $form_data['student_paket'] = $_POST['student_paket'] ?? '';
 
-        if ($stmt->execute(array_values($data))) {
-            $success = "Jadwal berhasil ditambahkan!";
+    try {
+        // Cek apakah instruktur sudah memiliki jadwal pada tanggal dan waktu yang sama
+        $check_stmt = $db->prepare("
+            SELECT COUNT(*) as count 
+            FROM jadwal_kursus 
+            WHERE instruktur_id = ? 
+            AND tanggal_jadwal = ? 
+            AND status NOT IN ('dibatalkan', 'selesai')
+            AND (
+                (jam_mulai < ? AND jam_selesai > ?) OR
+                (jam_mulai < ? AND jam_selesai > ?) OR
+                (jam_mulai >= ? AND jam_selesai <= ?) OR
+                (? BETWEEN jam_mulai AND jam_selesai) OR
+                (? BETWEEN jam_mulai AND jam_selesai)
+            )
+        ");
+        
+        $check_stmt->execute([
+            $data['instruktur_id'],
+            $data['tanggal_jadwal'],
+            $data['jam_selesai'],
+            $data['jam_mulai'],
+            $data['jam_mulai'],
+            $data['jam_selesai'],
+            $data['jam_mulai'],
+            $data['jam_selesai'],
+            $data['jam_mulai'],
+            $data['jam_selesai']
+        ]);
+        
+        $result = $check_stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result['count'] > 0) {
+            $error = "Instruktur sudah memiliki jadwal pada tanggal dan waktu tersebut! Silakan pilih waktu lain.";
         } else {
-            $error = "Gagal menambahkan jadwal!";
+            // Cek apakah siswa sudah memiliki jadwal pada tanggal dan waktu yang sama
+            $check_student_stmt = $db->prepare("
+                SELECT COUNT(*) as count 
+                FROM jadwal_kursus 
+                WHERE pendaftaran_id = ? 
+                AND tanggal_jadwal = ? 
+                AND status NOT IN ('dibatalkan', 'selesai')
+                AND (
+                    (jam_mulai < ? AND jam_selesai > ?) OR
+                    (jam_mulai < ? AND jam_selesai > ?) OR
+                    (jam_mulai >= ? AND jam_selesai <= ?) OR
+                    (? BETWEEN jam_mulai AND jam_selesai) OR
+                    (? BETWEEN jam_mulai AND jam_selesai)
+                )
+            ");
+            
+            $check_student_stmt->execute([
+                $data['pendaftaran_id'],
+                $data['tanggal_jadwal'],
+                $data['jam_selesai'],
+                $data['jam_mulai'],
+                $data['jam_mulai'],
+                $data['jam_selesai'],
+                $data['jam_mulai'],
+                $data['jam_selesai'],
+                $data['jam_mulai'],
+                $data['jam_selesai']
+            ]);
+            
+            $student_result = $check_student_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($student_result['count'] > 0) {
+                $error = "Siswa sudah memiliki jadwal pada tanggal dan waktu tersebut!";
+            } else {
+                // Jika tidak ada konflik, tambahkan jadwal
+                $stmt = $db->prepare("
+                    INSERT INTO jadwal_kursus 
+                    (pendaftaran_id, instruktur_id, tanggal_jadwal, jam_mulai, jam_selesai, tipe_sesi, lokasi, mobil_digunakan, status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+
+                if ($stmt->execute(array_values($data))) {
+                    $success = "Jadwal berhasil ditambahkan!";
+                    // Reset form data setelah sukses
+                    $form_data = null;
+                } else {
+                    $error = "Gagal menambahkan jadwal!";
+                }
+            }
         }
     } catch (PDOException $e) {
         $error = "Error: " . $e->getMessage();
@@ -72,7 +151,7 @@ $status_filter = $_GET['status'] ?? '';
 $tipe_filter = $_GET['tipe'] ?? '';
 $tanggal_filter = $_GET['tanggal'] ?? '';
 
-// PERBAIKAN: Query yang benar untuk join dengan tabel instruktur
+// Query untuk data jadwal
 $query = "SELECT jk.*, ps.nama_lengkap, ps.nomor_pendaftaran, 
                  i.nama_lengkap as nama_instruktur 
           FROM jadwal_kursus jk 
@@ -97,7 +176,6 @@ if ($tanggal_filter) {
     $params[] = $tanggal_filter;
 }
 
-// PERBAIKAN: ORDER BY id DESC untuk menampilkan data terbaru di atas
 $query .= " ORDER BY jk.id DESC";
 
 $stmt = $db->prepare($query);
@@ -110,17 +188,17 @@ $jadwal_terjadwal = $db->query("SELECT COUNT(*) as total FROM jadwal_kursus WHER
 $jadwal_selesai = $db->query("SELECT COUNT(*) as total FROM jadwal_kursus WHERE status = 'selesai'")->fetch()['total'];
 $jadwal_hari_ini = $db->query("SELECT COUNT(*) as total FROM jadwal_kursus WHERE tanggal_jadwal = CURDATE()")->fetch()['total'];
 
-// Get data for forms
+// Get data for forms - untuk search siswa
 $active_registrations = $db->query("
-    SELECT ps.id, ps.nomor_pendaftaran, ps.nama_lengkap, pk.nama_paket 
+    SELECT ps.id, ps.nomor_pendaftaran, ps.nama_lengkap, ps.telepon, pk.nama_paket 
     FROM pendaftaran_siswa ps 
     JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
     WHERE ps.status_pendaftaran IN ('dikonfirmasi', 'diproses')
-    ORDER BY ps.id DESC
+    ORDER BY ps.nama_lengkap
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// PERBAIKAN: Query untuk instruktur - hilangkan WHERE status karena kolom status tidak ada
-$instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur")->fetchAll(PDO::FETCH_ASSOC);
+// Query untuk instruktur
+$instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur ORDER BY nama_lengkap")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -146,6 +224,83 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
 
         .main-content {
             transition: all 0.3s ease;
+        }
+        
+        /* Search Results Styling */
+        .search-container {
+            position: relative;
+        }
+        
+        #studentSearchResults {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            margin-top: 2px;
+        }
+
+        #studentSearchResults::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #studentSearchResults::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 3px;
+        }
+
+        #studentSearchResults::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .student-search-result {
+            transition: all 0.2s ease;
+        }
+
+        .student-search-result:hover {
+            background-color: #f8fafc !important;
+            transform: translateX(2px);
+        }
+
+        .student-search-result:last-child {
+            border-bottom: none;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Time conflict warning */
+        .time-conflict {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        
+        .conflict-message {
+            font-size: 0.875rem;
+            color: #dc2626;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .conflict-message i {
+            margin-right: 0.25rem;
         }
     </style>
 </head>
@@ -186,7 +341,7 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                     </div>
                 <?php endif; ?>
 
-                <!-- Add Schedule Form - Hidden by default -->
+                <!-- Add Schedule Form - Hidden by default, tapi tetap terbuka jika ada error -->
                 <div class="bg-white rounded-lg shadow mb-6">
                     <div class="p-4">
                         <!-- Toggle Button -->
@@ -202,31 +357,71 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                             </button>
                         </div>
 
-                        <!-- Form (hidden by default) -->
-                        <div id="scheduleFormContainer" class="hidden mt-6 p-6">
-                            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Form - Tetap terbuka jika ada error atau form data tersimpan -->
+                        <div id="scheduleFormContainer" class="mt-6 p-6 <?= (isset($error) && isset($form_data)) ? '' : 'hidden' ?>">
+                            <form method="POST" id="addScheduleForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <input type="hidden" name="add_schedule" value="1">
+                                <input type="hidden" name="student_name" id="studentNameField" value="<?= isset($form_data['student_name']) ? htmlspecialchars($form_data['student_name']) : '' ?>">
+                                <input type="hidden" name="student_nomor" id="studentNomorField" value="<?= isset($form_data['student_nomor']) ? htmlspecialchars($form_data['student_nomor']) : '' ?>">
+                                <input type="hidden" name="student_paket" id="studentPaketField" value="<?= isset($form_data['student_paket']) ? htmlspecialchars($form_data['student_paket']) : '' ?>">
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Siswa *</label>
-                                    <select name="pendaftaran_id" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Pilih Siswa</option>
-                                        <?php foreach ($active_registrations as $reg): ?>
-                                            <option value="<?= $reg['id'] ?>">
-                                                <?= $reg['nomor_pendaftaran'] ?> - <?= htmlspecialchars($reg['nama_lengkap']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                <!-- Search Student -->
+                                <div class="search-container md:col-span-2 lg:col-span-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari Siswa *</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i class="fas fa-search text-gray-400"></i>
+                                        </div>
+                                        <input type="text" 
+                                               id="studentSearch" 
+                                               placeholder="Ketik nama, no. pendaftaran, atau telepon..."
+                                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               autocomplete="off"
+                                               value="<?= isset($form_data['student_name']) ? htmlspecialchars($form_data['student_name']) : '' ?>">
+                                        
+                                        <!-- Hidden input untuk menyimpan ID siswa -->
+                                        <input type="hidden" name="pendaftaran_id" id="pendaftaranId" required value="<?= isset($form_data['pendaftaran_id']) ? htmlspecialchars($form_data['pendaftaran_id']) : '' ?>">
+                                    </div>
+                                    
+                                    <!-- Search Results Dropdown -->
+                                    <div id="studentSearchResults" class="hidden bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"></div>
+                                    
+                                    <!-- Student Info Display -->
+                                    <div id="selectedStudentInfo" class="mt-2 <?= (isset($form_data['pendaftaran_id']) && $form_data['pendaftaran_id']) ? '' : 'hidden' ?>">
+                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <div class="flex justify-between items-start">
+                                                <div>
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-user text-blue-500 mr-2"></i>
+                                                        <span class="font-medium text-blue-900" id="infoNama">
+                                                            <?= isset($form_data['student_name']) ? htmlspecialchars($form_data['student_name']) : '' ?>
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-sm text-gray-600 mt-1">
+                                                        <div><span class="text-blue-700">No. Pendaftaran:</span> <span id="infoNoPendaftaran" class="font-medium">
+                                                            <?= isset($form_data['student_nomor']) ? htmlspecialchars($form_data['student_nomor']) : '' ?>
+                                                        </span></div>
+                                                        <div><span class="text-blue-700">Paket:</span> <span id="infoPaket" class="font-medium">
+                                                            <?= isset($form_data['student_paket']) ? htmlspecialchars($form_data['student_paket']) : '' ?>
+                                                        </span></div>
+                                                    </div>
+                                                </div>
+                                                <button type="button" onclick="clearStudentSelection()" class="text-gray-400 hover:text-gray-600">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Instruktur *</label>
-                                    <select name="instruktur_id" required
+                                    <select name="instruktur_id" id="instrukturId" required
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Pilih Instruktur</option>
                                         <?php foreach ($instrukturs as $instruktur): ?>
-                                            <option value="<?= $instruktur['id'] ?>">
+                                            <option value="<?= $instruktur['id'] ?>" 
+                                                <?= (isset($form_data['instruktur_id']) && $form_data['instruktur_id'] == $instruktur['id']) ? 'selected' : '' ?>>
                                                 <?= htmlspecialchars($instruktur['nama_lengkap']) ?> - <?= $instruktur['spesialisasi'] ?>
                                             </option>
                                         <?php endforeach; ?>
@@ -235,31 +430,43 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal *</label>
-                                    <input type="date" name="tanggal_jadwal" required min="<?= date('Y-m-d') ?>"
+                                    <input type="date" name="tanggal_jadwal" id="tanggalJadwal" required min="<?= date('Y-m-d') ?>"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        value="<?= date('Y-m-d') ?>">
+                                        value="<?= isset($form_data['tanggal_jadwal']) ? htmlspecialchars($form_data['tanggal_jadwal']) : date('Y-m-d') ?>">
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Jam Mulai *</label>
-                                    <input type="time" name="jam_mulai" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        value="08:00">
+                                    <div class="relative">
+                                        <input type="time" name="jam_mulai" id="jamMulai" required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            value="<?= isset($form_data['jam_mulai']) ? htmlspecialchars($form_data['jam_mulai']) : '08:00' ?>">
+                                        <div id="timeConflictMessage" class="conflict-message hidden">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span>Instruktur sudah memiliki jadwal pada waktu ini</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Jam Selesai *</label>
-                                    <input type="time" name="jam_selesai" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        value="10:00">
+                                    <div class="relative">
+                                        <input type="time" name="jam_selesai" id="jamSelesai" required
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            value="<?= isset($form_data['jam_selesai']) ? htmlspecialchars($form_data['jam_selesai']) : '10:00' ?>">
+                                        <div id="timeConflictMessage2" class="conflict-message hidden">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span>Waktu selesai harus setelah waktu mulai</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Sesi *</label>
                                     <select name="tipe_sesi" required
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="teori">Teori</option>
-                                        <option value="praktik">Praktik</option>
+                                        <option value="teori" <?= (isset($form_data['tipe_sesi']) && $form_data['tipe_sesi'] == 'teori') ? 'selected' : '' ?>>Teori</option>
+                                        <option value="praktik" <?= (isset($form_data['tipe_sesi']) && $form_data['tipe_sesi'] == 'praktik') ? 'selected' : '' ?>>Praktik</option>
                                     </select>
                                 </div>
 
@@ -267,14 +474,32 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
                                     <input type="text" name="lokasi"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Lokasi kursus">
+                                        placeholder="Lokasi kursus"
+                                        value="<?= isset($form_data['lokasi']) ? htmlspecialchars($form_data['lokasi']) : '' ?>">
                                 </div>
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Mobil Digunakan</label>
                                     <input type="text" name="mobil_digunakan"
                                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Mobil yang akan digunakan">
+                                        placeholder="Mobil yang akan digunakan"
+                                        value="<?= isset($form_data['mobil_digunakan']) ? htmlspecialchars($form_data['mobil_digunakan']) : '' ?>">
+                                </div>
+
+                                <!-- Loading indicator -->
+                                <div id="loadingIndicator" class="md:col-span-3 flex justify-center hidden">
+                                    <div class="spinner mr-2"></div>
+                                    <span class="text-gray-600">Memeriksa ketersediaan instruktur...</span>
+                                </div>
+
+                                <!-- Available schedules for selected instructor -->
+                                <div id="instructorSchedules" class="md:col-span-3 hidden">
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <h4 class="font-medium text-gray-700 mb-2">Jadwal Instruktur pada Tanggal Tersebut:</h4>
+                                        <div id="scheduleList" class="text-sm text-gray-600">
+                                            <!-- Schedule list will be populated here -->
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="md:col-span-3 flex justify-end space-x-3">
@@ -283,8 +508,8 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                                         class="bg-gray-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-700 transition">
                                         Batal
                                     </button>
-                                    <button type="submit"
-                                        class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition">
+                                    <button type="submit" id="submitBtn"
+                                        class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
                                         <i class="fas fa-plus mr-2"></i>Tambah Jadwal
                                     </button>
                                 </div>
@@ -589,23 +814,316 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                 container.classList.remove('hidden');
                 icon.classList.remove('fa-plus');
                 icon.classList.add('fa-times');
+                resetFormValidation();
             } else {
                 container.classList.add('hidden');
                 icon.classList.remove('fa-times');
                 icon.classList.add('fa-plus');
+                clearStudentSelection();
+                resetFormValidation();
             }
         }
+        
+        // Data siswa dari PHP
+        let students = <?php 
+            echo json_encode($active_registrations);
+        ?>;
+
+        // Search functionality
+        const studentSearch = document.getElementById('studentSearch');
+        const studentSearchResults = document.getElementById('studentSearchResults');
+        const pendaftaranId = document.getElementById('pendaftaranId');
+        const selectedStudentInfo = document.getElementById('selectedStudentInfo');
+
+        // Initialize form with existing data if any
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($form_data) && $form_data): ?>
+                // Check instructor availability with existing data
+                setTimeout(checkInstructorAvailability, 500);
+            <?php endif; ?>
+        });
+
+        studentSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            if (searchTerm.length < 1) {
+                studentSearchResults.classList.add('hidden');
+                return;
+            }
+            
+            // Filter students
+            const filtered = students.filter(student => {
+                const searchFields = [
+                    student.nama_lengkap?.toLowerCase() || '',
+                    student.nomor_pendaftaran?.toLowerCase() || '',
+                    student.telepon || ''
+                ];
+                
+                return searchFields.some(field => field.includes(searchTerm));
+            });
+            
+            // Display results
+            if (filtered.length > 0) {
+                let html = '';
+                filtered.forEach(student => {
+                    html += `
+                        <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer student-search-result" 
+                             data-id="${student.id}"
+                             data-nama="${student.nama_lengkap}"
+                             data-nomor="${student.nomor_pendaftaran}"
+                             data-paket="${student.nama_paket}"
+                             onclick="selectScheduleStudent(this)">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-blue-500 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">${student.nama_lengkap}</div>
+                                        <div class="text-sm text-gray-600">${student.nomor_pendaftaran}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-blue-600">${student.nama_paket}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                studentSearchResults.innerHTML = html;
+                studentSearchResults.classList.remove('hidden');
+            } else {
+                studentSearchResults.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        <i class="fas fa-user-slash text-xl mb-2"></i>
+                        <p>Siswa tidak ditemukan</p>
+                        <p class="text-xs mt-1">Coba cari dengan nama atau nomor pendaftaran</p>
+                    </div>
+                `;
+                studentSearchResults.classList.remove('hidden');
+            }
+        });
+
+        // Select student for schedule
+        function selectScheduleStudent(element) {
+            const id = element.getAttribute('data-id');
+            const nama = element.getAttribute('data-nama');
+            const nomor = element.getAttribute('data-nomor');
+            const paket = element.getAttribute('data-paket');
+            
+            // Set hidden input
+            pendaftaranId.value = id;
+            
+            // Update hidden fields for form submission
+            document.getElementById('studentNameField').value = nama;
+            document.getElementById('studentNomorField').value = nomor;
+            document.getElementById('studentPaketField').value = paket;
+            
+            // Hide search
+            studentSearch.value = nama;
+            studentSearchResults.classList.add('hidden');
+            
+            // Show student info
+            document.getElementById('infoNama').textContent = nama;
+            document.getElementById('infoNoPendaftaran').textContent = nomor;
+            document.getElementById('infoPaket').textContent = paket;
+            
+            selectedStudentInfo.classList.remove('hidden');
+            
+            // Check for time conflicts if other fields are filled
+            checkInstructorAvailability();
+        }
+
+        // Clear student selection
+        function clearStudentSelection() {
+            pendaftaranId.value = '';
+            document.getElementById('studentNameField').value = '';
+            document.getElementById('studentNomorField').value = '';
+            document.getElementById('studentPaketField').value = '';
+            studentSearch.value = '';
+            selectedStudentInfo.classList.add('hidden');
+            studentSearchResults.classList.add('hidden');
+            resetFormValidation();
+        }
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(event) {
+            const searchContainer = document.querySelector('.search-container');
+            if (searchContainer && !searchContainer.contains(event.target)) {
+                studentSearchResults.classList.add('hidden');
+            }
+        });
+
+        // Tambah event listener untuk enter key
+        studentSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstResult = studentSearchResults.querySelector('.student-search-result');
+                if (firstResult) {
+                    selectScheduleStudent(firstResult);
+                }
+            }
+        });
+
+        // Check instructor availability
+        function checkInstructorAvailability() {
+            const instrukturId = document.getElementById('instrukturId').value;
+            const tanggalJadwal = document.getElementById('tanggalJadwal').value;
+            const jamMulai = document.getElementById('jamMulai').value;
+            const jamSelesai = document.getElementById('jamSelesai').value;
+            
+            // Reset UI
+            resetFormValidation();
+            
+            if (!instrukturId || !tanggalJadwal || !jamMulai || !jamSelesai) {
+                return;
+            }
+            
+            // Validate time
+            if (jamMulai >= jamSelesai) {
+                document.getElementById('jamSelesai').classList.add('time-conflict');
+                document.getElementById('timeConflictMessage2').classList.remove('hidden');
+                document.getElementById('submitBtn').disabled = true;
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            
+            // Send AJAX request to check availability
+            fetch('check_instructor_availability.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `instruktur_id=${instrukturId}&tanggal_jadwal=${tanggalJadwal}&jam_mulai=${jamMulai}&jam_selesai=${jamSelesai}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                
+                if (data.hasConflict) {
+                    // Show conflict
+                    document.getElementById('jamMulai').classList.add('time-conflict');
+                    document.getElementById('jamSelesai').classList.add('time-conflict');
+                    document.getElementById('timeConflictMessage').classList.remove('hidden');
+                    document.getElementById('submitBtn').disabled = true;
+                    
+                    // Show existing schedules
+                    if (data.schedules && data.schedules.length > 0) {
+                        let scheduleHtml = '<div class="space-y-2">';
+                        data.schedules.forEach(schedule => {
+                            const waktu = `${schedule.jam_mulai} - ${schedule.jam_selesai}`;
+                            const siswa = schedule.nama_siswa || 'Siswa';
+                            const status = schedule.status === 'selesai' ? '(Selesai)' : schedule.status === 'dibatalkan' ? '(Dibatalkan)' : '';
+                            scheduleHtml += `
+                                <div class="flex justify-between items-center p-2 bg-white rounded border">
+                                    <div>
+                                        <span class="font-medium">${waktu}</span>
+                                        <span class="text-gray-600 ml-2">${siswa} ${status}</span>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs rounded ${schedule.tipe_sesi === 'teori' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                        ${schedule.tipe_sesi}
+                                    </span>
+                                </div>
+                            `;
+                        });
+                        scheduleHtml += '</div>';
+                        document.getElementById('scheduleList').innerHTML = scheduleHtml;
+                        document.getElementById('instructorSchedules').classList.remove('hidden');
+                    }
+                } else {
+                    // No conflict, enable submit button
+                    document.getElementById('submitBtn').disabled = false;
+                    
+                    // Show available schedules if any
+                    if (data.schedules && data.schedules.length > 0) {
+                        document.getElementById('instructorSchedules').classList.remove('hidden');
+                        let scheduleHtml = '<div class="space-y-2">';
+                        data.schedules.forEach(schedule => {
+                            const waktu = `${schedule.jam_mulai} - ${schedule.jam_selesai}`;
+                            const siswa = schedule.nama_siswa || 'Siswa';
+                            const status = schedule.status === 'selesai' ? '(Selesai)' : schedule.status === 'dibatalkan' ? '(Dibatalkan)' : '';
+                            scheduleHtml += `
+                                <div class="flex justify-between items-center p-2 bg-white rounded border">
+                                    <div>
+                                        <span class="font-medium">${waktu}</span>
+                                        <span class="text-gray-600 ml-2">${siswa} ${status}</span>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs rounded ${schedule.tipe_sesi === 'teori' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                        ${schedule.tipe_sesi}
+                                    </span>
+                                </div>
+                            `;
+                        });
+                        scheduleHtml += '</div>';
+                        document.getElementById('scheduleList').innerHTML = scheduleHtml;
+                    } else {
+                        document.getElementById('instructorSchedules').classList.add('hidden');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            });
+        }
+
+        // Reset form validation
+        function resetFormValidation() {
+            document.getElementById('jamMulai').classList.remove('time-conflict');
+            document.getElementById('jamSelesai').classList.remove('time-conflict');
+            document.getElementById('timeConflictMessage').classList.add('hidden');
+            document.getElementById('timeConflictMessage2').classList.add('hidden');
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('loadingIndicator').classList.add('hidden');
+            document.getElementById('instructorSchedules').classList.add('hidden');
+        }
+
+        // Add event listeners for time and date changes
+        document.getElementById('instrukturId').addEventListener('change', checkInstructorAvailability);
+        document.getElementById('tanggalJadwal').addEventListener('change', checkInstructorAvailability);
+        document.getElementById('jamMulai').addEventListener('change', checkInstructorAvailability);
+        document.getElementById('jamSelesai').addEventListener('change', checkInstructorAvailability);
+
+        // Form validation
+        document.getElementById('addScheduleForm').addEventListener('submit', function(e) {
+            if (!pendaftaranId.value) {
+                e.preventDefault();
+                alert('Silakan pilih siswa terlebih dahulu!');
+                studentSearch.focus();
+                return false;
+            }
+            
+            const instruktur = document.getElementById('instrukturId').value;
+            if (!instruktur) {
+                e.preventDefault();
+                alert('Silakan pilih instruktur!');
+                return false;
+            }
+            
+            // Check for time conflict one more time before submit
+            if (document.getElementById('submitBtn').disabled) {
+                e.preventDefault();
+                alert('Instruktur tidak tersedia pada waktu yang dipilih!');
+                return false;
+            }
+            
+            return true;
+        });
+
         // View Schedule Function
         function viewSchedule(id) {
             // Show loading state
             document.getElementById('viewContent').innerHTML = `
-            <div class="flex justify-center items-center py-12">
-                <div class="text-center">
-                    <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mb-2"></i>
-                    <p class="text-gray-600">Memuat detail jadwal...</p>
+                <div class="flex justify-center items-center py-12">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mb-2"></i>
+                        <p class="text-gray-600">Memuat detail jadwal...</p>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
             document.getElementById('viewModal').classList.remove('hidden');
 
@@ -617,13 +1135,13 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                 .catch(error => {
                     console.error('Error:', error);
                     document.getElementById('viewContent').innerHTML = `
-                    <div class="flex justify-center items-center py-12">
-                        <div class="text-center text-red-600">
-                            <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
-                            <p>Gagal memuat detail jadwal</p>
+                        <div class="flex justify-center items-center py-12">
+                            <div class="text-center text-red-600">
+                                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+                                <p>Gagal memuat detail jadwal</p>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
                 });
         }
 
@@ -631,7 +1149,7 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
             document.getElementById('viewModal').classList.add('hidden');
         }
 
-        // Update Schedule Function (existing)
+        // Update Schedule Function
         function updateSchedule(id, status, kehadiran, catatan) {
             document.getElementById('updateId').value = id;
             document.getElementById('updateStatus').value = status;
@@ -663,14 +1181,6 @@ $instrukturs = $db->query("SELECT id, nama_lengkap, spesialisasi FROM instruktur
                 closeUpdateModal();
             }
         }
-
-        // // Auto-hide success message after 5 seconds
-        // setTimeout(() => {
-        //     const successMessage = document.querySelector('.bg-green-100');
-        //     if (successMessage) {
-        //         successMessage.style.display = 'none';
-        //     }
-        // }, 5000);
     </script>
 </body>
 

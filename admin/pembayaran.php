@@ -282,6 +282,63 @@ $payment_types = $db->query("
             background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             color: white;
         }
+        
+        /* Search Results Styling */
+        #searchResults {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 50;
+        }
+
+        #searchResults::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #searchResults::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 3px;
+        }
+
+        #searchResults::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .student-result {
+            transition: all 0.2s ease;
+        }
+
+        .student-result:hover {
+            background-color: #f8fafc !important;
+            transform: translateX(2px);
+        }
+
+        .student-result:last-child {
+            border-bottom: none;
+        }
+        
+        /* Student Info Card */
+        .student-info-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Form grid layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -346,140 +403,196 @@ $payment_types = $db->query("
 
                         <!-- Manual Payment Form (Hidden by default) -->
                         <div id="manualPaymentForm" class="hidden mt-6">
-                            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <form method="POST" class="form-grid">
                                 <input type="hidden" name="add_payment" value="1">
                                 
+                                <!-- Left Column: Data Pembayaran -->
                                 <div class="space-y-4">
-                                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Data Pembayaran</h4>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Siswa *</label>
-                                        <select name="pendaftaran_id" required
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                id="studentSelect">
-                                            <option value="">Pilih siswa...</option>
-                                            <?php 
-                                            $active_students = $db->query("
-                                                SELECT ps.id, ps.nomor_pendaftaran, ps.nama_lengkap, ps.telepon, 
-                                                       pk.nama_paket, pk.harga,
-                                                       COALESCE(SUM(p.jumlah), 0) as total_dibayar
-                                                FROM pendaftaran_siswa ps 
-                                                JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
-                                                LEFT JOIN pembayaran p ON ps.id = p.pendaftaran_id AND p.status = 'terverifikasi'
-                                                WHERE ps.status_pendaftaran NOT IN ('dibatalkan', 'selesai')
-                                                GROUP BY ps.id, ps.nomor_pendaftaran, ps.nama_lengkap, ps.telepon, pk.nama_paket, pk.harga
-                                                ORDER BY ps.nama_lengkap
-                                            ")->fetchAll(PDO::FETCH_ASSOC);
+                                    <div class="card-header">
+                                        <h4 class="text-lg font-medium text-white">Data Pembayaran</h4>
+                                    </div>
+                                    
+                                    <div class="p-4 space-y-6">
+                                        <!-- Search Student -->
+                                        <div class="relative">
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Cari Siswa *</label>
+                                            <div class="relative">
+                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <i class="fas fa-search text-gray-400"></i>
+                                                </div>
+                                                <input type="text" 
+                                                       id="studentSearch" 
+                                                       placeholder="Ketik nama, no. pendaftaran, atau telepon..."
+                                                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                       autocomplete="off">
+                                                
+                                                <!-- Hidden input untuk menyimpan ID siswa -->
+                                                <input type="hidden" name="pendaftaran_id" id="pendaftaranId" required>
+                                            </div>
                                             
-                                            foreach ($active_students as $student): 
-                                                $sisa_bayar = $student['harga'] - $student['total_dibayar'];
-                                                $status_pembayaran = $student['total_dibayar'] == 0 ? 'Belum Bayar' : 
-                                                                   ($sisa_bayar > 0 ? 'Belum Lunas' : 'Lunas');
-                                            ?>
-                                            <option value="<?= $student['id'] ?>" 
-                                                    data-price="<?= $student['harga'] ?>"
-                                                    data-paid="<?= $student['total_dibayar'] ?>"
-                                                    data-remaining="<?= $sisa_bayar ?>">
-                                                <?= $student['nomor_pendaftaran'] ?> - <?= htmlspecialchars($student['nama_lengkap']) ?> 
-                                                (<?= htmlspecialchars($student['nama_paket']) ?> - Rp <?= number_format($student['harga'], 0, ',', '.') ?>)
-                                                - <?= $status_pembayaran ?>
-                                            </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pembayaran *</label>
-                                            <input type="date" name="tanggal_pembayaran" required
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                   value="<?= date('Y-m-d') ?>">
+                                            <!-- Search Results Dropdown -->
+                                            <div id="searchResults" class="hidden mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"></div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (Rp) *</label>
-                                            <input type="number" name="jumlah" required min="1" id="paymentAmount"
-                                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                   placeholder="1500000">
-                                        </div>
-                                    </div>
 
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran *</label>
-                                            <select name="metode_pembayaran" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="transfer">Transfer Bank</option>
-                                                <option value="tunai">Tunai</option>
-                                            </select>
+                                        <!-- Tanggal & Jumlah -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pembayaran *</label>
+                                                <input type="date" name="tanggal_pembayaran" required
+                                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                       value="<?= date('Y-m-d') ?>">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (Rp) *</label>
+                                                <input type="number" name="jumlah" required min="1" id="paymentAmount"
+                                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                       placeholder="1500000">
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Pembayaran *</label>
-                                            <select name="tipe_pembayaran" required
-                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="dp">DP (Down Payment)</option>
-                                                <option value="pelunasan">Pelunasan</option>
-                                                <option value="full">Lunas</option>
-                                            </select>
+
+                                        <!-- Metode & Tipe Pembayaran -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran *</label>
+                                                <select name="metode_pembayaran" required
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                    <option value="transfer">Transfer Bank</option>
+                                                    <option value="tunai">Tunai</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Pembayaran *</label>
+                                                <select name="tipe_pembayaran" required
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                    <option value="dp">DP (Down Payment)</option>
+                                                    <option value="pelunasan">Pelunasan</option>
+                                                    <option value="full">Lunas</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
-                                        <select name="status" required
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                            <option value="terverifikasi">Terverifikasi</option>
-                                            <option value="menunggu">Menunggu</option>
-                                            <option value="ditolak">Ditolak</option>
-                                        </select>
-                                    </div>
+                                        <!-- Status & Catatan -->
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                                                <select name="status" required
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                    <option value="terverifikasi">Terverifikasi</option>
+                                                    <option value="menunggu">Menunggu</option>
+                                                    <option value="ditolak">Ditolak</option>
+                                                </select>
+                                            </div>
 
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
-                                        <textarea name="catatan" rows="2"
-                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                  placeholder="Catatan tambahan mengenai pembayaran..."></textarea>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                                                <textarea name="catatan" rows="3"
+                                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                          placeholder="Catatan tambahan mengenai pembayaran..."></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
+                                <!-- Right Column: Informasi Siswa -->
                                 <div class="space-y-4">
-                                    <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Informasi Siswa Terpilih</h4>
+                                    <div class="card-header">
+                                        <h4 class="text-lg font-medium text-white">Informasi Siswa Terpilih</h4>
+                                    </div>
                                     
-                                    <div id="studentInfo" class="bg-blue-50 border border-blue-200 rounded-lg p-4 hidden">
-                                        <div class="grid grid-cols-1 gap-2 text-sm">
-                                            <div>
-                                                <span class="text-blue-700">Nama:</span>
-                                                <span id="infoNama" class="text-blue-900 font-medium block"></span>
+                                    <div class="p-4">
+                                        <!-- Default State: Belum ada siswa terpilih -->
+                                        <div id="noStudentSelected" class="text-center py-8">
+                                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+                                                <i class="fas fa-user text-blue-500 text-2xl"></i>
                                             </div>
-                                            <div>
-                                                <span class="text-blue-700">No. Pendaftaran:</span>
-                                                <span id="infoNoPendaftaran" class="text-blue-900 font-medium block"></span>
-                                            </div>
-                                            <div>
-                                                <span class="text-blue-700">Paket:</span>
-                                                <span id="infoPaket" class="text-blue-900 block"></span>
-                                            </div>
-                                            <div>
-                                                <span class="text-blue-700">Harga Paket:</span>
-                                                <span id="infoHarga" class="text-blue-900 font-semibold block"></span>
-                                            </div>
-                                            <div>
-                                                <span class="text-blue-700">Total Dibayar:</span>
-                                                <span id="infoDibayar" class="text-green-600 font-semibold block"></span>
-                                            </div>
-                                            <div>
-                                                <span class="text-blue-700">Sisa Bayar:</span>
-                                                <span id="infoSisa" class="text-orange-600 font-semibold block"></span>
+                                            <h4 class="text-lg font-medium text-gray-700 mb-2">Belum Ada Siswa Terpilih</h4>
+                                            <p class="text-gray-500 text-sm">Cari dan pilih siswa untuk menampilkan informasi detail</p>
+                                        </div>
+                                        
+                                        <!-- Student Info Display -->
+                                        <div id="selectedStudentInfo" class="hidden student-info-card rounded-lg p-6">
+                                            <div class="space-y-4">
+                                                <!-- Header dengan tombol clear -->
+                                                <div class="flex justify-between items-start mb-4">
+                                                    <div>
+                                                        <div class="flex items-center">
+                                                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center mr-3">
+                                                                <i class="fas fa-user text-white"></i>
+                                                            </div>
+                                                            <div>
+                                                                <h3 id="infoNama" class="text-xl font-bold text-gray-900"></h3>
+                                                                <p id="infoNoPendaftaran" class="text-sm text-gray-600"></p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" onclick="clearStudentSelection()" 
+                                                            class="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- Paket Info -->
+                                                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                    <div class="flex items-center mb-3">
+                                                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                                            <i class="fas fa-box text-blue-500"></i>
+                                                        </div>
+                                                        <h4 class="font-medium text-gray-700">Informasi Paket</h4>
+                                                    </div>
+                                                    <p id="infoPaket" class="text-gray-900 font-medium mb-1"></p>
+                                                    <p id="infoHarga" class="text-lg font-bold text-blue-600"></p>
+                                                </div>
+                                                
+                                                <!-- Status Pembayaran -->
+                                                <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                    <div class="flex items-center mb-3">
+                                                        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                                            <i class="fas fa-money-bill-wave text-green-500"></i>
+                                                        </div>
+                                                        <h4 class="font-medium text-gray-700">Status Pembayaran</h4>
+                                                    </div>
+                                                    
+                                                    <div class="space-y-3">
+                                                        <div class="flex justify-between items-center">
+                                                            <span class="text-gray-600">Total Dibayar:</span>
+                                                            <span id="infoDibayar" class="text-green-600 font-semibold"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center">
+                                                            <span class="text-gray-600">Sisa Bayar:</span>
+                                                            <span id="infoSisa" class="text-orange-600 font-semibold"></span>
+                                                        </div>
+                                                        <div class="pt-2 border-t border-gray-200">
+                                                            <div class="flex justify-between items-center">
+                                                                <span class="text-gray-700 font-medium">Status:</span>
+                                                                <span id="paymentStatus" class="px-3 py-1 rounded-full text-xs font-medium"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Tips -->
+                                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                    <div class="flex items-start">
+                                                        <i class="fas fa-lightbulb text-blue-500 mt-1 mr-2"></i>
+                                                        <div>
+                                                            <p class="text-sm text-blue-800">
+                                                                <strong>Tips:</strong> Jumlah pembayaran akan otomatis terisi dengan sisa pembayaran. Anda bisa mengubahnya sesuai kebutuhan.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="flex space-x-3 pt-4">
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="flex space-x-3 pt-4 border-t border-gray-200">
                                         <button type="button" onclick="toggleManualPayment()" 
                                                 class="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition duration-300">
                                             Batal
                                         </button>
                                         <button type="submit" 
-                                                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300">
+                                                class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition duration-300">
                                             <i class="fas fa-save mr-2"></i>Simpan Pembayaran
                                         </button>
                                     </div>
@@ -860,6 +973,188 @@ $payment_types = $db->query("
     <!-- sidebar -->
     <script src="../assets/js/sidebar.js"></script>
     <script>
+        // Student search functionality
+        let students = <?php 
+            $students = $db->query("
+                SELECT ps.id, ps.nomor_pendaftaran, ps.nama_lengkap, ps.telepon, 
+                       pk.nama_paket, pk.harga,
+                       COALESCE(SUM(p.jumlah), 0) as total_dibayar
+                FROM pendaftaran_siswa ps 
+                JOIN paket_kursus pk ON ps.paket_kursus_id = pk.id 
+                LEFT JOIN pembayaran p ON ps.id = p.pendaftaran_id AND p.status = 'terverifikasi'
+                WHERE ps.status_pendaftaran NOT IN ('dibatalkan', 'selesai')
+                GROUP BY ps.id, ps.nomor_pendaftaran, ps.nama_lengkap, ps.telepon, pk.nama_paket, pk.harga
+                ORDER BY ps.nama_lengkap
+            ")->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode($students);
+        ?>;
+
+        // Search functionality
+        const studentSearch = document.getElementById('studentSearch');
+        const searchResults = document.getElementById('searchResults');
+        const pendaftaranId = document.getElementById('pendaftaranId');
+        const selectedStudentInfo = document.getElementById('selectedStudentInfo');
+        const noStudentSelected = document.getElementById('noStudentSelected');
+        const paymentStatus = document.getElementById('paymentStatus');
+
+        studentSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            if (searchTerm.length < 2) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+            
+            // Filter students
+            const filtered = students.filter(student => 
+                student.nama_lengkap.toLowerCase().includes(searchTerm) ||
+                student.nomor_pendaftaran.toLowerCase().includes(searchTerm) ||
+                student.telepon.includes(searchTerm)
+            );
+            
+            // Display results
+            if (filtered.length > 0) {
+                let html = '';
+                filtered.forEach(student => {
+                    const sisa_bayar = student.harga - student.total_dibayar;
+                    const status = student.total_dibayar == 0 ? 'Belum Bayar' : 
+                                  (sisa_bayar > 0 ? 'Belum Lunas' : 'Lunas');
+                    const statusClass = student.total_dibayar == 0 ? 'bg-yellow-100 text-yellow-800' : 
+                                      (sisa_bayar > 0 ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800');
+                    
+                    html += `
+                        <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer student-result" 
+                             data-id="${student.id}"
+                             data-nama="${student.nama_lengkap}"
+                             data-nomor="${student.nomor_pendaftaran}"
+                             data-paket="${student.nama_paket}"
+                             data-harga="${student.harga}"
+                             data-dibayar="${student.total_dibayar}"
+                             data-sisa="${sisa_bayar}"
+                             onclick="selectStudent(this)">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                        <i class="fas fa-user text-blue-500 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">${student.nama_lengkap}</div>
+                                        <div class="text-sm text-gray-600">${student.nomor_pendaftaran}</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-semibold text-blue-600">Rp ${parseInt(student.harga).toLocaleString('id-ID')}</div>
+                                    <div class="text-xs px-2 py-1 rounded-full ${statusClass}">
+                                        ${status}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                searchResults.innerHTML = html;
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        <i class="fas fa-user-slash text-xl mb-2"></i>
+                        <p>Siswa tidak ditemukan</p>
+                    </div>
+                `;
+                searchResults.classList.remove('hidden');
+            }
+        });
+
+        // Select student
+        function selectStudent(element) {
+            const id = element.getAttribute('data-id');
+            const nama = element.getAttribute('data-nama');
+            const nomor = element.getAttribute('data-nomor');
+            const paket = element.getAttribute('data-paket');
+            const harga = element.getAttribute('data-harga');
+            const dibayar = element.getAttribute('data-dibayar');
+            const sisa = element.getAttribute('data-sisa');
+            
+            // Set hidden input
+            pendaftaranId.value = id;
+            
+            // Hide search
+            studentSearch.value = '';
+            searchResults.classList.add('hidden');
+            
+            // Show student info
+            document.getElementById('infoNama').textContent = nama;
+            document.getElementById('infoNoPendaftaran').textContent = nomor;
+            document.getElementById('infoPaket').textContent = paket;
+            document.getElementById('infoHarga').textContent = 'Rp ' + parseInt(harga).toLocaleString('id-ID');
+            document.getElementById('infoDibayar').textContent = 'Rp ' + parseInt(dibayar).toLocaleString('id-ID');
+            document.getElementById('infoSisa').textContent = 'Rp ' + parseInt(sisa).toLocaleString('id-ID');
+            
+            // Set payment status badge
+            if (parseInt(dibayar) === 0) {
+                paymentStatus.textContent = 'Belum Bayar';
+                paymentStatus.className = 'px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+            } else if (parseInt(sisa) > 0) {
+                paymentStatus.textContent = 'Belum Lunas';
+                paymentStatus.className = 'px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800';
+            } else {
+                paymentStatus.textContent = 'Lunas';
+                paymentStatus.className = 'px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800';
+            }
+            
+            selectedStudentInfo.classList.remove('hidden');
+            noStudentSelected.classList.add('hidden');
+            
+            // Auto-fill payment amount with remaining amount
+            if (parseInt(sisa) > 0) {
+                document.getElementById('paymentAmount').value = sisa;
+            }
+        }
+
+        // Clear student selection
+        function clearStudentSelection() {
+            pendaftaranId.value = '';
+            studentSearch.value = '';
+            selectedStudentInfo.classList.add('hidden');
+            noStudentSelected.classList.remove('hidden');
+        }
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!studentSearch.contains(event.target) && !searchResults.contains(event.target)) {
+                searchResults.classList.add('hidden');
+            }
+        });
+
+        // Handle form validation
+        document.querySelector('form[method="POST"]').addEventListener('submit', function(e) {
+            if (!pendaftaranId.value) {
+                e.preventDefault();
+                alert('Silakan pilih siswa terlebih dahulu!');
+                studentSearch.focus();
+            }
+            
+            // Validate payment amount
+            const jumlah = document.getElementById('paymentAmount').value;
+            const sisaText = document.getElementById('infoSisa').textContent;
+            const sisa = sisaText.replace(/[^0-9]/g, '');
+            
+            if (parseInt(jumlah) > parseInt(sisa)) {
+                e.preventDefault();
+                alert('Jumlah pembayaran tidak boleh melebihi sisa pembayaran!');
+                document.getElementById('paymentAmount').focus();
+                return false;
+            }
+            
+            if (parseInt(jumlah) <= 0) {
+                e.preventDefault();
+                alert('Jumlah pembayaran harus lebih dari 0!');
+                document.getElementById('paymentAmount').focus();
+                return false;
+            }
+        });
+
         // Toggle manual payment form
         function toggleManualPayment() {
             const form = document.getElementById('manualPaymentForm');
@@ -873,41 +1168,10 @@ $payment_types = $db->query("
                 form.classList.add('hidden');
                 icon.classList.remove('fa-times');
                 icon.classList.add('fa-plus');
+                // Clear selection when closing form
+                clearStudentSelection();
             }
         }
-
-        // Update student info when student is selected
-        document.getElementById('studentSelect')?.addEventListener('change', function() {
-            const studentInfo = document.getElementById('studentInfo');
-            const selectedOption = this.options[this.selectedIndex];
-            
-            if (selectedOption.value) {
-                studentInfo.classList.remove('hidden');
-                
-                // Extract info from option text and data attributes
-                const optionText = selectedOption.text;
-                const parts = optionText.split(' - ');
-                
-                document.getElementById('infoNama').textContent = parts[1];
-                document.getElementById('infoNoPendaftaran').textContent = parts[0];
-                document.getElementById('infoPaket').textContent = parts[2];
-                
-                const price = selectedOption.getAttribute('data-price');
-                const paid = selectedOption.getAttribute('data-paid');
-                const remaining = selectedOption.getAttribute('data-remaining');
-                
-                document.getElementById('infoHarga').textContent = 'Rp ' + parseInt(price).toLocaleString('id-ID');
-                document.getElementById('infoDibayar').textContent = 'Rp ' + parseInt(paid).toLocaleString('id-ID');
-                document.getElementById('infoSisa').textContent = 'Rp ' + parseInt(remaining).toLocaleString('id-ID');
-                
-                // Auto-fill payment amount with remaining amount
-                if (parseInt(remaining) > 0) {
-                    document.getElementById('paymentAmount').value = remaining;
-                }
-            } else {
-                studentInfo.classList.add('hidden');
-            }
-        });
 
         // View Payment Function
         function viewPayment(id) {

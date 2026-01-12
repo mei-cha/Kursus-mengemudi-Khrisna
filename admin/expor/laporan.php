@@ -333,7 +333,7 @@
         <div class="letterhead"> 
             <div class="letterhead-top"> 
                 <div class="logo-container"> 
-                    <img src="logokr.jpg" class="logo" alt="Logo Kursus Mengemudi Krishna" onerror="this.style.display='none'"> 
+                    <img src="logo1.png"class="logo" alt="Logo Kursus Mengemudi Krishna" onerror="this.style.display='none'"> 
                 </div> 
                 <div class="company-info"> 
                     <div class="company-name">Kursus Mengemudi Krishna</div> 
@@ -354,7 +354,7 @@
         </div> 
                 
         <div class="report-title-section"> 
-            <div class="report-title">Laporan Data Penyewa</div> 
+            <div class="report-title">Laporan Data Pendaftar</div> 
             <div class="report-subtitle">Periode: Januari 2026</div> 
         </div> 
                 
@@ -381,7 +381,7 @@
                         <td class="name-col">Adm</td> 
                         <td class="address-col">Cigurdanek No 126</td> 
                         <td class="phone-col">09805321753</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Cimahi, 04-05-1999</td> 
                     </tr> 
                     <tr> 
@@ -389,7 +389,7 @@
                         <td class="name-col">Adm</td> 
                         <td class="address-col">Ciraucene No 103</td> 
                         <td class="phone-col">087544400088</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Cimahi, 01-05-1999</td> 
                     </tr> 
                     <tr> 
@@ -397,7 +397,7 @@
                         <td class="name-col">Adm</td> 
                         <td class="address-col">Jl. Pesamwa No 100</td> 
                         <td class="phone-col">085898033939</td> 
-                        <td class="region-col">Penenyuan</td> 
+                        <td class="region-col">Tulungagung</td> 
                         <td class="info-col">Cimahi, 20-01-1988</td> 
                     </tr> 
                     <tr> 
@@ -405,7 +405,7 @@
                         <td class="name-col">Apur</td> 
                         <td class="address-col">Gaval</td> 
                         <td class="phone-col">08668311533</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Gaval, 15-01-1999</td> 
                     </tr> 
                     <tr> 
@@ -413,7 +413,7 @@
                         <td class="name-col">Apur K.</td> 
                         <td class="address-col">Jascon No 23</td> 
                         <td class="phone-col">08999775003</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Bogor, 07-10-1999</td> 
                     </tr> 
                     <tr> 
@@ -421,7 +421,7 @@
                         <td class="name-col">Abe Karita</td> 
                         <td class="address-col">A. Kreck No 777</td> 
                         <td class="phone-col">08593334527</td> 
-                        <td class="region-col">Penenyuan</td> 
+                        <td class="region-col">Tulungagung</td> 
                         <td class="info-col">Jember, 10-08-1999</td> 
                     </tr> 
                     <tr> 
@@ -429,7 +429,7 @@
                         <td class="name-col">Akdr Suuma</td> 
                         <td class="address-col">A. Chapin No 445</td> 
                         <td class="phone-col">08997456781</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">BDO, 10-10-1999</td> 
                     </tr> 
                     <tr> 
@@ -437,7 +437,7 @@
                         <td class="name-col">Amir Sumum</td> 
                         <td class="address-col">J. Kogo Bilbou No 106</td> 
                         <td class="phone-col">08745447321</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Bandung, 11-11-1999</td> 
                     </tr> 
                     <tr> 
@@ -445,7 +445,7 @@
                         <td class="name-col">Wahadaha</td> 
                         <td class="address-col">Shu-gla</td> 
                         <td class="phone-col">146779</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Shudilhukha</td> 
                     </tr> 
                     <tr> 
@@ -453,7 +453,7 @@
                         <td class="name-col">Boy Cute</td> 
                         <td class="address-col">Campen No 666</td> 
                         <td class="phone-col">08004247758</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Cimahi, 11-06-1988</td> 
                     </tr> 
                     <tr> 
@@ -461,7 +461,7 @@
                         <td class="name-col">Anca</td> 
                         <td class="address-col">Jl. R. Sawamo No</td> 
                         <td class="phone-col">08669866444</td> 
-                        <td class="region-col">Penenyuan</td> 
+                        <td class="region-col">Tulungagung</td> 
                         <td class="info-col">Medan, 10-11-1991</td> 
                     </tr> 
                     <tr> 
@@ -469,7 +469,7 @@
                         <td class="name-col">Ari Gulark</td> 
                         <td class="address-col">Jl. Cujun No 108</td> 
                         <td class="phone-col">0853306327</td> 
-                        <td class="region-col">Penenyuan</td> 
+                        <td class="region-col">Tulungagung</td> 
                         <td class="info-col">026981987</td> 
                     </tr> 
                     <tr> 
@@ -477,7 +477,7 @@
                         <td class="name-col">Andr Jan</td> 
                         <td class="address-col">Jl. Cusko No 11</td> 
                         <td class="phone-col">081173767093</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">056961899</td> 
                     </tr> 
                     <tr> 
@@ -485,7 +485,7 @@
                         <td class="name-col">Atat</td> 
                         <td class="address-col">Jl. Aryashara No 1</td> 
                         <td class="phone-col">08251745052</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">146767896</td> 
                     </tr> 
                     <tr> 
@@ -493,7 +493,7 @@
                         <td class="name-col">Amir Sumum</td> 
                         <td class="address-col">Jl. Gengao No 20</td> 
                         <td class="phone-col">08242517532</td> 
-                        <td class="region-col">Penenyuan</td> 
+                        <td class="region-col">Tulungagung</td> 
                         <td class="info-col">156067988</td> 
                     </tr> 
                     <tr> 
@@ -501,7 +501,7 @@
                         <td class="name-col">Ari Suryan</td> 
                         <td class="address-col">Jl. Kata No 10</td> 
                         <td class="phone-col">085695317342</td> 
-                        <td class="region-col">Penenyuan</td> 
+                        <td class="region-col">Tulungagung</td> 
                         <td class="info-col">019692913</td> 
                     </tr> 
                     <tr> 
@@ -509,7 +509,7 @@
                         <td class="name-col">Mihojuncur</td> 
                         <td class="address-col">Qingfiner</td> 
                         <td class="phone-col">847254735</td> 
-                        <td class="region-col">Ltak-Ltak</td> 
+                        <td class="region-col">Tulungagung  </td> 
                         <td class="info-col">Jihrabink, 04/06/2015</td> 
                     </tr> 
                 </tbody> 
@@ -521,8 +521,8 @@
                 <div class="signature-box"> 
                     <div class="signature-placeholder"></div> 
                     <div class="signature-text">Tanda tangan dan stempel perusahaan</div> 
-                    <div class="signature-name">DIREKTUR UTAMA</div> 
-                    <div class="signature-position">Surya Rental Mobil</div> 
+                    <div class="signature-name">Dian Dwi Satria</div> 
+                    <div class="signature-position">Kursus Krishna</div> 
                 </div> 
             </div> 
         </div> 
