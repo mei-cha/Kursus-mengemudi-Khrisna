@@ -17,7 +17,7 @@ try {
             ELSE tipe_mobil 
         END as tipe_mobil_text 
         FROM paket_kursus 
-        WHERE tersedia = 1 
+        WHERE aktif = 1 
         ORDER BY harga");
     $paket_kursus = $paket_query->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -232,16 +232,13 @@ select[readonly]:focus {
             ];
             
             foreach ($kategori_paket as $kategori => $data):
-                // Filter paket berdasarkan kategori dari kolom kategori di database
+                // Filter paket berdasarkan kategori dari nama_paket
                 $paket_kategori = array_filter($paket_kursus, function($pkg) use ($kategori) {
-                    return isset($pkg['kategori']) && $pkg['kategori'] === $kategori;
+                    return stripos($pkg['nama_paket'], $kategori) !== false;
                 });
                 
                 // Ambil harga terendah dari paket dalam kategori ini
                 $harga_terendah = $paket_kategori ? min(array_column($paket_kategori, 'harga')) : 0;
-                
-                // Hitung jumlah paket dalam kategori
-                $jumlah_paket = count($paket_kategori);
             ?>
             <div
                 class="bg-gradient-to-br <?= $data['warna'] ?> text-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition duration-300 transform hover:-translate-y-2">
@@ -266,17 +263,11 @@ select[readonly]:focus {
                     </div>
                 <?php endif; ?>
                 
-                <div class="text-2xl font-bold mb-2">Mulai Rp <?= number_format($harga_terendah, 0, ',', '.') ?></div>
-                
-                <!-- Tampilkan jumlah paket -->
-                <div class="text-sm text-blue-100 mb-4">
-                    <?= $jumlah_paket ?> paket tersedia
-                </div>
-                
-                <a href="paket-kursus.php?kategori=<?= urlencode($kategori) ?>"
-                    class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                    Lihat Detail
-                </a>
+                <div class="text-2xl font-bold mb-4">Mulai Rp <?= number_format($harga_terendah, 0, ',', '.') ?></div>
+                <a href="paket-kursus.php"
+    class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
+    Lihat Detail
+</a>
             </div>
             <?php endforeach; ?>
         </div>
@@ -462,9 +453,6 @@ select[readonly]:focus {
 
         <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <form id="formPendaftaran" action="proses-pendaftaran.php" method="POST" class="space-y-7" novalidate>
-                <!-- Tambahkan input hidden untuk menandai pendaftaran online -->
-                <input type="hidden" name="sumber_pendaftaran" value="online">
-                
                 <!-- Data Pribadi -->
                 <div class="space-y-5">
                     <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
@@ -569,71 +557,71 @@ select[readonly]:focus {
                 </div>
 
                 <!-- Preferensi Kursus -->
-                <div class="space-y-5 pt-4 border-t border-gray-200">
-                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        <i class="fas fa-car text-blue-600"></i> Preferensi Kursus
-                    </h3>
+<div class="space-y-5 pt-4 border-t border-gray-200">
+    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+        <i class="fas fa-car text-blue-600"></i> Preferensi Kursus
+    </h3>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <!-- Paket Kursus -->
-                        <div class="input-wrapper">
-                            <label for="paket_kursus_id" class="block text-sm text-gray-700 mb-1">Paket Kursus *</label>
-                            <select id="paket_kursus_id" name="paket_kursus_id" required onchange="onPackageSelectChange()"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
-                                <option value="">Pilih Paket</option>
-                                <?php foreach ($paket_kursus as $paket): ?>
-                                    <option value="<?= $paket['id'] ?>" 
-                                            data-harga="<?= $paket['harga'] ?>"
-                                            data-tipe-mobil="<?= $paket['tipe_mobil'] ?>">
-                                        <?= htmlspecialchars($paket['nama_paket']) ?> 
-                                        (<?= $paket['tipe_mobil_text'] ?? ucfirst($paket['tipe_mobil']) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <span class="valid-indicator">
-                                <i class="fas fa-check"></i>
-                            </span>
-                            <div class="error-message" id="paket_kursus_id_error">Pilih paket kursus</div>
-                            <p class="text-xs text-gray-500 mt-1">Pilih paket, tipe mobil akan otomatis terisi</p>
-                        </div>
-                        
-                        <!-- Tipe Mobil -->
-                        <div class="input-wrapper">
-                            <label for="tipe_mobil" class="block text-sm text-gray-700 mb-1">Tipe Mobil *</label>
-                            <select id="tipe_mobil" name="tipe_mobil" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-100" 
-                                style="pointer-events: none; cursor: not-allowed;">
-                                <option value="">Pilih Paket Dulu</option>
-                                <option value="manual">Manual</option>
-                                <option value="matic">Matic</option>
-                                <option value="keduanya">Keduanya</option>
-                            </select>
-                            <span class="valid-indicator">
-                                <i class="fas fa-check"></i>
-                            </span>
-                            <div class="error-message" id="tipe_mobil_error">Tipe mobil wajib diisi</div>
-                            <div id="tipeMobilNote" class="text-xs text-blue-600 mt-1 hidden">
-                                <i class="fas fa-info-circle mr-1"></i>Tipe mobil otomatis mengikuti paket yang dipilih
-                            </div>
-                        </div>
-                        
-                        <!-- Jadwal Preferensi -->
-                        <div class="input-wrapper">
-                            <label for="jadwal_preferensi" class="block text-sm text-gray-700 mb-1">Jadwal Preferensi *</label>
-                            <select id="jadwal_preferensi" name="jadwal_preferensi" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
-                                <option value="">Pilih Jadwal</option>
-                                <option value="pagi">Pagi</option>
-                                <option value="siang">Siang</option>
-                                <option value="sore">Sore</option>
-                            </select>
-                            <span class="valid-indicator">
-                                <i class="fas fa-check"></i>
-                            </span>
-                            <div class="error-message" id="jadwal_preferensi_error">Pilih jadwal preferensi</div>
-                        </div>
-                    </div>
-                </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Paket Kursus -->
+        <div class="input-wrapper">
+            <label for="paket_kursus_id" class="block text-sm text-gray-700 mb-1">Paket Kursus *</label>
+            <select id="paket_kursus_id" name="paket_kursus_id" required onchange="onPackageSelectChange()"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                <option value="">Pilih Paket</option>
+                <?php foreach ($paket_kursus as $paket): ?>
+                    <option value="<?= $paket['id'] ?>" 
+                            data-harga="<?= $paket['harga'] ?>"
+                            data-tipe-mobil="<?= $paket['tipe_mobil'] ?>">
+                        <?= htmlspecialchars($paket['nama_paket']) ?> 
+                        (<?= $paket['tipe_mobil_text'] ?? ucfirst($paket['tipe_mobil']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <span class="valid-indicator">
+                <i class="fas fa-check"></i>
+            </span>
+            <div class="error-message" id="paket_kursus_id_error">Pilih paket kursus</div>
+            <p class="text-xs text-gray-500 mt-1">Pilih paket, tipe mobil akan otomatis terisi</p>
+        </div>
+        
+        <!-- Tipe Mobil -->
+<div class="input-wrapper">
+    <label for="tipe_mobil" class="block text-sm text-gray-700 mb-1">Tipe Mobil *</label>
+    <select id="tipe_mobil" name="tipe_mobil" required
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-100" 
+        style="pointer-events: none; cursor: not-allowed;"> <!-- READONLY STYLE -->
+        <option value="">Pilih Paket Dulu</option>
+        <option value="manual">Manual</option>
+        <option value="matic">Matic</option>
+        <option value="keduanya">Keduanya</option>
+    </select>
+    <span class="valid-indicator">
+        <i class="fas fa-check"></i>
+    </span>
+    <div class="error-message" id="tipe_mobil_error">Tipe mobil wajib diisi</div>
+    <div id="tipeMobilNote" class="text-xs text-blue-600 mt-1 hidden">
+        <i class="fas fa-info-circle mr-1"></i>Tipe mobil otomatis mengikuti paket yang dipilih
+    </div>
+</div>
+        
+        <!-- Jadwal Preferensi -->
+        <div class="input-wrapper">
+            <label for="jadwal_preferensi" class="block text-sm text-gray-700 mb-1">Jadwal Preferensi *</label>
+            <select id="jadwal_preferensi" name="jadwal_preferensi" required
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                <option value="">Pilih Jadwal</option>
+                <option value="pagi">Pagi</option>
+                <option value="siang">Siang</option>
+                <option value="sore">Sore</option>
+            </select>
+            <span class="valid-indicator">
+                <i class="fas fa-check"></i>
+            </span>
+            <div class="error-message" id="jadwal_preferensi_error">Pilih jadwal preferensi</div>
+        </div>
+    </div>
+</div>
 
                 <!-- Kontak Darurat & Kondisi Medis -->
                 <div class="space-y-5 pt-4 border-t border-gray-200">
