@@ -19,14 +19,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle'])) {
         'tahun' => $_POST['tahun'],
         'tipe_transmisi' => $_POST['tipe_transmisi'],
         'warna' => $_POST['warna'],
-        'kapasitas_bahan_bakar' => $_POST['kapasitas_bahan_bakar'] ?? 0,
-        'kondisi' => $_POST['kondisi'],
-        'status_ketersediaan' => $_POST['status_ketersediaan'],
-        'tanggal_pajak' => $_POST['tanggal_pajak'] ?? null,
-        'tanggal_stnk' => $_POST['tanggal_stnk'] ?? null,
+        'kapasitas_bahan_bakar' => !empty($_POST['kapasitas_bahan_bakar']) ? $_POST['kapasitas_bahan_bakar'] : null,
+        'kondisi' => $_POST['kondisi'] ?? 'baik',
+        'status_ketersediaan' => $_POST['status_ketersediaan'] ?? 'tersedia',
+        'tanggal_pajak' => !empty($_POST['tanggal_pajak']) ? $_POST['tanggal_pajak'] : null,
+        'tanggal_stnk' => !empty($_POST['tanggal_stnk']) ? $_POST['tanggal_stnk'] : null,
         'kilometer_terakhir' => $_POST['kilometer_terakhir'] ?? 0,
-        'catatan' => $_POST['catatan'] ?? '',
+        'catatan' => !empty($_POST['catatan']) ? $_POST['catatan'] : null,
+        'foto' => null,
     ];
+
+    // Handle file upload
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../uploads/kendaraan/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $fileName = uniqid() . '_' . basename($_FILES['foto']['name']);
+        $uploadFile = $uploadDir . $fileName;
+        
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $fileType = mime_content_type($_FILES['foto']['tmp_name']);
+        
+        if (in_array($fileType, $allowedTypes)) {
+            if (move_uploaded_file($_FILES['foto']['tmp_name'], $uploadFile)) {
+                $data['foto'] = $fileName;
+            } else {
+                $error = "Gagal mengupload foto!";
+            }
+        } else {
+            $error = "Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.";
+        }
+    }
 
     try {
         // Cek apakah nomor plat sudah ada
@@ -41,8 +66,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle'])) {
                 INSERT INTO kendaraan 
                 (nomor_plat, merk, model, tahun, tipe_transmisi, warna, 
                  kapasitas_bahan_bakar, kondisi, status_ketersediaan,
-                 tanggal_pajak, tanggal_stnk, kilometer_terakhir, catatan) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 tanggal_pajak, tanggal_stnk, kilometer_terakhir, catatan, foto) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $values = [
@@ -58,11 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_vehicle'])) {
                 $data['tanggal_pajak'],
                 $data['tanggal_stnk'],
                 $data['kilometer_terakhir'],
-                $data['catatan']
+                $data['catatan'],
+                $data['foto']
             ];
 
             if ($stmt->execute($values)) {
                 $success = "Kendaraan berhasil ditambahkan!";
+                header("Location: kendaraan.php?success=" . urlencode($success));
+                exit;
             } else {
                 $error = "Gagal menambahkan kendaraan!";
             }
@@ -82,13 +110,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_vehicle'])) {
         'tahun' => $_POST['tahun'],
         'tipe_transmisi' => $_POST['tipe_transmisi'],
         'warna' => $_POST['warna'],
-        'kapasitas_bahan_bakar' => $_POST['kapasitas_bahan_bakar'] ?? 0,
-        'kondisi' => $_POST['kondisi'],
-        'status_ketersediaan' => $_POST['status_ketersediaan'],
-        'tanggal_pajak' => $_POST['tanggal_pajak'] ?? null,
-        'tanggal_stnk' => $_POST['tanggal_stnk'] ?? null,
+        'kapasitas_bahan_bakar' => !empty($_POST['kapasitas_bahan_bakar']) ? $_POST['kapasitas_bahan_bakar'] : null,
+        'kondisi' => $_POST['kondisi'] ?? 'baik',
+        'status_ketersediaan' => $_POST['status_ketersediaan'] ?? 'tersedia',
+        'tanggal_pajak' => !empty($_POST['tanggal_pajak']) ? $_POST['tanggal_pajak'] : null,
+        'tanggal_stnk' => !empty($_POST['tanggal_stnk']) ? $_POST['tanggal_stnk'] : null,
         'kilometer_terakhir' => $_POST['kilometer_terakhir'] ?? 0,
-        'catatan' => $_POST['catatan'] ?? '',
+        'catatan' => !empty($_POST['catatan']) ? $_POST['catatan'] : null,
     ];
 
     try {
@@ -99,11 +127,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_vehicle'])) {
         if ($check_stmt->fetch()) {
             $error = "Nomor plat sudah terdaftar untuk kendaraan lain!";
         } else {
+            // Handle file upload if new photo provided
+            $foto_field = "";
+            $foto_value = null;
+            
+            if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = '../uploads/kendaraan/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $fileName = uniqid() . '_' . basename($_FILES['foto']['name']);
+                $uploadFile = $uploadDir . $fileName;
+                
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                $fileType = mime_content_type($_FILES['foto']['tmp_name']);
+                
+                if (in_array($fileType, $allowedTypes)) {
+                    if (move_uploaded_file($_FILES['foto']['tmp_name'], $uploadFile)) {
+                        // Delete old photo if exists
+                        $stmt_old = $db->prepare("SELECT foto FROM kendaraan WHERE id = ?");
+                        $stmt_old->execute([$id]);
+                        $old_foto = $stmt_old->fetchColumn();
+                        
+                        if ($old_foto && file_exists($uploadDir . $old_foto)) {
+                            unlink($uploadDir . $old_foto);
+                        }
+                        
+                        $foto_field = ", foto = ?";
+                        $foto_value = $fileName;
+                    } else {
+                        $error = "Gagal mengupload foto!";
+                    }
+                } else {
+                    $error = "Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.";
+                }
+            }
+
             $stmt = $db->prepare("
                 UPDATE kendaraan SET 
                 nomor_plat = ?, merk = ?, model = ?, tahun = ?, tipe_transmisi = ?, 
                 warna = ?, kapasitas_bahan_bakar = ?, kondisi = ?, status_ketersediaan = ?,
                 tanggal_pajak = ?, tanggal_stnk = ?, kilometer_terakhir = ?, catatan = ?
+                $foto_field
                 WHERE id = ?
             ");
 
@@ -120,9 +186,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_vehicle'])) {
                 $data['tanggal_pajak'],
                 $data['tanggal_stnk'],
                 $data['kilometer_terakhir'],
-                $data['catatan'],
-                $id
+                $data['catatan']
             ];
+            
+            if ($foto_value) {
+                $values[] = $foto_value;
+            }
+            
+            $values[] = $id;
 
             if ($stmt->execute($values)) {
                 $success = "Kendaraan berhasil diupdate!";
@@ -135,19 +206,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_vehicle'])) {
     }
 }
 
-// Handle delete vehicle
+// Handle delete vehicle - PERBAIKAN DISINI
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
     
     try {
         // Cek apakah kendaraan sedang digunakan di jadwal
-        $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM jadwal_kursus WHERE mobil_digunakan LIKE ?");
-        $check_stmt->execute(['%' . $id . '%']);
+        // PERBAIKAN: Menggunakan kendaraan_id bukan mobil_digunakan
+        $check_stmt = $db->prepare("SELECT COUNT(*) as count FROM jadwal_kursus WHERE kendaraan_id = ?");
+        $check_stmt->execute([$id]);
         $result = $check_stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($result['count'] > 0) {
             $error = "Kendaraan tidak dapat dihapus karena masih digunakan dalam jadwal kursus!";
         } else {
+            // Delete photo file if exists
+            $stmt_foto = $db->prepare("SELECT foto FROM kendaraan WHERE id = ?");
+            $stmt_foto->execute([$id]);
+            $foto = $stmt_foto->fetchColumn();
+            
+            if ($foto) {
+                $uploadDir = '../uploads/kendaraan/';
+                if (file_exists($uploadDir . $foto)) {
+                    unlink($uploadDir . $foto);
+                }
+            }
+            
             $stmt = $db->prepare("DELETE FROM kendaraan WHERE id = ?");
             if ($stmt->execute([$id])) {
                 $success = "Kendaraan berhasil dihapus!";
@@ -197,6 +281,11 @@ $dipakai = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE status_kete
 $servis = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE status_ketersediaan = 'servis'")->fetch()['total'];
 $manual = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmisi = 'manual'")->fetch()['total'];
 $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmisi = 'matic'")->fetch()['total'];
+
+// Handle success message from redirect
+if (isset($_GET['success'])) {
+    $success = urldecode($_GET['success']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -207,19 +296,17 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
     <title>Kelola Kendaraan - Krishna Driving</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .sidebar {
             transition: all 0.3s ease;
         }
-
         .sidebar.collapsed {
             width: 70px;
         }
-
         .sidebar.collapsed .sidebar-text {
             display: none;
         }
-
         .main-content {
             transition: all 0.3s ease;
         }
@@ -228,18 +315,15 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
         .vehicle-card {
             transition: all 0.3s ease;
         }
-        
         .vehicle-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-        
         .status-badge {
             font-size: 0.75rem;
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
         }
-        
         .transmission-icon {
             width: 40px;
             height: 40px;
@@ -249,25 +333,52 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
             border-radius: 0.5rem;
         }
         
-        /* Modal styling */
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+        /* Form styling */
+        .error-input {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
         }
-        
-        .modal-content {
-            animation: modalFadeIn 0.3s ease-out;
+        .success-input {
+            border-color: #10b981 !important;
+            background-color: #f0fdf4 !important;
         }
-        
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .error-label {
+            color: #ef4444 !important;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .info-message {
+            color: #3b82f6;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        .valid-indicator {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #10b981;
+            display: none;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .cursor-not-allowed {
+            cursor: not-allowed;
+        }
+        input[readonly], select[readonly] {
+            background-color: #f9fafb !important;
+            color: #6b7280 !important;
+            cursor: not-allowed !important;
+            user-select: none !important;
+        }
+        input[readonly]:focus {
+            border-color: #d1d5db !important;
+            box-shadow: none !important;
         }
         
         /* Progress bar for kilometer */
@@ -277,10 +388,37 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
             border-radius: 3px;
             overflow: hidden;
         }
-        
         .progress-fill {
             height: 100%;
             transition: width 0.3s ease;
+        }
+        
+        /* Photo preview */
+        .photo-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 2px dashed #d1d5db;
+        }
+        .photo-preview.has-photo {
+            border-style: solid;
+            border-color: #3b82f6;
+        }
+        .photo-remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
         }
     </style>
 </head>
@@ -291,7 +429,7 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
         <?php include 'sidebar.php'; ?>
 
         <!-- Main Content -->
-        <div class="main-content flex-1 flex flex-col overflow-hidden">
+        <div class="main-content flex-1 flex flex-col overflow-hidden relative">
             <!-- Top Header -->
             <header class="bg-white shadow">
                 <div class="flex justify-between items-center px-6 py-4">
@@ -311,32 +449,17 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
             <main class="flex-1 overflow-y-auto p-6">
                 <?php if (isset($success)): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                        <?= $success ?>
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <?= htmlspecialchars($success) ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if (isset($error)): ?>
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        <?= $error ?>
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
-
-                <!-- Add Vehicle Button -->
-                <div class="bg-white rounded-lg shadow mb-6">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">Manajemen Kendaraan</h3>
-                                <p class="text-gray-600 mt-1">Tambah atau kelola kendaraan yang tersedia</p>
-                            </div>
-                            <button onclick="openAddModal()"
-                                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition duration-300 flex items-center">
-                                <i class="fas fa-plus mr-2"></i>
-                                Tambah Kendaraan
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -385,6 +508,272 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                                 <p class="text-sm font-medium text-gray-600">Matic</p>
                                 <p class="text-2xl font-bold text-gray-900"><?= $matic ?></p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tambah Kendaraan Button -->
+                <div class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">
+                                    <i class="fas fa-car text-blue-600 mr-2"></i>
+                                    Manajemen Kendaraan
+                                </h3>
+                                <p class="text-gray-600">Tambah atau kelola kendaraan yang tersedia</p>
+                            </div>
+                            <button onclick="toggleTambahForm()"
+                                class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                aria-label="Toggle form tambah kendaraan">
+                                <i id="toggle-icon" class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <!-- Form Tambah Kendaraan (Hidden by default) -->
+                        <div id="tambahForm" class="mt-6 hidden">
+                            <form method="POST" class="space-y-7" id="formKendaraan" novalidate enctype="multipart/form-data">
+                                <input type="hidden" name="id" id="vehicleId">
+                                <input type="hidden" name="current_foto" id="currentFoto">
+
+                                <!-- Informasi Dasar -->
+                                <div class="space-y-5">
+                                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-car text-blue-600"></i> Informasi Dasar
+                                    </h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Nomor Plat -->
+                                        <div class="input-wrapper">
+                                            <label for="nomor_plat" class="block text-sm text-gray-700 mb-1">Nomor Plat *</label>
+                                            <input type="text" id="nomor_plat" name="nomor_plat" required
+                                                placeholder="B 1234 ABC"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="nomor_plat_error">Nomor plat wajib diisi (minimal 3 karakter)</div>
+                                        </div>
+                                        
+                                        <!-- Tahun -->
+                                        <div class="input-wrapper">
+                                            <label for="tahun" class="block text-sm text-gray-700 mb-1">Tahun *</label>
+                                            <input type="number" id="tahun" name="tahun" required 
+                                                placeholder="<?= date('Y') ?>"
+                                                min="2000"
+                                                max="<?= date('Y') + 1 ?>"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="tahun_error">Tahun harus antara 2000 dan <?= date('Y') + 1 ?></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Merk -->
+                                        <div class="input-wrapper">
+                                            <label for="merk" class="block text-sm text-gray-700 mb-1">Merk *</label>
+                                            <input type="text" id="merk" name="merk" required 
+                                                placeholder="Toyota"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="merk_error">Merk wajib diisi</div>
+                                        </div>
+                                        
+                                        <!-- Model -->
+                                        <div class="input-wrapper">
+                                            <label for="model" class="block text-sm text-gray-700 mb-1">Model *</label>
+                                            <input type="text" id="model" name="model" required 
+                                                placeholder="Avanza"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="model_error">Model wajib diisi</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Warna -->
+                                        <div class="input-wrapper">
+                                            <label for="warna" class="block text-sm text-gray-700 mb-1">Warna *</label>
+                                            <input type="text" id="warna" name="warna" required 
+                                                placeholder="Putih"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="warna_error">Warna wajib diisi</div>
+                                        </div>
+                                        
+                                        <!-- Tipe Transmisi -->
+                                        <div class="input-wrapper">
+                                            <label for="tipe_transmisi" class="block text-sm text-gray-700 mb-1">Tipe Transmisi *</label>
+                                            <select id="tipe_transmisi" name="tipe_transmisi" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                                <option value="">Pilih Tipe</option>
+                                                <option value="manual">Manual</option>
+                                                <option value="matic">Matic</option>
+                                            </select>
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="tipe_transmisi_error">Pilih tipe transmisi</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Foto Kendaraan -->
+                                <div class="space-y-5 pt-4 border-t border-gray-200">
+                                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-camera text-blue-600"></i> Foto Kendaraan
+                                    </h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Foto Preview -->
+                                        <div>
+                                            <label class="block text-sm text-gray-700 mb-2">Preview Foto</label>
+                                            <div class="relative">
+                                                <img id="fotoPreview" src="" alt="Preview foto kendaraan" 
+                                                    class="photo-preview">
+                                                <button type="button" id="removeFotoBtn" 
+                                                    class="photo-remove-btn hidden"
+                                                    onclick="removeFoto()">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-2" id="currentFotoName"></p>
+                                        </div>
+                                        
+                                        <!-- Upload Foto -->
+                                        <div>
+                                            <label for="foto" class="block text-sm text-gray-700 mb-2">Upload Foto Baru</label>
+                                            <input type="file" id="foto" name="foto" accept="image/*"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                                                onchange="previewFoto(this)">
+                                            <div class="error-message" id="foto_error">Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.</div>
+                                            <div class="info-message">Maksimum ukuran file: 2MB. Format: JPG, PNG, GIF, WebP</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Informasi Teknis -->
+                                <div class="space-y-5 pt-4 border-t border-gray-200">
+                                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-cogs text-blue-600"></i> Informasi Teknis
+                                    </h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Kapasitas Bahan Bakar -->
+                                        <div class="input-wrapper">
+                                            <label for="kapasitas_bahan_bakar" class="block text-sm text-gray-700 mb-1">Kapasitas Bahan Bakar (Liter)</label>
+                                            <input type="number" id="kapasitas_bahan_bakar" name="kapasitas_bahan_bakar" step="0.01"
+                                                placeholder="40.00"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <div class="error-message" id="kapasitas_bahan_bakar_error">Kapasitas bahan bakar harus angka positif</div>
+                                        </div>
+                                        
+                                        <!-- Kilometer Terakhir -->
+                                        <div class="input-wrapper">
+                                            <label for="kilometer_terakhir" class="block text-sm text-gray-700 mb-1">Kilometer Terakhir</label>
+                                            <input type="number" id="kilometer_terakhir" name="kilometer_terakhir"
+                                                placeholder="0"
+                                                min="0"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <div class="error-message" id="kilometer_terakhir_error">Kilometer harus angka positif</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Status & Dokumen -->
+                                <div class="space-y-5 pt-4 border-t border-gray-200">
+                                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-clipboard-check text-blue-600"></i> Status & Dokumen
+                                    </h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Kondisi -->
+                                        <div class="input-wrapper">
+                                            <label for="kondisi" class="block text-sm text-gray-700 mb-1">Kondisi *</label>
+                                            <select id="kondisi" name="kondisi" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                                <option value="">Pilih Kondisi</option>
+                                                <option value="baik">Baik</option>
+                                                <option value="perbaikan">Perbaikan</option>
+                                                <option value="rusak">Rusak</option>
+                                            </select>
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="kondisi_error">Pilih kondisi kendaraan</div>
+                                        </div>
+                                        
+                                        <!-- Status Ketersediaan -->
+                                        <div class="input-wrapper">
+                                            <label for="status_ketersediaan" class="block text-sm text-gray-700 mb-1">Status Ketersediaan *</label>
+                                            <select id="status_ketersediaan" name="status_ketersediaan" required
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                                <option value="">Pilih Status</option>
+                                                <option value="tersedia">Tersedia</option>
+                                                <option value="dipakai">Dipakai</option>
+                                                <option value="servis">Servis</option>
+                                            </select>
+                                            <span class="valid-indicator">
+                                                <i class="fas fa-check"></i>
+                                            </span>
+                                            <div class="error-message" id="status_ketersediaan_error">Pilih status ketersediaan</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <!-- Tanggal Pajak -->
+                                        <div class="input-wrapper">
+                                            <label for="tanggal_pajak" class="block text-sm text-gray-700 mb-1">Tanggal Pajak</label>
+                                            <input type="date" id="tanggal_pajak" name="tanggal_pajak"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <div class="info-message">Format: YYYY-MM-DD</div>
+                                        </div>
+                                        
+                                        <!-- Tanggal STNK -->
+                                        <div class="input-wrapper">
+                                            <label for="tanggal_stnk" class="block text-sm text-gray-700 mb-1">Tanggal STNK</label>
+                                            <input type="date" id="tanggal_stnk" name="tanggal_stnk"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
+                                            <div class="info-message">Format: YYYY-MM-DD</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Catatan -->
+                                <div class="space-y-5 pt-4 border-t border-gray-200">
+                                    <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                                        <i class="fas fa-sticky-note text-blue-600"></i> Catatan
+                                    </h3>
+
+                                    <!-- Catatan Tambahan -->
+                                    <div>
+                                        <label for="catatan" class="block text-sm text-gray-700 mb-1">Catatan Tambahan</label>
+                                        <textarea id="catatan" name="catatan" rows="3"
+                                            placeholder="Catatan khusus tentang kendaraan..."
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="pt-4">
+                                    <button type="submit" id="submitButton"
+                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                                        <i class="fas fa-save"></i>
+                                        <span id="buttonText">Simpan Kendaraan Baru</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Form Status -->
+                                <div id="formStatus" class="hidden p-4 rounded-lg text-center"></div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -459,6 +848,9 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                             ];
                             $transmission_color = $transmission_colors[$data['tipe_transmisi']] ?? 'bg-gray-100 text-gray-800';
                             
+                            // Foto path
+                            $foto_path = !empty($data['foto']) ? '../uploads/kendaraan/' . $data['foto'] : '../assets/images/no-car-image.jpg';
+                            
                             // Calculate days until tax/STNK expiry
                             $today = new DateTime();
                             $tax_due = null;
@@ -502,6 +894,14 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                                     </div>
                                 </div>
                                 
+                                <!-- Vehicle Image -->
+                                <div class="h-48 overflow-hidden">
+                                    <img src="<?= $foto_path ?>" 
+                                         alt="<?= htmlspecialchars($data['merk'] . ' ' . $data['model']) ?>" 
+                                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                         onerror="this.src='../assets/images/no-car-image.jpg'">
+                                </div>
+                                
                                 <!-- Vehicle Details -->
                                 <div class="p-6">
                                     <div class="space-y-4">
@@ -513,7 +913,7 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                                             </div>
                                             <div>
                                                 <p class="text-sm text-gray-600">Bahan Bakar</p>
-                                                <p class="font-medium text-gray-900"><?= $data['kapasitas_bahan_bakar'] ?> L</p>
+                                                <p class="font-medium text-gray-900"><?= $data['kapasitas_bahan_bakar'] ? $data['kapasitas_bahan_bakar'] . ' L' : '-' ?></p>
                                             </div>
                                         </div>
                                         
@@ -591,7 +991,7 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                             <i class="fas fa-car text-gray-300 text-5xl mb-4"></i>
                             <h3 class="text-xl font-medium text-gray-900 mb-2">Belum ada kendaraan</h3>
                             <p class="text-gray-600 mb-6">Tambahkan kendaraan pertama Anda untuk memulai</p>
-                            <button onclick="openAddModal()"
+                            <button onclick="toggleTambahForm()"
                                 class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
                                 <i class="fas fa-plus mr-2"></i>Tambah Kendaraan
                             </button>
@@ -602,167 +1002,9 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
         </div>
     </div>
 
-    <!-- Add/Edit Vehicle Modal -->
-    <div id="vehicleModal" class="fixed inset-0 modal-overlay overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-4 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white modal-content">
-            <form method="POST" id="vehicleForm">
-                <input type="hidden" name="id" id="vehicleId">
-                <input type="hidden" name="add_vehicle" id="formType" value="1">
-
-                <div class="flex justify-between items-center pb-3 border-b">
-                    <h3 class="text-xl font-bold text-gray-900" id="modalTitle">Tambah Kendaraan Baru</h3>
-                    <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-
-                <div class="mt-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Basic Information -->
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Informasi Dasar</h4>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Plat *</label>
-                                <input type="text" name="nomor_plat" id="nomorPlat" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="B 1234 ABC">
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Merk *</label>
-                                    <input type="text" name="merk" id="merk" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Toyota">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Model *</label>
-                                    <input type="text" name="model" id="model" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Avanza">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tahun *</label>
-                                    <input type="number" name="tahun" id="tahun" required min="2000" max="<?= date('Y') + 1 ?>"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="2023">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Warna *</label>
-                                    <input type="text" name="warna" id="warna" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="Putih">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Technical Information -->
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Informasi Teknis</h4>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Transmisi *</label>
-                                <select name="tipe_transmisi" id="tipeTransmisi" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">Pilih Tipe</option>
-                                    <option value="manual">Manual</option>
-                                    <option value="matic">Matic</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Kapasitas Bahan Bakar (Liter)</label>
-                                <input type="number" name="kapasitas_bahan_bakar" id="kapasitasBahanBakar" step="0.01"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="40.00">
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kilometer Terakhir</label>
-                                    <input type="number" name="kilometer_terakhir" id="kilometerTerakhir"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="0">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Status & Documents -->
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Status & Dokumen</h4>
-                            
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kondisi *</label>
-                                    <select name="kondisi" id="kondisi" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Pilih Kondisi</option>
-                                        <option value="baik">Baik</option>
-                                        <option value="perbaikan">Perbaikan</option>
-                                        <option value="rusak">Rusak</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Status Ketersediaan *</label>
-                                    <select name="status_ketersediaan" id="statusKetersediaan" required
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">Pilih Status</option>
-                                        <option value="tersedia">Tersedia</option>
-                                        <option value="dipakai">Dipakai</option>
-                                        <option value="servis">Servis</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pajak</label>
-                                    <input type="date" name="tanggal_pajak" id="tanggalPajak"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal STNK</label>
-                                    <input type="date" name="tanggal_stnk" id="tanggalStnk"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Notes -->
-                        <div class="space-y-4 md:col-span-2">
-                            <h4 class="text-lg font-medium text-gray-900 border-b pb-2">Catatan</h4>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Tambahan</label>
-                                <textarea name="catatan" id="catatan" rows="3"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Catatan khusus tentang kendaraan..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-3 mt-8 pt-6 border-t">
-                    <button type="button" onclick="closeModal()"
-                        class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300 font-medium">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 font-medium">
-                        <i class="fas fa-save mr-2"></i>Simpan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- View Vehicle Modal -->
-    <div id="viewModal" class="fixed inset-0 modal-overlay overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-4 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white modal-content">
+    <div id="viewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <div class="flex justify-between items-center pb-3 border-b">
                     <h3 class="text-xl font-bold text-gray-900">Detail Kendaraan</h3>
@@ -770,30 +1012,480 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                         <i class="fas fa-times text-xl"></i>
                     </button>
                 </div>
-                <div id="viewContent" class="mt-6">
+                <div id="viewContent" class="mt-4">
                     <!-- Detail content will be loaded here -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- sidebar -->
+    <script src="../assets/js/sidebar.js"></script>
     <script>
-        // Modal Functions
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Tambah Kendaraan Baru';
-            document.getElementById('vehicleId').value = '';
-            document.getElementById('formType').value = 'add_vehicle';
-            document.getElementById('formType').name = 'add_vehicle';
-            
-            // Reset form
-            document.getElementById('vehicleForm').reset();
-            
-            // Show modal
-            document.getElementById('vehicleModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+        // ==================== FUNGSI UTAMA ====================
+        
+        // Toggle form tambah kendaraan
+        function toggleTambahForm() {
+            const form = document.getElementById('tambahForm');
+            const icon = document.getElementById('toggle-icon');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-times');
+                
+                resetForm();
+                
+                form.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                form.classList.add('hidden');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-plus');
+            }
         }
 
+        // Reset form
+        function resetForm() {
+            const form = document.getElementById('formKendaraan');
+            if (form) {
+                form.reset();
+                
+                // Reset hidden inputs
+                document.getElementById('vehicleId').value = '';
+                document.getElementById('currentFoto').value = '';
+                
+                // Reset button text
+                document.getElementById('buttonText').textContent = 'Simpan Kendaraan Baru';
+                
+                // Reset foto preview
+                document.getElementById('fotoPreview').src = '';
+                document.getElementById('fotoPreview').classList.remove('has-photo');
+                document.getElementById('removeFotoBtn').classList.add('hidden');
+                document.getElementById('currentFotoName').textContent = '';
+                document.getElementById('foto').value = '';
+                
+                // Reset error messages
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Reset input styling
+                document.querySelectorAll('#tambahForm input, #tambahForm select, #tambahForm textarea').forEach(el => {
+                    el.classList.remove('error-input', 'success-input');
+                });
+                
+                // Reset labels
+                document.querySelectorAll('#tambahForm label').forEach(el => {
+                    el.classList.remove('error-label');
+                });
+                
+                // Reset valid indicators
+                document.querySelectorAll('.valid-indicator').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+        }
+
+        // Preview foto
+        function previewFoto(input) {
+            const preview = document.getElementById('fotoPreview');
+            const removeBtn = document.getElementById('removeFotoBtn');
+            const fotoName = document.getElementById('currentFotoName');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.add('has-photo');
+                    removeBtn.classList.remove('hidden');
+                    fotoName.textContent = input.files[0].name;
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Remove foto
+        function removeFoto() {
+            const preview = document.getElementById('fotoPreview');
+            const removeBtn = document.getElementById('removeFotoBtn');
+            const fotoInput = document.getElementById('foto');
+            const fotoName = document.getElementById('currentFotoName');
+            const currentFoto = document.getElementById('currentFoto');
+            
+            preview.src = '';
+            preview.classList.remove('has-photo');
+            removeBtn.classList.add('hidden');
+            fotoInput.value = '';
+            fotoName.textContent = currentFoto.value ? 'Foto saat ini akan dihapus' : '';
+        }
+
+        // ==================== VALIDASI FUNGSI ====================
+        
+        // Tampilkan/sembunyikan error message
+        function showError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const errorElement = document.getElementById(inputId + '_error');
+            const validIndicator = input.parentElement.querySelector('.valid-indicator');
+            
+            if (input) {
+                input.classList.remove('success-input');
+                input.classList.add('error-input');
+                
+                const label = input.parentElement.querySelector('label');
+                if (label) {
+                    label.classList.add('error-label');
+                }
+            }
+            
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+            
+            if (validIndicator) {
+                validIndicator.style.display = 'none';
+            }
+        }
+
+        function showSuccess(inputId) {
+            const input = document.getElementById(inputId);
+            const errorElement = document.getElementById(inputId + '_error');
+            const validIndicator = input.parentElement.querySelector('.valid-indicator');
+            
+            if (input) {
+                input.classList.remove('error-input');
+                input.classList.add('success-input');
+                
+                const label = input.parentElement.querySelector('label');
+                if (label) {
+                    label.classList.remove('error-label');
+                }
+            }
+            
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            
+            if (validIndicator) {
+                validIndicator.style.display = 'block';
+            }
+        }
+
+        function resetValidation(input) {
+            if (!input) return;
+            
+            input.classList.remove('error-input', 'success-input');
+            
+            const errorElement = document.getElementById(input.id + '_error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            
+            const label = input.parentElement.querySelector('label');
+            if (label) {
+                label.classList.remove('error-label');
+            }
+            
+            const validIndicator = input.parentElement.querySelector('.valid-indicator');
+            if (validIndicator) {
+                validIndicator.style.display = 'none';
+            }
+        }
+
+        // Validasi select element
+        function validateSelect(selectElement) {
+            if (!selectElement.value) {
+                showError(selectElement.id, 'Pilihan ini wajib diisi');
+                return false;
+            } else {
+                showSuccess(selectElement.id);
+                return true;
+            }
+        }
+
+        // Validasi nomor plat
+        function validateNomorPlat(plat) {
+            return plat.length >= 3;
+        }
+
+        // Validasi tahun
+        function validateTahun(tahun) {
+            const currentYear = new Date().getFullYear();
+            return tahun >= 2000 && tahun <= currentYear + 1;
+        }
+
+        // Validasi file
+        function validateFile(fileInput) {
+            if (!fileInput.files || !fileInput.files[0]) {
+                return true; // File tidak wajib
+            }
+            
+            const file = fileInput.files[0];
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            if (!allowedTypes.includes(file.type)) {
+                showError('foto', 'Format file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                showError('foto', 'Ukuran file terlalu besar. Maksimum 2MB.');
+                return false;
+            }
+            
+            resetValidation(fileInput);
+            return true;
+        }
+
+        // Validasi form sebelum submit
+        function validateForm() {
+            let isValid = true;
+            
+            // Nomor Plat
+            const nomorPlatInput = document.getElementById('nomor_plat');
+            if (!nomorPlatInput.value.trim() || !validateNomorPlat(nomorPlatInput.value.trim())) {
+                showError('nomor_plat', 'Nomor plat wajib diisi (minimal 3 karakter)');
+                isValid = false;
+            } else {
+                showSuccess('nomor_plat');
+            }
+            
+            // Tahun
+            const tahunInput = document.getElementById('tahun');
+            const tahun = parseInt(tahunInput.value);
+            if (!tahunInput.value || !validateTahun(tahun)) {
+                showError('tahun', `Tahun harus antara 2000 dan ${new Date().getFullYear() + 1}`);
+                isValid = false;
+            } else {
+                showSuccess('tahun');
+            }
+            
+            // Merk
+            const merkInput = document.getElementById('merk');
+            if (!merkInput.value.trim()) {
+                showError('merk', 'Merk wajib diisi');
+                isValid = false;
+            } else {
+                showSuccess('merk');
+            }
+            
+            // Model
+            const modelInput = document.getElementById('model');
+            if (!modelInput.value.trim()) {
+                showError('model', 'Model wajib diisi');
+                isValid = false;
+            } else {
+                showSuccess('model');
+            }
+            
+            // Warna
+            const warnaInput = document.getElementById('warna');
+            if (!warnaInput.value.trim()) {
+                showError('warna', 'Warna wajib diisi');
+                isValid = false;
+            } else {
+                showSuccess('warna');
+            }
+            
+            // Tipe Transmisi
+            const tipeTransmisiSelect = document.getElementById('tipe_transmisi');
+            if (!validateSelect(tipeTransmisiSelect)) {
+                isValid = false;
+            }
+            
+            // File
+            const fotoInput = document.getElementById('foto');
+            if (!validateFile(fotoInput)) {
+                isValid = false;
+            }
+            
+            // Kapasitas Bahan Bakar (jika diisi)
+            const kapasitasInput = document.getElementById('kapasitas_bahan_bakar');
+            if (kapasitasInput.value && (isNaN(kapasitasInput.value) || parseFloat(kapasitasInput.value) < 0)) {
+                showError('kapasitas_bahan_bakar', 'Kapasitas bahan bakar harus angka positif');
+                isValid = false;
+            } else {
+                resetValidation(kapasitasInput);
+            }
+            
+            // Kilometer Terakhir (jika diisi)
+            const kilometerInput = document.getElementById('kilometer_terakhir');
+            if (kilometerInput.value && (isNaN(kilometerInput.value) || parseInt(kilometerInput.value) < 0)) {
+                showError('kilometer_terakhir', 'Kilometer harus angka positif');
+                isValid = false;
+            } else {
+                resetValidation(kilometerInput);
+            }
+            
+            // Kondisi
+            const kondisiSelect = document.getElementById('kondisi');
+            if (!validateSelect(kondisiSelect)) {
+                isValid = false;
+            }
+            
+            // Status Ketersediaan
+            const statusSelect = document.getElementById('status_ketersediaan');
+            if (!validateSelect(statusSelect)) {
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validasi Nomor Plat
+            const nomorPlatInput = document.getElementById('nomor_plat');
+            if (nomorPlatInput) {
+                nomorPlatInput.addEventListener('blur', function() {
+                    if (!validateNomorPlat(this.value.trim())) {
+                        showError('nomor_plat', 'Nomor plat minimal 3 karakter');
+                    } else {
+                        showSuccess('nomor_plat');
+                    }
+                });
+            }
+
+            // Validasi Tahun
+            const tahunInput = document.getElementById('tahun');
+            if (tahunInput) {
+                tahunInput.addEventListener('blur', function() {
+                    const tahun = parseInt(this.value);
+                    if (!validateTahun(tahun)) {
+                        showError('tahun', `Tahun harus antara 2000 dan ${new Date().getFullYear() + 1}`);
+                    } else {
+                        showSuccess('tahun');
+                    }
+                });
+            }
+
+            // Validasi Merk
+            const merkInput = document.getElementById('merk');
+            if (merkInput) {
+                merkInput.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        showError('merk', 'Merk wajib diisi');
+                    } else {
+                        showSuccess('merk');
+                    }
+                });
+            }
+
+            // Validasi Model
+            const modelInput = document.getElementById('model');
+            if (modelInput) {
+                modelInput.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        showError('model', 'Model wajib diisi');
+                    } else {
+                        showSuccess('model');
+                    }
+                });
+            }
+
+            // Validasi Warna
+            const warnaInput = document.getElementById('warna');
+            if (warnaInput) {
+                warnaInput.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        showError('warna', 'Warna wajib diisi');
+                    } else {
+                        showSuccess('warna');
+                    }
+                });
+            }
+
+            // Validasi Tipe Transmisi
+            const tipeTransmisiSelect = document.getElementById('tipe_transmisi');
+            if (tipeTransmisiSelect) {
+                tipeTransmisiSelect.addEventListener('change', function() {
+                    validateSelect(this);
+                });
+            }
+
+            // Validasi Kondisi
+            const kondisiSelect = document.getElementById('kondisi');
+            if (kondisiSelect) {
+                kondisiSelect.addEventListener('change', function() {
+                    validateSelect(this);
+                });
+            }
+
+            // Validasi Status Ketersediaan
+            const statusSelect = document.getElementById('status_ketersediaan');
+            if (statusSelect) {
+                statusSelect.addEventListener('change', function() {
+                    validateSelect(this);
+                });
+            }
+
+            // Validasi Kapasitas Bahan Bakar
+            const kapasitasInput = document.getElementById('kapasitas_bahan_bakar');
+            if (kapasitasInput) {
+                kapasitasInput.addEventListener('blur', function() {
+                    if (this.value && (isNaN(this.value) || parseFloat(this.value) < 0)) {
+                        showError('kapasitas_bahan_bakar', 'Kapasitas bahan bakar harus angka positif');
+                    } else {
+                        resetValidation(this);
+                    }
+                });
+            }
+
+            // Validasi Kilometer
+            const kilometerInput = document.getElementById('kilometer_terakhir');
+            if (kilometerInput) {
+                kilometerInput.addEventListener('blur', function() {
+                    if (this.value && (isNaN(this.value) || parseInt(this.value) < 0)) {
+                        showError('kilometer_terakhir', 'Kilometer harus angka positif');
+                    } else {
+                        resetValidation(this);
+                    }
+                });
+            }
+
+            // Validasi File
+            const fotoInput = document.getElementById('foto');
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function() {
+                    validateFile(this);
+                });
+            }
+
+            // Form submission dengan pencegahan double submit
+            const form = document.getElementById('formKendaraan');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Validasi form
+                    if (!validateForm()) {
+                        const firstError = document.querySelector('.error-input, .error-message[style*="block"]');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return;
+                    }
+                    
+                    // Set nama form berdasarkan mode (add/edit)
+                    const vehicleId = document.getElementById('vehicleId').value;
+                    const formAction = document.createElement('input');
+                    formAction.type = 'hidden';
+                    formAction.name = vehicleId ? 'update_vehicle' : 'add_vehicle';
+                    this.appendChild(formAction);
+                    
+                    // Submit form
+                    this.submit();
+                });
+            }
+        });
+
+        // ==================== FUNGSI LAINNYA ====================
+        
+        // Edit Vehicle Function
         function editVehicle(id) {
             // Fetch vehicle data
             fetch(`get_kendaraan.php?id=${id}`)
@@ -802,133 +1494,112 @@ $matic = $db->query("SELECT COUNT(*) as total FROM kendaraan WHERE tipe_transmis
                     if (data.success) {
                         const vehicle = data.vehicle;
                         
-                        document.getElementById('modalTitle').textContent = 'Edit Kendaraan';
+                        // Buka form jika belum terbuka
+                        const form = document.getElementById('tambahForm');
+                        if (form.classList.contains('hidden')) {
+                            toggleTambahForm();
+                        }
+                        
+                        // Set form untuk edit
                         document.getElementById('vehicleId').value = vehicle.id;
-                        document.getElementById('formType').value = 'update_vehicle';
-                        document.getElementById('formType').name = 'update_vehicle';
+                        document.getElementById('buttonText').textContent = 'Update Kendaraan';
                         
                         // Fill form
-                        document.getElementById('nomorPlat').value = vehicle.nomor_plat || '';
+                        document.getElementById('nomor_plat').value = vehicle.nomor_plat || '';
+                        document.getElementById('tahun').value = vehicle.tahun || '';
                         document.getElementById('merk').value = vehicle.merk || '';
                         document.getElementById('model').value = vehicle.model || '';
-                        document.getElementById('tahun').value = vehicle.tahun || '';
                         document.getElementById('warna').value = vehicle.warna || '';
-                        document.getElementById('tipeTransmisi').value = vehicle.tipe_transmisi || '';
-                        document.getElementById('kapasitasBahanBakar').value = vehicle.kapasitas_bahan_bakar || '';
-                        document.getElementById('kilometerTerakhir').value = vehicle.kilometer_terakhir || '';
+                        document.getElementById('tipe_transmisi').value = vehicle.tipe_transmisi || '';
+                        document.getElementById('kapasitas_bahan_bakar').value = vehicle.kapasitas_bahan_bakar || '';
+                        document.getElementById('kilometer_terakhir').value = vehicle.kilometer_terakhir || '';
                         document.getElementById('kondisi').value = vehicle.kondisi || '';
-                        document.getElementById('statusKetersediaan').value = vehicle.status_ketersediaan || '';
-                        document.getElementById('tanggalPajak').value = vehicle.tanggal_pajak || '';
-                        document.getElementById('tanggalStnk').value = vehicle.tanggal_stnk || '';
+                        document.getElementById('status_ketersediaan').value = vehicle.status_ketersediaan || '';
+                        document.getElementById('tanggal_pajak').value = vehicle.tanggal_pajak || '';
+                        document.getElementById('tanggal_stnk').value = vehicle.tanggal_stnk || '';
                         document.getElementById('catatan').value = vehicle.catatan || '';
                         
-                        // Show modal
-                        document.getElementById('vehicleModal').classList.remove('hidden');
-                        document.body.style.overflow = 'hidden';
+                        // Handle foto
+                        const currentFoto = document.getElementById('currentFoto');
+                        const fotoPreview = document.getElementById('fotoPreview');
+                        const currentFotoName = document.getElementById('currentFotoName');
+                        
+                        if (vehicle.foto) {
+                            currentFoto.value = vehicle.foto;
+                            fotoPreview.src = '../uploads/kendaraan/' + vehicle.foto;
+                            fotoPreview.classList.add('has-photo');
+                            currentFotoName.textContent = 'Foto saat ini: ' + vehicle.foto;
+                        }
+                        
+                        // Scroll ke form
+                        form.scrollIntoView({ behavior: 'smooth' });
+                        
                     } else {
-                        alert('Gagal memuat data kendaraan!');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Gagal memuat data kendaraan'
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Terjadi kesalahan saat memuat data!');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan saat memuat data!'
+                    });
                 });
-        }
-
-        function closeModal() {
-            document.getElementById('vehicleModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
         }
 
         // View Vehicle Function
         function viewVehicle(id) {
-            // Show loading state
-            document.getElementById('viewContent').innerHTML = `
-                <div class="flex justify-center items-center py-12">
-                    <div class="text-center">
-                        <i class="fas fa-spinner fa-spin text-blue-500 text-2xl mb-2"></i>
-                        <p class="text-gray-600">Memuat detail kendaraan...</p>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('viewModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-
             fetch(`kendaraan_detail.php?id=${id}`)
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('viewContent').innerHTML = html;
+                    document.getElementById('viewModal').classList.remove('hidden');
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('viewContent').innerHTML = `
-                        <div class="flex justify-center items-center py-12">
-                            <div class="text-center text-red-600">
-                                <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
-                                <p>Gagal memuat detail kendaraan</p>
-                            </div>
-                        </div>
-                    `;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal memuat detail kendaraan'
+                    });
                 });
         }
 
         function closeViewModal() {
             document.getElementById('viewModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
         }
 
         // Delete Confirmation
         function confirmDelete(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus kendaraan ini?')) {
-                window.location.href = `kendaraan.php?delete=${id}`;
-            }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data kendaraan akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `kendaraan.php?delete=${id}`;
+                }
+            });
         }
 
         // Close modals when clicking outside
         window.onclick = function(event) {
-            const vehicleModal = document.getElementById('vehicleModal');
             const viewModal = document.getElementById('viewModal');
 
-            if (event.target === vehicleModal) {
-                closeModal();
-            }
             if (event.target === viewModal) {
                 closeViewModal();
             }
         }
-
-        // Close modals with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeViewModal();
-            }
-        });
-        
-        // Form validation
-        document.getElementById('vehicleForm').addEventListener('submit', function(e) {
-            const nomorPlat = document.getElementById('nomorPlat').value.trim();
-            const tahun = parseInt(document.getElementById('tahun').value);
-            const currentYear = new Date().getFullYear();
-            
-            if (nomorPlat.length < 3) {
-                e.preventDefault();
-                alert('Nomor plat harus minimal 3 karakter!');
-                document.getElementById('nomorPlat').focus();
-                return false;
-            }
-            
-            if (tahun < 2000 || tahun > currentYear + 1) {
-                e.preventDefault();
-                alert(`Tahun harus antara 2000 dan ${currentYear + 1}!`);
-                document.getElementById('tahun').focus();
-                return false;
-            }
-            
-            return true;
-        });
     </script>
 </body>
-
 </html>

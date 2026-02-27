@@ -14,7 +14,8 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 $db = (new Database())->getConnection();
 
 // ==================== FUNGSI HELPER ====================
-function cekStatusPembayaran($db, $pendaftaran_id) {
+function cekStatusPembayaran($db, $pendaftaran_id)
+{
     $stmt = $db->prepare("
         SELECT 
             SUM(CASE WHEN status = 'terverifikasi' THEN jumlah ELSE 0 END) as total_dibayar,
@@ -26,7 +27,8 @@ function cekStatusPembayaran($db, $pendaftaran_id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function cekJumlahPertemuan($db, $pendaftaran_id) {
+function cekJumlahPertemuan($db, $pendaftaran_id)
+{
     $stmt = $db->prepare("
         SELECT 
             ps.id,
@@ -44,37 +46,40 @@ function cekJumlahPertemuan($db, $pendaftaran_id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function updateStatusOtomatis($db, $pendaftaran_id) {
+function updateStatusOtomatis($db, $pendaftaran_id)
+{
     $pembayaran = cekStatusPembayaran($db, $pendaftaran_id);
     $total_dibayar = $pembayaran['total_dibayar'] ?? 0;
     $is_lunas = $pembayaran['is_lunas'] ?? 0;
-    
+
     $pertemuan = cekJumlahPertemuan($db, $pendaftaran_id);
     $jumlah_pertemuan = $pertemuan['jumlah_pertemuan'] ?? 0;
     $pertemuan_selesai = $pertemuan['pertemuan_selesai'] ?? 0;
-    
+
     $stmt = $db->prepare("SELECT status_pendaftaran FROM pendaftaran_siswa WHERE id = ?");
     $stmt->execute([$pendaftaran_id]);
     $current_status = $stmt->fetchColumn();
-    
+
     $new_status = $current_status;
-    
+
     if ($current_status === 'dikonfirmasi' && $total_dibayar > 0) {
         $new_status = 'diproses';
     }
-    
-    if ($current_status === 'diproses' && 
-        $pertemuan_selesai >= $jumlah_pertemuan && 
-        $is_lunas == 1) {
+
+    if (
+        $current_status === 'diproses' &&
+        $pertemuan_selesai >= $jumlah_pertemuan &&
+        $is_lunas == 1
+    ) {
         $new_status = 'selesai';
     }
-    
+
     if ($new_status !== $current_status) {
         $update_stmt = $db->prepare("UPDATE pendaftaran_siswa SET status_pendaftaran = ? WHERE id = ?");
         $update_stmt->execute([$new_status, $pendaftaran_id]);
         return $new_status;
     }
-    
+
     return $current_status;
 }
 // ==================== END FUNGSI HELPER ====================
@@ -86,18 +91,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tambah_siswa'])) {
     $stmt_check = $db->prepare("SELECT COUNT(*) FROM pendaftaran_siswa WHERE email = ?");
     $stmt_check->execute([$email]);
     $email_count = $stmt_check->fetchColumn();
-    
+
     if ($email_count > 0) {
         $error = "Email sudah terdaftar!";
     } else {
         // Generate nomor pendaftaran yang unik
         $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-        
+
         // Validasi nomor pendaftaran unik
         $stmt_check_nomor = $db->prepare("SELECT COUNT(*) FROM pendaftaran_siswa WHERE nomor_pendaftaran = ?");
         $stmt_check_nomor->execute([$nomor_pendaftaran]);
         $nomor_count = $stmt_check_nomor->fetchColumn();
-        
+
         // Jika nomor sudah ada, generate ulang
         while ($nomor_count > 0) {
             $nomor_pendaftaran = 'KD' . date('Ymd') . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
@@ -282,6 +287,7 @@ if (isset($_GET['success'])) {
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -293,52 +299,65 @@ if (isset($_GET['success'])) {
         .sidebar {
             transition: all 0.3s ease;
         }
+
         .sidebar.collapsed {
             width: 70px;
         }
+
         .sidebar.collapsed .sidebar-text {
             display: none;
         }
+
         .main-content {
             transition: all 0.3s ease;
         }
+
         /* Styling untuk tab */
         .tab-active {
             border-bottom-width: 2px;
             color: #2563eb;
         }
+
         .tab-active-all {
             border-bottom-color: #6b7280;
         }
+
         .tab-active-online {
             border-bottom-color: #3b82f6;
         }
+
         .tab-active-offline {
             border-bottom-color: #10b981;
         }
+
         /* Styling untuk validasi */
         .error-input {
             border-color: #ef4444 !important;
             background-color: #fef2f2 !important;
         }
+
         .success-input {
             border-color: #10b981 !important;
             background-color: #f0fdf4 !important;
         }
+
         .error-label {
             color: #ef4444 !important;
         }
+
         .error-message {
             color: #ef4444;
             font-size: 0.875rem;
             margin-top: 0.25rem;
             display: none;
         }
+
         .info-message {
             color: #3b82f6;
             font-size: 0.75rem;
             margin-top: 0.25rem;
         }
+
         .valid-indicator {
             position: absolute;
             right: 0.75rem;
@@ -347,39 +366,57 @@ if (isset($_GET['success'])) {
             color: #10b981;
             display: none;
         }
+
         .input-wrapper {
             position: relative;
         }
+
         .cursor-not-allowed {
             cursor: not-allowed;
         }
+
         /* Animasi untuk perubahan harga */
         @keyframes priceUpdate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
+
         .price-update {
             animation: priceUpdate 0.5s ease;
         }
-        select[readonly] {
+
+        select[disabled] {
             background-color: #f9fafb !important;
             cursor: not-allowed !important;
+            opacity: 0.75 !important;
         }
-        select[readonly]:focus {
+
+        select[disabled]:focus {
             border-color: #d1d5db !important;
             box-shadow: none !important;
         }
+
         .badge-online {
             background-color: #dbeafe;
             color: #1e40af;
         }
+
         .badge-offline {
             background-color: #d1fae5;
             color: #065f46;
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="flex h-screen">
         <!-- Sidebar -->
@@ -485,7 +522,7 @@ if (isset($_GET['success'])) {
                                             </span>
                                             <div class="error-message" id="nama_lengkap_error">Nama lengkap wajib diisi (minimal 3 karakter)</div>
                                         </div>
-                                        
+
                                         <!-- Email -->
                                         <div class="input-wrapper">
                                             <label for="email" class="block text-sm text-gray-700 mb-1">Email *</label>
@@ -502,7 +539,7 @@ if (isset($_GET['success'])) {
                                         <!-- Telepon -->
                                         <div class="input-wrapper">
                                             <label for="telepon" class="block text-sm text-gray-700 mb-1">Telepon *</label>
-                                            <input type="tel" id="telepon" name="telepon" required 
+                                            <input type="tel" id="telepon" name="telepon" required
                                                 placeholder="081234567890"
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
                                             <span class="valid-indicator">
@@ -511,7 +548,7 @@ if (isset($_GET['success'])) {
                                             <div class="error-message" id="telepon_error">Format nomor HP tidak valid (contoh: 081234567890)</div>
                                             <div class="info-message">Format: 08xxxxxxxxxx (10-13 digit)</div>
                                         </div>
-                                        
+
                                         <!-- Tanggal Lahir -->
                                         <div class="input-wrapper">
                                             <label for="tanggal_lahir" class="block text-sm text-gray-700 mb-1">Tanggal Lahir *</label>
@@ -554,7 +591,7 @@ if (isset($_GET['success'])) {
                                             </div>
                                             <div class="error-message" id="jenis_kelamin_error">Pilih jenis kelamin</div>
                                         </div>
-                                        
+
                                         <!-- Pengalaman Mengemudi -->
                                         <div class="input-wrapper">
                                             <label for="pengalaman_mengemudi" class="block text-sm text-gray-700 mb-1">Pengalaman Mengemudi</label>
@@ -565,7 +602,7 @@ if (isset($_GET['success'])) {
                                                 <option value="pernah_ujian">Pernah ujian</option>
                                             </select>
                                         </div>
-                                        
+
                                         <!-- Alamat -->
                                         <div class="input-wrapper">
                                             <label for="alamat" class="block text-sm text-gray-700 mb-1">Alamat *</label>
@@ -593,10 +630,10 @@ if (isset($_GET['success'])) {
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
                                                 <option value="">Pilih Paket</option>
                                                 <?php foreach ($paket_kursus as $paket): ?>
-                                                    <option value="<?= $paket['id'] ?>" 
-                                                            data-harga="<?= $paket['harga'] ?>"
-                                                            data-tipe-mobil="<?= $paket['tipe_mobil'] ?>">
-                                                        <?= htmlspecialchars($paket['nama_paket']) ?> 
+                                                    <option value="<?= $paket['id'] ?>"
+                                                        data-harga="<?= $paket['harga'] ?>"
+                                                        data-tipe-mobil="<?= $paket['tipe_mobil'] ?>">
+                                                        <?= htmlspecialchars($paket['nama_paket']) ?>
                                                         (<?= ucfirst($paket['tipe_mobil']) ?>)
                                                     </option>
                                                 <?php endforeach; ?>
@@ -607,12 +644,12 @@ if (isset($_GET['success'])) {
                                             <div class="error-message" id="paket_kursus_id_error">Pilih paket kursus</div>
                                             <p class="text-xs text-gray-500 mt-1">Pilih paket, tipe mobil akan otomatis terisi</p>
                                         </div>
-                                        
+
                                         <!-- Tipe Mobil -->
                                         <div class="input-wrapper">
                                             <label for="tipe_mobil" class="block text-sm text-gray-700 mb-1">Tipe Mobil *</label>
-                                            <select id="tipe_mobil" name="tipe_mobil" required readonly
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-100">
+                                            <select id="tipe_mobil" name="tipe_mobil" required disabled
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-100 cursor-not-allowed opacity-75">
                                                 <option value="">Pilih Paket Dulu</option>
                                                 <option value="manual">Manual</option>
                                                 <option value="matic">Matic</option>
@@ -626,7 +663,7 @@ if (isset($_GET['success'])) {
                                                 <i class="fas fa-info-circle mr-1"></i>Tipe mobil otomatis mengikuti paket yang dipilih
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Jadwal Preferensi -->
                                         <div class="input-wrapper">
                                             <label for="jadwal_preferensi" class="block text-sm text-gray-700 mb-1">Jadwal Preferensi *</label>
@@ -659,11 +696,11 @@ if (isset($_GET['success'])) {
                                                 placeholder="Nama keluarga/teman"
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
                                         </div>
-                                        
+
                                         <!-- Nomor Kontak Darurat -->
                                         <div class="input-wrapper">
                                             <label for="kontak_darurat" class="block text-sm text-gray-700 mb-1">Nomor Kontak Darurat</label>
-                                            <input type="tel" id="kontak_darurat" name="kontak_darurat" 
+                                            <input type="tel" id="kontak_darurat" name="kontak_darurat"
                                                 placeholder="081234567890"
                                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition">
                                             <div class="error-message" id="kontak_darurat_error">Format nomor HP tidak valid</div>
@@ -710,7 +747,7 @@ if (isset($_GET['success'])) {
                                         Simpan Data Siswa (Offline)
                                     </button>
                                 </div>
-                                
+
                                 <!-- Form Status -->
                                 <div id="formStatus" class="hidden p-4 rounded-lg text-center"></div>
                             </form>
@@ -722,7 +759,7 @@ if (isset($_GET['success'])) {
                 <div class="bg-white rounded-lg shadow mb-6">
                     <div class="border-b border-gray-200">
                         <nav class="flex -mb-px">
-                            <button onclick="changeTab('all')" id="tab-all" 
+                            <button onclick="changeTab('all')" id="tab-all"
                                 class="py-3 px-6 text-sm font-medium border-b-2 <?= $tab_active === 'all' ? 'tab-active tab-active-all text-gray-800' : 'border-transparent text-gray-500' ?> hover:text-gray-700 hover:border-gray-300 transition-all duration-200 flex items-center gap-2">
                                 <i class="fas fa-layer-group"></i>
                                 Semua Pendaftaran
@@ -756,7 +793,7 @@ if (isset($_GET['success'])) {
                         <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <!-- Tambah parameter tab -->
                             <input type="hidden" name="tab" value="<?= $tab_active ?>">
-                            
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
                                 <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
@@ -782,6 +819,10 @@ if (isset($_GET['success'])) {
                                 <a href="pendaftaran.php?tab=<?= $tab_active ?>" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300">
                                     <i class="fas fa-refresh mr-2"></i>Reset Filter
                                 </a>
+                                <button type="button" onclick="exportData()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 flex items-center">
+                                     <i class="fas fa-file-export mr-2"></i>
+                                        Export
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -822,7 +863,7 @@ if (isset($_GET['success'])) {
                     <div class="px-6 py-4 border-b border-gray-200">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-medium text-gray-900">
-                                Data Pendaftaran 
+                                Data Pendaftaran
                                 <span class="text-blue-600">
                                     <?php if ($tab_active === 'all'): ?>
                                         (Semua: <?= count($pendaftaran) ?>)
@@ -872,7 +913,7 @@ if (isset($_GET['success'])) {
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="text-sm text-gray-900"><?= htmlspecialchars($data['nama_paket'] ?? '-') ?></div>
                                                 <div class="text-sm text-gray-500">
-                                                    <?php 
+                                                    <?php
                                                     $durasi_jam = $data['durasi_jam'] ?? 0;
                                                     $jumlah_pertemuan = floor($durasi_jam / 50);
                                                     echo $jumlah_pertemuan > 0 ? $jumlah_pertemuan . ' pertemuan' : '-';
@@ -1025,23 +1066,95 @@ if (isset($_GET['success'])) {
         </div>
     </div>
 
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-file-export text-green-600 mr-2"></i>
+                    Export Data Pendaftaran
+                </h3>
+                <button onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-filter mr-1"></i>
+                        Tipe Export
+                    </label>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <input type="radio" id="export_all" name="export_type" value="all" checked
+                                   class="text-green-600 focus:ring-green-500 mr-2">
+                            <label for="export_all" class="text-gray-700">
+                                <i class="fas fa-layer-group text-gray-500 mr-1"></i>
+                                Semua Pendaftaran
+                                <span class="text-xs text-gray-500 ml-2">(<?= $count_all ?> data)</span>
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="export_online" name="export_type" value="online"
+                                   class="text-green-600 focus:ring-green-500 mr-2">
+                            <label for="export_online" class="text-gray-700">
+                                <i class="fas fa-globe text-blue-500 mr-1"></i>
+                                Hanya Online
+                                <span class="text-xs text-gray-500 ml-2">(<?= $count_online ?> data)</span>
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="export_offline" name="export_type" value="offline"
+                                   class="text-green-600 focus:ring-green-500 mr-2">
+                            <label for="export_offline" class="text-gray-700">
+                                <i class="fas fa-building text-green-500 mr-1"></i>
+                                Hanya Offline
+                                <span class="text-xs text-gray-500 ml-2">(<?= $count_offline ?> data)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="text-sm text-blue-700">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Data akan diexport sesuai dengan filter yang aktif saat ini
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                <button type="button" onclick="closeExportModal()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">
+                    Batal
+                </button>
+                <button type="button" onclick="processExport()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300 flex items-center gap-2">
+                    <i class="fas fa-download"></i>
+                    Export Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- sidebar -->
     <script src="../assets/js/sidebar.js"></script>
     <script>
         // ==================== FUNGSI UTAMA ====================
-        
+
         // Fungsi untuk ganti tab
         function changeTab(tabType) {
             // Dapatkan URL saat ini
             let url = new URL(window.location.href);
             let params = new URLSearchParams(url.search);
-            
+
             // Set parameter tab
             params.set('tab', tabType);
-            
+
             // Hapus parameter sumber jika ada (untuk konsistensi)
             params.delete('sumber');
-            
+
             // Redirect ke URL baru
             window.location.href = 'pendaftaran.php?' + params.toString();
         }
@@ -1055,12 +1168,14 @@ if (isset($_GET['success'])) {
                 form.classList.remove('hidden');
                 icon.classList.remove('fa-plus');
                 icon.classList.add('fa-times');
-                
+
                 // Reset form ketika dibuka
                 resetForm();
-                
+
                 // Scroll ke form
-                form.scrollIntoView({ behavior: 'smooth' });
+                form.scrollIntoView({
+                    behavior: 'smooth'
+                });
             } else {
                 form.classList.add('hidden');
                 icon.classList.remove('fa-times');
@@ -1073,7 +1188,7 @@ if (isset($_GET['success'])) {
             const form = document.getElementById('formPendaftaran');
             if (form) {
                 form.reset();
-                
+
                 // Reset tipe mobil
                 const tipeMobilSelect = document.getElementById('tipe_mobil');
                 const tipeMobilNote = document.getElementById('tipeMobilNote');
@@ -1084,30 +1199,30 @@ if (isset($_GET['success'])) {
                 if (tipeMobilNote) {
                     tipeMobilNote.classList.add('hidden');
                 }
-                
+
                 // Reset harga
                 updateTotalHarga();
-                
+
                 // Reset error messages
                 document.querySelectorAll('.error-message').forEach(el => {
                     el.style.display = 'none';
                 });
-                
+
                 // Reset input styling
                 document.querySelectorAll('#tambahForm input, #tambahForm select, #tambahForm textarea').forEach(el => {
                     el.classList.remove('error-input', 'success-input');
                 });
-                
+
                 // Reset labels
                 document.querySelectorAll('#tambahForm label').forEach(el => {
                     el.classList.remove('error-label');
                 });
-                
+
                 // Reset valid indicators
                 document.querySelectorAll('.valid-indicator').forEach(el => {
                     el.style.display = 'none';
                 });
-                
+
                 // Reset radio buttons
                 document.querySelectorAll('input[type="radio"]').forEach(radio => {
                     radio.checked = false;
@@ -1120,19 +1235,19 @@ if (isset($_GET['success'])) {
             const paketSelect = document.getElementById('paket_kursus_id');
             const totalHargaElement = document.getElementById('totalHarga');
             const paketNamaElement = document.getElementById('paketNama');
-            
+
             if (paketSelect.value) {
                 const selectedOption = paketSelect.options[paketSelect.selectedIndex];
                 const harga = parseInt(selectedOption.getAttribute('data-harga')) || 0;
                 const nama = selectedOption.text;
-                
+
                 // Format harga
                 const formattedPrice = new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
                     minimumFractionDigits: 0
                 }).format(harga);
-                
+
                 totalHargaElement.textContent = formattedPrice;
                 totalHargaElement.classList.add('price-update');
                 setTimeout(() => {
@@ -1151,16 +1266,17 @@ if (isset($_GET['success'])) {
             const tipeMobilSelect = document.getElementById('tipe_mobil');
             const tipeMobilNote = document.getElementById('tipeMobilNote');
             const selectedPaketId = paketSelect.value;
-            
+
             // Update harga
             updateTotalHarga();
-            
+
             // Validasi paket
             validateSelect(paketSelect);
-            
+
             if (!selectedPaketId) {
                 // Reset jika tidak ada paket yang dipilih
                 tipeMobilSelect.value = '';
+                tipeMobilSelect.disabled = true;
                 tipeMobilSelect.classList.remove('success-input');
                 if (tipeMobilNote) {
                     tipeMobilNote.classList.add('hidden');
@@ -1169,44 +1285,90 @@ if (isset($_GET['success'])) {
                 resetValidation(tipeMobilSelect);
                 return;
             }
-            
+
             // Ambil tipe mobil dari data attribute
             const selectedOption = paketSelect.options[paketSelect.selectedIndex];
             const tipeMobil = selectedOption.getAttribute('data-tipe-mobil');
-            
+
             if (tipeMobil) {
                 // Set nilai tipe mobil
                 tipeMobilSelect.value = tipeMobil;
+                tipeMobilSelect.disabled = true;
                 tipeMobilSelect.classList.add('success-input');
-                
+
                 // Tampilkan note
                 if (tipeMobilNote) {
                     tipeMobilNote.classList.remove('hidden');
                 }
-                
+
                 // Validasi tipe mobil
                 validateSelect(tipeMobilSelect);
             }
         }
 
+        // ==================== EXPORT FUNCTIONS ====================
+
+        // Export Functions
+        function exportData() {
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function processExport() {
+            const exportType = document.querySelector('input[name="export_type"]:checked').value;
+            
+            // Dapatkan parameter filter saat ini
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Buat URL export dengan semua parameter
+            let exportUrl = `export_pendaftaran.php?export_type=${exportType}`;
+            
+            // Tambahkan parameter filter
+            const search = urlParams.get('search');
+            const status = urlParams.get('status');
+            const tab = urlParams.get('tab');
+            
+            if (search) exportUrl += `&search=${encodeURIComponent(search)}`;
+            if (status) exportUrl += `&status=${status}`;
+            if (tab) exportUrl += `&tab=${tab}`;
+            
+            // Buka halaman export di tab baru
+            window.open(exportUrl, '_blank');
+            
+            // Tutup modal
+            closeExportModal();
+            
+            // Tampilkan notifikasi
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Berhasil',
+                text: 'Data sedang diproses untuk diexport',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
         // ==================== VALIDASI FUNGSI ====================
-        
+
         // Format nomor telepon saat input
         function formatPhoneNumber(input) {
             let value = input.value.replace(/\D/g, '');
-            
+
             // Pastikan dimulai dengan 0
             if (!value.startsWith('0')) {
                 value = '0' + value;
             }
-            
+
             // Batasi panjang 10-13 digit (termasuk 0)
             if (value.length > 13) {
                 value = value.substring(0, 13);
             }
-            
+
             input.value = value;
-            
+
             // Validasi format
             const phonePattern = /^0[0-9]{9,12}$/;
             return phonePattern.test(value);
@@ -1216,14 +1378,14 @@ if (isset($_GET['success'])) {
         function validateAge(birthDate) {
             const today = new Date();
             const birth = new Date(birthDate);
-            
+
             let age = today.getFullYear() - birth.getFullYear();
             const monthDiff = today.getMonth() - birth.getMonth();
-            
+
             if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
                 age--;
             }
-            
+
             return age >= 17;
         }
 
@@ -1232,23 +1394,23 @@ if (isset($_GET['success'])) {
             const input = document.getElementById(inputId);
             const errorElement = document.getElementById(inputId + '_error');
             const validIndicator = input.parentElement.querySelector('.valid-indicator');
-            
+
             if (input) {
                 input.classList.remove('success-input');
                 input.classList.add('error-input');
-                
+
                 // Tambahkan class error ke label
                 const label = input.parentElement.querySelector('label');
                 if (label) {
                     label.classList.add('error-label');
                 }
             }
-            
+
             if (errorElement) {
                 errorElement.textContent = message;
                 errorElement.style.display = 'block';
             }
-            
+
             if (validIndicator) {
                 validIndicator.style.display = 'none';
             }
@@ -1258,22 +1420,22 @@ if (isset($_GET['success'])) {
             const input = document.getElementById(inputId);
             const errorElement = document.getElementById(inputId + '_error');
             const validIndicator = input.parentElement.querySelector('.valid-indicator');
-            
+
             if (input) {
                 input.classList.remove('error-input');
                 input.classList.add('success-input');
-                
+
                 // Hapus class error dari label
                 const label = input.parentElement.querySelector('label');
                 if (label) {
                     label.classList.remove('error-label');
                 }
             }
-            
+
             if (errorElement) {
                 errorElement.style.display = 'none';
             }
-            
+
             if (validIndicator) {
                 validIndicator.style.display = 'block';
             }
@@ -1281,19 +1443,19 @@ if (isset($_GET['success'])) {
 
         function resetValidation(input) {
             if (!input) return;
-            
+
             input.classList.remove('error-input', 'success-input');
-            
+
             const errorElement = document.getElementById(input.id + '_error');
             if (errorElement) {
                 errorElement.style.display = 'none';
             }
-            
+
             const label = input.parentElement.querySelector('label');
             if (label) {
                 label.classList.remove('error-label');
             }
-            
+
             const validIndicator = input.parentElement.querySelector('.valid-indicator');
             if (validIndicator) {
                 validIndicator.style.display = 'none';
@@ -1329,7 +1491,7 @@ if (isset($_GET['success'])) {
         // Validasi form sebelum submit
         function validateForm() {
             let isValid = true;
-            
+
             // Nama Lengkap
             const namaInput = document.getElementById('nama_lengkap');
             if (!namaInput.value.trim() || namaInput.value.trim().length < 3) {
@@ -1338,7 +1500,7 @@ if (isset($_GET['success'])) {
             } else {
                 showSuccess('nama_lengkap');
             }
-            
+
             // Email
             const emailInput = document.getElementById('email');
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1348,7 +1510,7 @@ if (isset($_GET['success'])) {
             } else {
                 showSuccess('email');
             }
-            
+
             // Telepon
             const teleponInput = document.getElementById('telepon');
             const phonePattern = /^0[0-9]{9,12}$/;
@@ -1358,7 +1520,7 @@ if (isset($_GET['success'])) {
             } else {
                 showSuccess('telepon');
             }
-            
+
             // Tanggal Lahir
             const tanggalLahirInput = document.getElementById('tanggal_lahir');
             if (!tanggalLahirInput.value) {
@@ -1370,12 +1532,12 @@ if (isset($_GET['success'])) {
             } else {
                 showSuccess('tanggal_lahir');
             }
-            
+
             // Jenis Kelamin
             if (!validateRadioButtons('jenis_kelamin')) {
                 isValid = false;
             }
-            
+
             // Alamat
             const alamatInput = document.getElementById('alamat');
             if (!alamatInput.value.trim() || alamatInput.value.trim().length < 10) {
@@ -1384,13 +1546,13 @@ if (isset($_GET['success'])) {
             } else {
                 showSuccess('alamat');
             }
-            
+
             // Paket Kursus
             const paketSelect = document.getElementById('paket_kursus_id');
             if (!validateSelect(paketSelect)) {
                 isValid = false;
             }
-            
+
             // Tipe Mobil
             const tipeMobilSelect = document.getElementById('tipe_mobil');
             if (!tipeMobilSelect.value) {
@@ -1399,13 +1561,13 @@ if (isset($_GET['success'])) {
             } else {
                 showSuccess('tipe_mobil');
             }
-            
+
             // Jadwal Preferensi
             const jadwalSelect = document.getElementById('jadwal_preferensi');
             if (!validateSelect(jadwalSelect)) {
                 isValid = false;
             }
-            
+
             // Kontak Darurat (jika diisi)
             const kontakDaruratInput = document.getElementById('kontak_darurat');
             if (kontakDaruratInput.value && !/^0[0-9]{9,12}$/.test(kontakDaruratInput.value)) {
@@ -1414,12 +1576,12 @@ if (isset($_GET['success'])) {
             } else {
                 resetValidation(kontakDaruratInput);
             }
-            
+
             return isValid;
         }
 
         // ==================== EVENT LISTENERS ====================
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             // Validasi Nama Lengkap
             const namaInput = document.getElementById('nama_lengkap');
@@ -1458,7 +1620,7 @@ if (isset($_GET['success'])) {
                         showSuccess('telepon');
                     }
                 });
-                
+
                 teleponInput.addEventListener('blur', function() {
                     if (!this.value) {
                         showError('telepon', 'Nomor telepon wajib diisi');
@@ -1542,50 +1704,53 @@ if (isset($_GET['success'])) {
             if (paketSelect) {
                 paketSelect.addEventListener('change', updateTotalHarga);
             }
-            
+
             // Initial update harga
             updateTotalHarga();
-            
+
             // Form submission dengan pencegahan double submit
             const form = document.getElementById('formPendaftaran');
             if (form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    
-                    // Enable semua select yang readonly sementara untuk submit
-                    const readonlySelects = document.querySelectorAll('select[readonly]');
-                    readonlySelects.forEach(select => {
-                        select.removeAttribute('readonly');
-                    });
-                    
+
+                    // Enable tipe mobil yang disabled sementara untuk submit
+                    const tipeMobilSelect = document.getElementById('tipe_mobil');
+                    if (tipeMobilSelect) {
+                        tipeMobilSelect.disabled = false;
+                    }
+
                     // Validasi form
                     if (!validateForm()) {
-                        // Kembalikan status readonly
-                        readonlySelects.forEach(select => {
-                            select.setAttribute('readonly', 'readonly');
-                        });
-                        
+                        // Kembalikan status disabled
+                        if (tipeMobilSelect) {
+                            tipeMobilSelect.disabled = true;
+                        }
+
                         // Scroll ke error pertama
                         const firstError = document.querySelector('.error-input, .error-message[style*="block"]');
                         if (firstError) {
-                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstError.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
                         }
                         return;
                     }
-                    
+
                     // Submit form
                     this.submit();
-                    
-                    // Kembalikan status readonly
-                    readonlySelects.forEach(select => {
-                        select.setAttribute('readonly', 'readonly');
-                    });
+
+                    // Kembalikan status disabled
+                    if (tipeMobilSelect) {
+                        tipeMobilSelect.disabled = true;
+                    }
                 });
             }
         });
 
         // ==================== FUNGSI LAINNYA ====================
-        
+
         // View Detail Function
         function viewDetail(id) {
             fetch(`pendaftaran_detail.php?id=${id}`)
@@ -1644,6 +1809,7 @@ if (isset($_GET['success'])) {
         window.onclick = function(event) {
             const detailModal = document.getElementById('detailModal');
             const statusModal = document.getElementById('statusModal');
+            const exportModal = document.getElementById('exportModal');
 
             if (event.target === detailModal) {
                 closeDetailModal();
@@ -1651,7 +1817,11 @@ if (isset($_GET['success'])) {
             if (event.target === statusModal) {
                 closeStatusModal();
             }
+            if (event.target === exportModal) {
+                closeExportModal();
+            }
         }
     </script>
 </body>
+
 </html>

@@ -262,12 +262,6 @@ select[readonly]:focus {
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
-                
-                <div class="text-2xl font-bold mb-4">Mulai Rp <?= number_format($harga_terendah, 0, ',', '.') ?></div>
-                <a href="paket-kursus.php"
-    class="block w-full bg-white text-blue-600 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-    Lihat Detail
-</a>
             </div>
             <?php endforeach; ?>
         </div>
